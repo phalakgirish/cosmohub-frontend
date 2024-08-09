@@ -6,34 +6,44 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import url from '../../env';
 // hooks
 import { usePageTitle } from '../../hooks';
+import secureLocalStorage from 'react-secure-storage';
+import { useNavigate } from 'react-router-dom';
 
 // Define the type for branch data
 type Branch = {
     _id: string;
-    branch_city: string;
+    branch_name: string;
 };
 
 // Define the type for form data
 type DepartmentData = {
     department_name: string;
-    department_desc: string;
     branch_name: string; // This will be the ID of the branch
     department_status: boolean;
 };
 
 const BasicForm = () => {
     const [branches, setBranches] = useState<Branch[]>([]);
+    const navigate = useNavigate()
 
     useEffect(() => {
         // Fetch branches from the backend
         const fetchBranches = async () => {
             try {
-                const response = await fetch(`${url.nodeapipath}/branch/`);
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/branch/all/all`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
                 const data = await response.json();
                 console.log(data);
                 
                 if (response.ok) {
-                    setBranches(data.branches || []);
+                    setBranches(data.branch || []);
                 } else {
                     console.error('Error fetching branches:', data);
                 }
@@ -51,7 +61,6 @@ const BasicForm = () => {
     const schemaResolver = yupResolver(
         yup.object().shape({
             department_name: yup.string().required('Please enter Department Name'),
-            department_desc: yup.string().required('Please enter Department Description'),
             branch_name: yup.string().required('Please select a Branch'),
             department_status: yup.bool().required('Please select Department Status'),
         })
@@ -63,19 +72,26 @@ const BasicForm = () => {
 
     const onSubmit = async (formData: DepartmentData) => {
         try {
+            console.log(formData);
+            
+            const bearerToken = secureLocalStorage.getItem('login');
+
             const response = await fetch(`${url.nodeapipath}/department/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin':'*',
+                    'Authorization': `Bearer ${bearerToken}`
                 },
                 body: JSON.stringify(formData),
             });
 
             const result = await response.json();
-console.log(result);
+            console.log(result);
 
             if (response.ok) {
                 console.log('Department added successfully:', result);
+                navigate('/department')
             } else {
                 console.error('Error adding department:', result);
             }
@@ -103,19 +119,6 @@ console.log(result);
                         </Form.Control.Feedback>
                     </Form.Group>
 
-                    <Form.Group className="mb-2">
-                        <Form.Label>Department Description</Form.Label>
-                        <Form.Control
-                            type="text"
-                            placeholder="Enter department description"
-                            {...register('department_desc')}
-                            isInvalid={!!errors.department_desc}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.department_desc?.message}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
                     <Form.Group  className="mb-2">
                         <Form.Label>Branch Name</Form.Label>
                         <Form.Select
@@ -126,7 +129,7 @@ console.log(result);
                             <option value="">Select a branch</option>
                             {branches.map((branch) => (
                                 <option key={branch._id} value={branch._id}>
-                                    {branch.branch_city}
+                                    {branch.branch_name}
                                 </option>
                             ))}
                         </Form.Select>

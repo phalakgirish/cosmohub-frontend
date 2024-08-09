@@ -7,42 +7,34 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import url from '../../env';
 // hooks
 import { usePageTitle } from '../../hooks';
+import secureLocalStorage from 'react-secure-storage';
 
-type BranchData = {
-    branch_name: string;
-    branch_contact_person: string;
-    branch_mobile_number: string;
-    branch_emailId: string;
-    branch_area: string;
-    branch_city: string;
-    branch_district: string;
-    branch_taluka: string;
-    branch_pincode: string;
-    branch_status: boolean;
+type Department = {
+    _id: string;
+    department_name: string;
+};
+
+// Define the type for form data
+type DesignationData = {
+    designation_name: string;
+    department_name: string; // This will be the ID of the department
+    designation_status: boolean;
 };
 
 const schemaResolver = yupResolver(
     yup.object().shape({
-        branch_name: yup.string().required('Please enter Branch name'),
-        branch_contact_person: yup.string().required('Please enter Contact Person'),
-        branch_mobile_number: yup.string().required('Please enter Mobile Number'),
-        branch_emailId: yup
-            .string()
-            .required('Please enter Email address')
-            .email('Please enter a valid Email address'),
-        branch_area: yup.string().required('Please enter Area'),
-        branch_city: yup.string().required('Please enter City'),
-        branch_district: yup.string().required('Please enter District'),
-        branch_taluka: yup.string().required('Please enter Taluka'),
-        branch_pincode: yup.string().required('Please enter Pincode'),
-        branch_status: yup.boolean().required('Please select Status'),
+        designation_name: yup.string().required('Please enter Designation Name'),
+        department_name: yup.string().required('Please select a Department'),
+        designation_status: yup.bool().required('Please select Designation Status'),
     })
 );
 
 const EditDesignation = () => {
     const { id } = useParams<{ id: string }>();
+    const [departments, setDepartments] = useState<Department[]>([]);
     const navigate = useNavigate();
-    const { control, handleSubmit, reset, setValue } = useForm<BranchData>({
+
+    const { control, handleSubmit, reset, setValue,formState:{errors},register } = useForm<DesignationData>({
         resolver: schemaResolver,
     });
 
@@ -50,25 +42,61 @@ const EditDesignation = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchBranchData = async () => {
+        const fetchDepartments = async () => {
             try {
-                const response = await fetch(`${url.nodeapipath}/branch/${id}`);
+                const bearerToken = secureLocalStorage.getItem('login');
+
+                const response = await fetch(`${url.nodeapipath}/department/all/0`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
+                const data = await response.json();
+                console.log(data);
+
+                if (response.ok) {
+                    setDepartments(data.department || []);
+                } else {
+                    console.error('Error fetching departments:', data);
+                }
+            } catch (error) {
+                console.error('Error during API call:', error);
+            }
+        };
+
+        fetchDepartments();
+
+        const fetchDesignationData = async () => {
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+
+                const response = await fetch(`${url.nodeapipath}/designation/${id}`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
                 if (!response.ok) {
                     throw new Error('Error fetching branch data');
                 }
                 const data = await response.json();
 
-                if (data && data.branch && Array.isArray(data.branch) && data.branch.length > 0) {
-                    const branchData = data.branch[0]; // Access the first element in the branch array
+                if (data && data.designation && Array.isArray(data.designation) && data.designation.length > 0) {
+                    const designationData = data.designation[0]; // Access the first element in the branch array
 
                     // Set form values using branchData
-                    for (const key in branchData) {
-                        if (branchData.hasOwnProperty(key)) {
-                            setValue(key as keyof BranchData, branchData[key]);
+                    for (const key in designationData) {
+                        if (designationData.hasOwnProperty(key)) {
+                            setValue(key as keyof DesignationData, designationData[key]);
                         }
                     }
                 } else {
-                    throw new Error('Branch data is empty or invalid');
+                    throw new Error('Designation data is empty or invalid');
                 }
             } catch (err) {
                 if (err instanceof Error) {
@@ -81,15 +109,18 @@ const EditDesignation = () => {
             }
         };
 
-        fetchBranchData();
+        fetchDesignationData();
     }, [id, setValue]);
 
-    const onSubmit = async (formData: BranchData) => {
+    const onSubmit = async (formData: DesignationData) => {
         try {
-            const response = await fetch(`${url.nodeapipath}/branch/${id}`, {
+            const bearerToken = secureLocalStorage.getItem('login');
+            const response = await fetch(`${url.nodeapipath}/designation/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin':'*',
+                    'Authorization': `Bearer ${bearerToken}`
                 },
                 body: JSON.stringify(formData),
             });
@@ -99,7 +130,7 @@ const EditDesignation = () => {
                 throw new Error(result.message || 'Error updating branch');
             }
 
-            navigate('/branch'); // Redirect after successful update
+            navigate('/designation'); // Redirect after successful update
         } catch (err) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -118,150 +149,49 @@ const EditDesignation = () => {
                 <h4 className="header-title mt-0 mb-1">Edit Branch</h4>
                 <p className="sub-header">Modify the details of the branch.</p>
                 <Form onSubmit={handleSubmit(onSubmit)}>
-                    <Row>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Branch Name</Form.Label>
-                                <Controller
-                                    name="branch_name"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Control {...field} placeholder="Enter Branch name" />
-                                    )}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Contact Person</Form.Label>
-                                <Controller
-                                    name="branch_contact_person"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Control {...field} placeholder="Enter contact person name" />
-                                    )}
-                                />
-                            </Form.Group>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Mobile Number</Form.Label>
-                                <Controller
-                                    name="branch_mobile_number"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Control {...field} placeholder="Enter mobile number" />
-                                    )}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Email Address</Form.Label>
-                                <Controller
-                                    name="branch_emailId"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Control
-                                            type="email"
-                                            {...field}
-                                            placeholder="Enter email address"
-                                        />
-                                    )}
-                                />
-                            </Form.Group>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Area</Form.Label>
-                                <Controller
-                                    name="branch_area"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Control {...field} placeholder="Enter area" />
-                                    )}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>City</Form.Label>
-                                <Controller
-                                    name="branch_city"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Control {...field} placeholder="Enter city" />
-                                    )}
-                                />
-                            </Form.Group>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>District</Form.Label>
-                                <Controller
-                                    name="branch_district"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Control {...field} placeholder="Enter district" />
-                                    )}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Taluka</Form.Label>
-                                <Controller
-                                    name="branch_taluka"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Control {...field} placeholder="Enter taluka" />
-                                    )}
-                                />
-                            </Form.Group>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Pincode</Form.Label>
-                                <Controller
-                                    name="branch_pincode"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Control {...field} placeholder="Enter pincode" />
-                                    )}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Status</Form.Label>
-                                <Controller
-                                    name="branch_status"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Select
-                                            {...field}
-                                            value={field.value ? 'true' : 'false'}
-                                            onChange={(e) =>
-                                                field.onChange(e.target.value === 'true')
-                                            }
-                                        >
-                                            <option value="">Select status</option>
-                                            <option value="true">Active</option>
-                                            <option value="false">Inactive</option>
-                                        </Form.Select>
-                                    )}
-                                />
-                            </Form.Group>
-                        </Col>
-                    </Row>
+                <Form.Group className="mb-2">
+                        <Form.Label>Designation Name</Form.Label>
+                        <Form.Control
+                            type="text"
+                            placeholder="Enter designation name"
+                            {...register('designation_name')}
+                            isInvalid={!!errors.designation_name}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.designation_name?.message}
+                        </Form.Control.Feedback>
+                    </Form.Group>
+
+                    <Form.Group className="mb-2">
+                        <Form.Label>Department Name</Form.Label>
+                        <Form.Select
+                            aria-label="Default select example"
+                            {...register('department_name')}
+                            isInvalid={!!errors.department_name}
+                        >
+                            <option value="">Select a department</option>
+                            {departments.map((department) => (
+                                <option key={department._id} value={department._id}>
+                                    {department.department_name}
+                                </option>
+                            ))}
+                        </Form.Select>
+                        <Form.Control.Feedback type="invalid">
+                            {errors.department_name?.message}
+                        </Form.Control.Feedback>
+                    </Form.Group>
+
+                    <Form.Group className="mb-2">
+                        <Form.Check
+                            type="checkbox"
+                            label="Designation Status"
+                            {...register('designation_status')}
+                            isInvalid={!!errors.designation_status}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.designation_status?.message}
+                        </Form.Control.Feedback>
+                    </Form.Group>
 
                     <div className="text-md-end mb-0">
                         <Button variant="primary" className="me-1" type="submit">

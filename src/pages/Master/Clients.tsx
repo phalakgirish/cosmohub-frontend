@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Button, Table } from 'react-bootstrap';
+import { Card, Row, Col, Button } from 'react-bootstrap';
 import url from '../../env';  // Adjust the import path as necessary
+import secureLocalStorage from 'react-secure-storage';
+import Table from '../../components/Table';
 
 // Define types
 interface Client {
@@ -15,24 +17,33 @@ interface Client {
     createdAt: string; // Example date field
 }
 
-const columns = [
-    { Header: 'Sr. No', accessor: 'srNo' },
-    { Header: 'Name', accessor: 'name' },
-    { Header: 'Email', accessor: 'email' },
-    { Header: 'Mobile Number', accessor: 'mobile' },
-    { Header: 'Postal Address', accessor: 'postalAddress' },
-    { Header: 'Landmark', accessor: 'landmark' },
-];
+interface DataResponse {
+    // department: any;
+    client: Client[];
+}
+
+
 
 const Clients = () => {
     const [clients, setClients] = useState<Client[]>([]);
 
     useEffect(() => {
-        fetch(`${url.nodeapipath}/clients`)
+        const bearerToken = secureLocalStorage.getItem('login');
+
+        fetch(`${url.nodeapipath}/client`,{
+            method:'GET',
+            headers: {
+                'Content-Type':'application/json',
+                'Access-Control-Allow-Origin':'*',
+                'Authorization': `Bearer ${bearerToken}`
+                }
+        })
             .then((response) => response.json())
-            .then((data: Client[]) => {
+            .then((data: DataResponse) => {
                 // You can format data if needed
-                const formattedData = data.map((client, index) => ({
+                console.log(data);
+                
+                const formattedData = data.client.map((client:any, index:any) => ({
                     srNo: index + 1,
                     ...client,
                 }));
@@ -40,6 +51,65 @@ const Clients = () => {
             })
             .catch((error) => console.error('Error fetching client data:', error));
     }, []);
+
+    const handleEdit = (id:any)=>{
+
+    };
+
+    const handleDelete = (id:any)=>{
+
+    }
+
+    const sizePerPageList = [
+        {
+            text: '5',
+            value: 5,
+        },
+        {
+            text: '10',
+            value: 10,
+        },
+        {
+            text: '25',
+            value: 25,
+        },
+        {
+            text: 'All',
+            value: clients.length,
+        },
+    ];
+
+    const columns = [
+        { Header: 'Sr. No', accessor: 'srNo',sort: true, },
+        { Header: 'Client Id', accessor: 'client_id',sort: true, },
+        { Header: 'Name', accessor: 'client_name', sort: true,},
+        { Header: 'Email', accessor: 'client_emailId',sort: true, },
+        { Header: 'Mobile Number', accessor: 'client_mobile_number',sort: true, },
+        // { Header: 'Postal Address', accessor: 'postalAddress',sort: true, },
+        // { Header: 'Landmark', accessor: 'landmark',sort: true, },
+        {
+            Header: 'Actions',
+            accessor: 'actions',
+            sort: true,
+            Cell: ({ row }: { row: any }) => (
+                <>
+                <Button
+                    variant="primary"
+                    onClick={() => handleEdit(row.original._id)}
+                >
+                    Edit
+                </Button>
+                &nbsp;
+                <Button
+                    variant="danger"
+                    onClick={() => handleDelete(row.original._id)}
+                >
+                    Delete
+                </Button>
+                </>
+            ),
+        },
+    ];
 
     return (
         <Row>
@@ -55,7 +125,7 @@ const Clients = () => {
                                 Add Client
                             </Button>
                         </div>
-                        <Table striped bordered hover>
+                        {/* <Table striped bordered hover>
                             <thead>
                                 <tr>
                                     {columns.map((column) => (
@@ -63,8 +133,8 @@ const Clients = () => {
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody>
-                                {clients.map((client, index) => (
+                            <tbody> */}
+                                {/* {clients.map((client, index) => (
                                     <tr key={client._id}>
                                         {columns.map((column) => (
                                             <td key={column.accessor}>
@@ -78,9 +148,18 @@ const Clients = () => {
                                             </td>
                                         ))}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </Table>
+                                ))} */}
+                                    <Table
+                                    columns={columns}
+                                    data={clients}
+                                    pageSize={5}
+                                    sizePerPageList={sizePerPageList}
+                                    isSortable={true}
+                                    pagination={true}
+                                    isSearchable={true}
+                                    />
+                            {/* </tbody>
+                        </Table> */}
                     </Card.Body>
                 </Card>
             </Col>

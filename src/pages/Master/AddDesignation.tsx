@@ -6,6 +6,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import url from '../../env';
 // hooks
 import { usePageTitle } from '../../hooks';
+import secureLocalStorage from 'react-secure-storage';
+import { useNavigate } from 'react-router-dom';
 
 // Define the type for department data
 type Department = {
@@ -16,19 +18,27 @@ type Department = {
 // Define the type for form data
 type DesignationData = {
     designation_name: string;
-    designation_desc: string;
     department_name: string; // This will be the ID of the department
     designation_status: boolean;
 };
 
 const BasicForm = () => {
     const [departments, setDepartments] = useState<Department[]>([]);
-
+    const navigate = useNavigate()
     useEffect(() => {
         // Fetch departments from the backend
         const fetchDepartments = async () => {
             try {
-                const response = await fetch(`${url.nodeapipath}/department/`);
+                const bearerToken = secureLocalStorage.getItem('login');
+
+                const response = await fetch(`${url.nodeapipath}/department/all/0`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
                 const data = await response.json();
                 console.log(data);
 
@@ -51,7 +61,6 @@ const BasicForm = () => {
     const schemaResolver = yupResolver(
         yup.object().shape({
             designation_name: yup.string().required('Please enter Designation Name'),
-            designation_desc: yup.string().required('Please enter Designation Description'),
             department_name: yup.string().required('Please select a Department'),
             designation_status: yup.bool().required('Please select Designation Status'),
         })
@@ -63,19 +72,24 @@ const BasicForm = () => {
 
     const onSubmit = async (formData: DesignationData) => {
         try {
+            const bearerToken = secureLocalStorage.getItem('login');
+
             const response = await fetch(`${url.nodeapipath}/designation/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin':'*',
+                    'Authorization': `Bearer ${bearerToken}`
                 },
                 body: JSON.stringify(formData),
             });
 
             const result = await response.json();
-            console.log(result);
+            // console.log(result);
 
             if (response.ok) {
                 console.log('Designation added successfully:', result);
+                navigate('/designation')
             } else {
                 console.error('Error adding designation:', result);
             }
@@ -100,19 +114,6 @@ const BasicForm = () => {
                         />
                         <Form.Control.Feedback type="invalid">
                             {errors.designation_name?.message}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                    <Form.Group className="mb-2">
-                        <Form.Label>Designation Description</Form.Label>
-                        <Form.Control
-                            type="text"
-                            placeholder="Enter designation description"
-                            {...register('designation_desc')}
-                            isInvalid={!!errors.designation_desc}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.designation_desc?.message}
                         </Form.Control.Feedback>
                     </Form.Group>
 

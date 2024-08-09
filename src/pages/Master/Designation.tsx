@@ -14,7 +14,7 @@ import secureLocalStorage from 'react-secure-storage';
 interface Designation {
     _id: string;
     designation_name: string;
-    designation_desc: string;
+    department_name:string
     designation_status: boolean;
 }
 
@@ -30,6 +30,23 @@ const Designation = () => {
     const handleEdit = (id: string) => {
         navigate(`/edit-designation/${id}`);
     };
+
+    const handleDelete = async (id:string) =>{
+        const bearerToken = secureLocalStorage.getItem('login');
+        fetch(`${url.nodeapipath}/designation/${id}`,{
+            method:'DELETE',
+            headers: {
+                'Content-Type':'application/json',
+                'Access-Control-Allow-Origin':'*',
+                'Authorization': `Bearer ${bearerToken}`
+                }
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log(data);
+            })
+            .catch((error) => console.error('Error fetching branch data:', error));
+    }
 
     usePageTitle({
         title: 'Designations',
@@ -100,8 +117,8 @@ const columns = [
         sort: true,
     },
     {
-        Header: 'Description',
-        accessor: 'designation_desc',
+        Header: 'Department Name',
+        accessor: 'department_name',
         sort: true,
     },
     {
@@ -114,12 +131,21 @@ const columns = [
         Header: 'Actions',
         accessor: 'actions',
         Cell: ({ row }: { row: any }) => (
-            <Button
-                variant="primary"
-                onClick={() => handleEdit(row.original._id)}
-            >
-                Edit
+            <>
+                <Button
+                    variant="primary"
+                    onClick={() => handleEdit(row.original._id)}
+                >
+                    Edit
+                </Button>
+                &nbsp;
+                <Button
+                variant="danger"
+                onClick={() => handleDelete(row.original._id)}
+                >
+                    Delete
             </Button>
+            </>
         ),
     },
 ];

@@ -32,6 +32,23 @@ const Department = () => {
         navigate(`/edit-department/${id}`);
     };
 
+    const handleDelete = async (id:string) =>{
+        const bearerToken = secureLocalStorage.getItem('login');
+        fetch(`${url.nodeapipath}/department/${id}`,{
+            method:'DELETE',
+            headers: {
+                'Content-Type':'application/json',
+                'Access-Control-Allow-Origin':'*',
+                'Authorization': `Bearer ${bearerToken}`
+                }
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log(data);
+            })
+            .catch((error) => console.error('Error fetching branch data:', error));
+    }
+
     // Set page title
     usePageTitle({
         title: 'Departments',
@@ -101,9 +118,9 @@ const Department = () => {
             sort: true,
         },
         {
-            Header: 'Description',
-            accessor: 'department_desc',
-            sort: true,
+            Header: 'Branch Name',
+            accessor: 'branch_name',
+            sort: true
         },
         {
             Header: 'Status',
@@ -115,12 +132,21 @@ const Department = () => {
             Header: 'Actions',
             accessor: 'actions',
             Cell: ({ row }: { row: any }) => (
+                <>
                 <Button
                     variant="primary"
                     onClick={() => handleEdit(row.original._id)}
                 >
                     Edit
                 </Button>
+                &nbsp;
+                <Button
+                    variant="danger"
+                    onClick={() => handleDelete(row.original._id)}
+                >
+                    Delete
+                </Button>
+                </>
             ),
         },
     ];

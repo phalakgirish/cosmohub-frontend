@@ -140,18 +140,19 @@ const Branch = () => {
             accessor: 'actions',
             Cell: ({ row }: { row: any }) => (
                 <>
-                <Button
-                    variant="primary"
-                    onClick={() => handleEdit(row.original._id)}
-                >
-                    Edit
+                    <Button
+                        variant="primary"
+                        onClick={() => handleEdit(row.original._id)}
+                    >
+                        Edit
+                    </Button>
+                    &nbsp;
+                    <Button
+                    variant="danger"
+                    onClick={() => handleDelete(row.original._id)}
+                    >
+                    Delete
                 </Button>
-                <Button
-                variant="danger"
-                onClick={() => handleDelete(row.original._id)}
-            >
-                Delete
-            </Button>
             </>
             ),
         },

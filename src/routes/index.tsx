@@ -15,6 +15,7 @@ import { LayoutTypes } from '../constants';
 
 // hooks
 import { useRedux } from '../hooks';
+// import EditDepartment from '../pages/Master/EditDeprtment';
 // lazy load all the views
 // auth
 const Branch = React.lazy(() => import('../pages/Master/Branch'));
@@ -30,6 +31,9 @@ const ClientRegistration = React.lazy(() => import('../pages/Master/ClientRegist
 const AllClients = React.lazy(() => import('../pages/Master/Clients'));
 
 const EditBranch = React.lazy(() => import('../pages/Master/EditBranch'));
+const EditDepartment = React.lazy(() => import('../pages/Master/EditDeprtment'));
+const EditDesignation = React.lazy(() => import('../pages/Master/EditDesignation'));
+
 
 const SIPSlab = React.lazy(() => import('../pages/Master/SIPSlab'));
 
@@ -251,11 +255,11 @@ const AllRoutes = () => {
         },
         {
           path: 'edit-designation/:id',
-          element: <LoadComponent component={AllClients} />,
+          element: <LoadComponent component={EditDesignation} />,
         },
         {
           path: 'edit-department/:id',
-          element: <LoadComponent component={AllClients} />,
+          element: <LoadComponent component={EditDepartment} />,
         },
         {
           path: 'apps',
