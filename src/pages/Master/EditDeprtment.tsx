@@ -163,8 +163,8 @@ const EditDepartment = () => {
     return (
         <Card>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Edit Branch</h4>
-                <p className="sub-header">Modify the details of the branch.</p>
+                <h4 className="header-title mt-0 mb-1">Edit Department</h4>
+                <p className="sub-header">Modify the details of the department.</p>
                 <Form onSubmit={handleSubmit(onSubmit)}>
                 <Form.Group className="mb-2">
                         <Form.Label>Department Name</Form.Label>
@@ -199,16 +199,22 @@ const EditDepartment = () => {
                     </Form.Group>
 
                     <Form.Group className="mb-2">
-                        <Form.Check
-                            type="checkbox"
-                            label="Department Status"
-                            {...register('department_status')}
-                            isInvalid={!!errors.department_status}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.department_status?.message}
-                        </Form.Control.Feedback>
-                    </Form.Group>
+                                <Form.Label>Status</Form.Label>
+                                <Controller
+                                    name="department_status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value.toString()}
+                                            onChange={(e) => field.onChange(e.target.value === 'true')}>
+                                            <option value="">Select status</option>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </Form.Select>
+                                    )}
+                                />
+                            </Form.Group>
 
                     <div className="text-md-end mb-0">
                         <Button variant="primary" className="me-1" type="submit">

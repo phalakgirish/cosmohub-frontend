@@ -20,17 +20,20 @@ const UserBox = () => {
     const navigate = useNavigate();
     const loginvalue = secureLocalStorage.getItem('login');
     const StorageuserData:any = secureLocalStorage.getItem('userData');
-    // console.log(userData);
+    // const userData = JSON.parse(StorageuserData);
     const userData:any = JSON.parse(StorageuserData);
     
-    if(loginvalue == null || loginvalue == undefined)
-    { 
-        navigate('/auth/login');
-    }
-    else if(StorageuserData == null || StorageuserData == undefined)
-    {
-        navigate('/auth/login');
-    }
+    useEffect(()=>{
+        if(loginvalue == null || loginvalue == undefined)
+            { 
+                navigate('/auth/login');
+            }
+            else if(StorageuserData == null || StorageuserData == undefined)
+            {
+                navigate('/auth/login');
+            }
+    },[])
+    
 
     // get the profilemenu
     const ProfileMenus = [
@@ -77,7 +80,8 @@ const UserBox = () => {
                     className="user-name h5 mt-2 mb-1 d-block"
                     style={{ color: 'white' }}
                 >
-                    Nowak Helme
+                    {}
+                    {(userData !== null)?userData.staff_name:''}
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="user-pro-dropdown">
                     <div onClick={toggleDropdown}>
@@ -96,7 +100,7 @@ const UserBox = () => {
                     </div>
                 </Dropdown.Menu>
             </Dropdown>
-            <p className=" left-user-info" style={{ color: '#DADADA' }}>Admin Head</p>
+            <p className=" left-user-info" style={{ color: '#DADADA' }}> {(userData !== null)?(userData.user_role_type == "0")?"Super Admin":"Admin":''}</p>
 
             <ul className="list-inline">
                 <li className="list-inline-item">

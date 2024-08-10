@@ -52,20 +52,20 @@ const notifications: Notification[] = [
 
 // get the profilemenu
 const profileMenus: ProfileMenu[] = [
-    {
-        label: 'My Account',
-        icon: 'fe-user',
-        redirectTo: '/apps/contacts/profile',
-    },
-    {
-        label: 'Lock Screen',
-        icon: 'fe-lock',
-        redirectTo: '/auth/lock-screen',
-    },
+    // {
+    //     label: 'My Account',
+    //     icon: 'fe-user',
+    //     redirectTo: '/apps/contacts/profile',
+    // },
+    // {
+    //     label: 'Lock Screen',
+    //     icon: 'fe-lock',
+    //     redirectTo: '/auth/lock-screen',
+    // },
     {
         label: 'Logout',
         icon: 'fe-log-out',
-        redirectTo: '/auth/logout',
+        redirectTo: '/auth/login',
     },
 ];
 

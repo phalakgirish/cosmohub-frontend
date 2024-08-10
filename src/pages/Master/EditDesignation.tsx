@@ -146,8 +146,8 @@ const EditDesignation = () => {
     return (
         <Card>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Edit Branch</h4>
-                <p className="sub-header">Modify the details of the branch.</p>
+                <h4 className="header-title mt-0 mb-1">Edit Designation</h4>
+                <p className="sub-header">Modify the details of the designation.</p>
                 <Form onSubmit={handleSubmit(onSubmit)}>
                 <Form.Group className="mb-2">
                         <Form.Label>Designation Name</Form.Label>
@@ -182,15 +182,21 @@ const EditDesignation = () => {
                     </Form.Group>
 
                     <Form.Group className="mb-2">
-                        <Form.Check
-                            type="checkbox"
-                            label="Designation Status"
-                            {...register('designation_status')}
-                            isInvalid={!!errors.designation_status}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.designation_status?.message}
-                        </Form.Control.Feedback>
+                                <Form.Label>Status</Form.Label>
+                                <Controller
+                                    name="designation_status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value.toString()}
+                                            onChange={(e) => field.onChange(e.target.value === 'true')}>
+                                            <option value="">Select status</option>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </Form.Select>
+                                    )}
+                                />
                     </Form.Group>
 
                     <div className="text-md-end mb-0">

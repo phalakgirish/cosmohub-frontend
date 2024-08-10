@@ -3,6 +3,7 @@ import { Card, Row, Col, Button } from 'react-bootstrap';
 import url from '../../env';  // Adjust the import path as necessary
 import secureLocalStorage from 'react-secure-storage';
 import Table from '../../components/Table';
+import { useNavigate } from 'react-router-dom';
 
 // Define types
 interface Client {
@@ -26,7 +27,7 @@ interface DataResponse {
 
 const Clients = () => {
     const [clients, setClients] = useState<Client[]>([]);
-
+    const navigate = useNavigate();
     useEffect(() => {
         const bearerToken = secureLocalStorage.getItem('login');
 
@@ -53,7 +54,7 @@ const Clients = () => {
     }, []);
 
     const handleEdit = (id:any)=>{
-
+        navigate(`/edit-client/${id}`);
     };
 
     const handleDelete = (id:any)=>{
@@ -111,6 +112,10 @@ const Clients = () => {
         },
     ];
 
+    const handleAddClient = ()=>{
+        navigate('/client-registration');
+    }
+
     return (
         <Row>
             <Col>
@@ -121,7 +126,7 @@ const Clients = () => {
                                 <h4 className="header-title">Clients</h4>
                                 <p className="text-muted font-14 mb-4">A table showing all clients</p>
                             </div>
-                            <Button style={{ height: '40px', backgroundColor: '#dd4923' }}>
+                            <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddClient}>
                                 Add Client
                             </Button>
                         </div>

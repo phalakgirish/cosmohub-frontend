@@ -26,24 +26,27 @@ type BranchData = {
     branch_status: boolean;
 };
 
-const schemaResolver = yupResolver(
-    yup.object().shape({
-        branch_name: yup.string().required('Please enter Branch name'),
-        branch_contact_person: yup.string().required('Please enter Contact Person'),
-        branch_mobile_number: yup.string().required('Please enter Mobile Number'),
-        branch_emailId: yup.string().required('Please enter Email address').email('Please enter a valid Email address'),
-        branch_area: yup.string().required('Please enter Area'),
-        branch_city: yup.string().required('Please enter City'),
-        branch_district: yup.string().required('Please enter District'),
-        branch_taluka: yup.string().required('Please enter Taluka'),
-        branch_pincode: yup.string().required('Please enter Pincode'),
-        branch_state: yup.string().required('Please enter state'),
-        branch_status: yup.boolean().required('Please select Status'),
-    })
-);
+
 
 const BasicForm = () => {
-    const { control, handleSubmit, reset } = useForm<BranchData>({
+
+    const schemaResolver = yupResolver(
+        yup.object().shape({
+            branch_name: yup.string().required('Please enter Branch name'),
+            branch_contact_person: yup.string().required('Please enter Contact Person'),
+            branch_mobile_number: yup.string().required('Please enter Mobile Number'),
+            branch_emailId: yup.string().required('Please enter Email address').email('Please enter a valid Email address'),
+            branch_area: yup.string().required('Please enter Area'),
+            branch_city: yup.string().required('Please enter City'),
+            branch_district: yup.string().required('Please enter District'),
+            branch_taluka: yup.string().required('Please enter Taluka'),
+            branch_pincode: yup.string().required('Please enter Pincode'),
+            branch_state: yup.string().required('Please enter state'),
+            branch_status: yup.boolean().required('Please select Status'),
+        })
+    );
+
+    const { control, handleSubmit, reset,formState:{ errors} } = useForm<BranchData>({
         resolver: schemaResolver,
         defaultValues: {
             branch_status: true, // Default value if needed

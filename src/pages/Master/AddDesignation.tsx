@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Row, Col, Card, Button, Form } from 'react-bootstrap';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import url from '../../env';
@@ -66,8 +66,11 @@ const BasicForm = () => {
         })
     );
 
-    const { handleSubmit, register, formState: { errors } } = useForm<DesignationData>({
+    const { control,handleSubmit, register, formState: { errors } } = useForm<DesignationData>({
         resolver: schemaResolver,
+        defaultValues: {
+            designation_status: true, // Default value if needed
+        },
     });
 
     const onSubmit = async (formData: DesignationData) => {
@@ -137,15 +140,21 @@ const BasicForm = () => {
                     </Form.Group>
 
                     <Form.Group className="mb-2">
-                        <Form.Check
-                            type="checkbox"
-                            label="Designation Status"
-                            {...register('designation_status')}
-                            isInvalid={!!errors.designation_status}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.designation_status?.message}
-                        </Form.Control.Feedback>
+                                <Form.Label>Status</Form.Label>
+                                <Controller
+                                    name="designation_status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value.toString()}
+                                            onChange={(e) => field.onChange(e.target.value === 'true')}>
+                                            <option value="">Select status</option>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </Form.Select>
+                                    )}
+                                />
                     </Form.Group>
 
                     <div className="text-md-end mb-0">

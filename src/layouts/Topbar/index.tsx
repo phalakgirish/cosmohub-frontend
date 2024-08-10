@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import classNames from 'classnames';
 
@@ -33,21 +33,23 @@ type TopbarProps = {
 const Topbar = ({ openLeftMenuCallBack, containerClass }: TopbarProps) => {
     const navigate = useNavigate();
     const loginvalue = secureLocalStorage.getItem('login');
-    console.log(loginvalue);
+    // console.log(loginvalue);
     
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     // console.log(userData);
     const userData:any = JSON.parse(StorageuserData);
-    console.log(loginvalue);
+    // console.log(loginvalue);
+    useEffect(()=>{
+        if(loginvalue == null || loginvalue == undefined)
+        {
+            navigate('/auth/login');
+        }
+        else if(StorageuserData == null || StorageuserData == undefined)
+        {
+            navigate('/auth/login');
+        }
+    },[])
     
-    if(loginvalue == null || loginvalue == undefined)
-    {
-        navigate('/auth/login');
-    }
-    else if(StorageuserData == null || StorageuserData == undefined)
-    {
-        navigate('/auth/login');
-    }
 
     const { dispatch, appSelector } = useRedux();
     const [isopen, setIsopen] = useState<boolean>(false);
@@ -80,7 +82,7 @@ const Topbar = ({ openLeftMenuCallBack, containerClass }: TopbarProps) => {
                     </li>
                     <li className="dropdown notification-list topbar-dropdown">
                         {/* User */}
-                        <ProfileDropdown userImage={avatar1} username={'Nowak'} menuItems={profileMenus} />
+                        <ProfileDropdown userImage={avatar1} username={(userData !== null)?userData.staff_name:''} menuItems={profileMenus} />
                     </li>
                     {/* <li className="dropdown notification-list">
                         <ThemeSetting handleRightSideBar={handleRightSideBar} />

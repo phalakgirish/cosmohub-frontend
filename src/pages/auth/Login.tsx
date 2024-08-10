@@ -125,10 +125,10 @@ const Login = () => {
     const onSubmit = (formData: UserData,event:any) => {
         event.preventDefault();
         // dispatch(loginUser(formData['email'], formData['password']));
-        console.log(formData);
+        // console.log(formData);
         
         let baseURL = url.nodeapipath+'/login'
-        console.log(baseURL);
+        // console.log(baseURL);
         
         var datatoPost = {
             user_emailid: (formData['email'] == '')?email:formData['email'],
@@ -145,7 +145,7 @@ const Login = () => {
         })
         .then(response => response.json())
         .then(val =>{
-            console.log(val);
+            // console.log(val);
             
             if(val.token !==  undefined || val.error === undefined)
             {

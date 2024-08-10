@@ -16,12 +16,16 @@ import Projects from './Projects';
 import { messages, projectDetails } from './data';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const DashBoard1 = () => {
     // set pagetitle
     const navigate = useNavigate();
-    const loginvalue = secureLocalStorage.getItem('login');
+
+    useEffect(()=>{
+        const loginvalue = secureLocalStorage.getItem('login');
     const StorageuserData:any = secureLocalStorage.getItem('userData');
+
     if(loginvalue == null || loginvalue == undefined)
     {
         navigate('/auth/login');
@@ -30,6 +34,9 @@ const DashBoard1 = () => {
     {
         navigate('/auth/login');
     }
+    },[])
+    
+
     usePageTitle({
         title: 'DashBoard',
         breadCrumbItems: [

@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import url from '../../../env';
 
@@ -25,92 +24,116 @@ interface ISIPFormInput {
     branch_id: string;
 }
 
-const schema = yup.object().shape({
-    sipmember_id: yup.string().required('Member ID is required'),
-    sipmember_name: yup.string().required('Member Name is required'),
-    client_id: yup.string().required('Client ID is required'),
-    sipmember_bank_name: yup.string().required('Bank Name is required'),
-    sipmember_account_number: yup.string().required('Account Number is required'),
-    sipmember_ifsc_code: yup.string().required('IFSC Code is required'),
-    sipmember_upi_id: yup.string().required('UPI ID is required'),
-    sipmember_doj: yup.date().required('Date of Joining is required'),
-    sipmember_maturity_date: yup.date().required('Maturity Date is required'),
-    sipmember_nominee_name: yup.string().required('Nominee Name is required'),
-    sipmember_nominee_age: yup.string().required('Nominee Age is required'),
-    sipmember_nominee_relation: yup.string().required('Nominee Relation is required'),
-    sipmember_nominee_mobile: yup.string().required('Nominee Mobile Number is required'),
-    sipmember_nominee_pancard: yup.string().required('Nominee PAN Card is required'),
-    sipmember_nominee_addharcard: yup.string().required('Nominee Aadhar Card is required'),
-    sipmemberblock_status: yup.string().required('Block Status is required'),
-    branch_id: yup.string().required('Branch ID is required'),
-});
+const SIPEdit = () => {
+    const { sipmember_id } = useParams<{ sipmember_id: string }>();
+    const navigate = useNavigate();
+    const { register, handleSubmit, setValue, formState: { errors } } = useForm<ISIPFormInput>();
+    const [loading, setLoading] = useState(true);
 
-const SIPRegistration = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm<ISIPFormInput>({
-        resolver: yupResolver(schema),
-    });
+    // Fetch existing SIP member data
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`${url.nodeapipath}/sip/${sipmember_id}`);
+                const data: ISIPFormInput = await response.json();
 
-    const onSubmit = async (data: ISIPFormInput) => {
+                // Pre-fill form with fetched data
+                Object.keys(data).forEach(key => setValue(key as keyof ISIPFormInput, data[key as keyof ISIPFormInput]));
+
+                setLoading(false);
+            } catch (error) {
+                console.error('Failed to fetch SIP member data:', error);
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [sipmember_id, setValue]);
+
+    // Handle form submission
+    const onSubmit = async (formData: ISIPFormInput) => {
         try {
-            const response = await fetch(`${url.nodeapipath}/sip/`, {
-                method: 'POST',
+            const response = await fetch(`${url.nodeapipath}/sip/${sipmember_id}`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify(formData),
             });
-            const result = await response.json();
-            console.log('Registration successful:', result);
+
+            if (response.ok) {
+                alert('SIP registration updated successfully.');
+                navigate('/path-to-redirect'); // Adjust path as needed
+            } else {
+                console.error('Failed to update SIP registration.');
+            }
         } catch (error) {
-            console.error('Error during registration:', error);
+            console.error('Error during form submission:', error);
         }
     };
 
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
     return (
         <Container>
-            <Row className="justify-content-center">
-                <Col>
+            <Row className="justify-content-md-center">
+                <Col xs={12} md={8}>
                     <Card>
                         <Card.Body>
-                            <Card.Title className="text-center">SIP Registration</Card.Title>
+                            <Card.Title>Edit SIP Registration</Card.Title>
                             <form onSubmit={handleSubmit(onSubmit)}>
                                 <Row>
                                     <Col md={6}>
                                         <div className="mb-3">
-                                            <label htmlFor="sipmember_id" className="form-label">Member ID</label>
-                                            <input
-                                                type="text"
-                                                id="sipmember_id"
-                                                className="form-control"
-                                                placeholder="Enter Member ID"
-                                                {...register('sipmember_id')}
-                                            />
-                                            {errors.sipmember_id && <div className="invalid-feedback d-block">{errors.sipmember_id.message}</div>}
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label htmlFor="sipmember_name" className="form-label">Member Name</label>
+                                            <label htmlFor="sipmember_name" className="form-label">Name</label>
                                             <input
                                                 type="text"
                                                 id="sipmember_name"
                                                 className="form-control"
-                                                placeholder="Enter Member Name"
-                                                {...register('sipmember_name')}
+                                                placeholder="Enter Name"
+                                                {...register('sipmember_name', { required: "Name is required" })}
                                             />
                                             {errors.sipmember_name && <div className="invalid-feedback d-block">{errors.sipmember_name.message}</div>}
                                         </div>
 
                                         <div className="mb-3">
-                                            <label htmlFor="client_id" className="form-label">Client ID</label>
+                                            <label htmlFor="sipmember_bank_name" className="form-label">Bank Name</label>
                                             <input
                                                 type="text"
-                                                id="client_id"
+                                                id="sipmember_bank_name"
                                                 className="form-control"
-                                                placeholder="Enter Client ID"
-                                                {...register('client_id')}
+                                                placeholder="Enter Bank Name"
+                                                {...register('sipmember_bank_name', { required: "Bank Name is required" })}
                                             />
-                                            {errors.client_id && <div className="invalid-feedback d-block">{errors.client_id.message}</div>}
+                                            {errors.sipmember_bank_name && <div className="invalid-feedback d-block">{errors.sipmember_bank_name.message}</div>}
                                         </div>
+
+                                        <div className="mb-3">
+                                            <label htmlFor="sipmember_account_number" className="form-label">Account Number</label>
+                                            <input
+                                                type="text"
+                                                id="sipmember_account_number"
+                                                className="form-control"
+                                                placeholder="Enter Account Number"
+                                                {...register('sipmember_account_number', { required: "Account Number is required" })}
+                                            />
+                                            {errors.sipmember_account_number && <div className="invalid-feedback d-block">{errors.sipmember_account_number.message}</div>}
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label htmlFor="sipmember_ifsc_code" className="form-label">IFSC Code</label>
+                                            <input
+                                                type="text"
+                                                id="sipmember_ifsc_code"
+                                                className="form-control"
+                                                placeholder="Enter IFSC Code"
+                                                {...register('sipmember_ifsc_code', { required: "IFSC Code is required" })}
+                                            />
+                                            {errors.sipmember_ifsc_code && <div className="invalid-feedback d-block">{errors.sipmember_ifsc_code.message}</div>}
+                                        </div>
+
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_upi_id" className="form-label">UPI ID</label>
                                             <input
@@ -133,56 +156,6 @@ const SIPRegistration = () => {
                                             />
                                             {errors.sipmember_doj && <div className="invalid-feedback d-block">{errors.sipmember_doj.message}</div>}
                                         </div>
-                                        <div className="mb-3">
-                                            <label htmlFor="sipmember_bank_name" className="form-label">Bank Name</label>
-                                            <input
-                                                type="text"
-                                                id="sipmember_bank_name"
-                                                className="form-control"
-                                                placeholder="Enter Bank Name"
-                                                {...register('sipmember_bank_name')}
-                                            />
-                                            {errors.sipmember_bank_name && <div className="invalid-feedback d-block">{errors.sipmember_bank_name.message}</div>}
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label htmlFor="sipmember_account_number" className="form-label">Account Number</label>
-                                            <input
-                                                type="text"
-                                                id="sipmember_account_number"
-                                                className="form-control"
-                                                placeholder="Enter Account Number"
-                                                {...register('sipmember_account_number')}
-                                            />
-                                            {errors.sipmember_account_number && <div className="invalid-feedback d-block">{errors.sipmember_account_number.message}</div>}
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label htmlFor="sipmember_ifsc_code" className="form-label">IFSC Code</label>
-                                            <input
-                                                type="text"
-                                                id="sipmember_ifsc_code"
-                                                className="form-control"
-                                                placeholder="Enter IFSC Code"
-                                                {...register('sipmember_ifsc_code')}
-                                            />
-                                            {errors.sipmember_ifsc_code && <div className="invalid-feedback d-block">{errors.sipmember_ifsc_code.message}</div>}
-                                        </div>
-                                        <div className="mb-3">
-                                            <label htmlFor="branch_id" className="form-label">Branch ID</label>
-                                            <input
-                                                type="text"
-                                                id="branch_id"
-                                                className="form-control"
-                                                placeholder="Enter Branch ID"
-                                                {...register('branch_id')}
-                                            />
-                                            {errors.branch_id && <div className="invalid-feedback d-block">{errors.branch_id.message}</div>}
-                                        </div>
-                                    </Col>
-
-                                    <Col md={6}>
-                                       
 
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_maturity_date" className="form-label">Maturity Date</label>
@@ -194,7 +167,9 @@ const SIPRegistration = () => {
                                             />
                                             {errors.sipmember_maturity_date && <div className="invalid-feedback d-block">{errors.sipmember_maturity_date.message}</div>}
                                         </div>
+                                    </Col>
 
+                                    <Col md={6}>
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_nominee_name" className="form-label">Nominee Name</label>
                                             <input
@@ -202,7 +177,7 @@ const SIPRegistration = () => {
                                                 id="sipmember_nominee_name"
                                                 className="form-control"
                                                 placeholder="Enter Nominee Name"
-                                                {...register('sipmember_nominee_name')}
+                                                {...register('sipmember_nominee_name', { required: "Nominee Name is required" })}
                                             />
                                             {errors.sipmember_nominee_name && <div className="invalid-feedback d-block">{errors.sipmember_nominee_name.message}</div>}
                                         </div>
@@ -214,7 +189,7 @@ const SIPRegistration = () => {
                                                 id="sipmember_nominee_age"
                                                 className="form-control"
                                                 placeholder="Enter Nominee Age"
-                                                {...register('sipmember_nominee_age')}
+                                                {...register('sipmember_nominee_age', { required: "Nominee Age is required" })}
                                             />
                                             {errors.sipmember_nominee_age && <div className="invalid-feedback d-block">{errors.sipmember_nominee_age.message}</div>}
                                         </div>
@@ -226,23 +201,23 @@ const SIPRegistration = () => {
                                                 id="sipmember_nominee_relation"
                                                 className="form-control"
                                                 placeholder="Enter Nominee Relation"
-                                                {...register('sipmember_nominee_relation')}
+                                                {...register('sipmember_nominee_relation', { required: "Nominee Relation is required" })}
                                             />
                                             {errors.sipmember_nominee_relation && <div className="invalid-feedback d-block">{errors.sipmember_nominee_relation.message}</div>}
                                         </div>
-                                        
+
                                         <div className="mb-3">
-                                            <label htmlFor="sipmember_nominee_mobile" className="form-label">Nominee Mobile Number</label>
+                                            <label htmlFor="sipmember_nominee_mobile" className="form-label">Nominee Mobile</label>
                                             <input
                                                 type="text"
                                                 id="sipmember_nominee_mobile"
                                                 className="form-control"
-                                                placeholder="Enter Nominee Mobile Number"
-                                                {...register('sipmember_nominee_mobile')}
+                                                placeholder="Enter Nominee Mobile"
+                                                {...register('sipmember_nominee_mobile', { required: "Nominee Mobile is required" })}
                                             />
                                             {errors.sipmember_nominee_mobile && <div className="invalid-feedback d-block">{errors.sipmember_nominee_mobile.message}</div>}
                                         </div>
-                                        
+
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_nominee_pancard" className="form-label">Nominee PAN Card</label>
                                             <input
@@ -254,7 +229,7 @@ const SIPRegistration = () => {
                                             />
                                             {errors.sipmember_nominee_pancard && <div className="invalid-feedback d-block">{errors.sipmember_nominee_pancard.message}</div>}
                                         </div>
-                                        
+
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_nominee_addharcard" className="form-label">Nominee Aadhar Card</label>
                                             <input
@@ -266,23 +241,35 @@ const SIPRegistration = () => {
                                             />
                                             {errors.sipmember_nominee_addharcard && <div className="invalid-feedback d-block">{errors.sipmember_nominee_addharcard.message}</div>}
                                         </div>
-                                        
+
                                         <div className="mb-3">
                                             <label htmlFor="sipmemberblock_status" className="form-label">Block Status</label>
-                                            <input
-                                                type="text"
+                                            <select
                                                 id="sipmemberblock_status"
-                                                className="form-control"
-                                                placeholder="Enter Block Status"
+                                                className="form-select"
                                                 {...register('sipmemberblock_status')}
-                                            />
+                                            >
+                                                <option value="">Select Status</option>
+                                                <option value="Active">Active</option>
+                                                <option value="Blocked">Blocked</option>
+                                            </select>
                                             {errors.sipmemberblock_status && <div className="invalid-feedback d-block">{errors.sipmemberblock_status.message}</div>}
                                         </div>
-                                        
-                                       
+
+                                        <div className="mb-3">
+                                            <label htmlFor="branch_id" className="form-label">Branch</label>
+                                            <input
+                                                type="text"
+                                                id="branch_id"
+                                                className="form-control"
+                                                placeholder="Enter Branch ID"
+                                                {...register('branch_id')}
+                                            />
+                                            {errors.branch_id && <div className="invalid-feedback d-block">{errors.branch_id.message}</div>}
+                                        </div>
                                     </Col>
                                 </Row>
-                                <Button variant="primary" type="submit">Register</Button>
+                                <Button variant="primary" type="submit">Update</Button>
                             </form>
                         </Card.Body>
                     </Card>
@@ -292,4 +279,4 @@ const SIPRegistration = () => {
     );
 };
 
-export default SIPRegistration;
+export default SIPEdit;

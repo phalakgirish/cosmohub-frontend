@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Col, Row, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom'; // Use useNavigate for navigation
+import { useNavigate } from 'react-router-dom';
 
 // hooks
 import { usePageTitle } from '../../../hooks';
@@ -8,57 +8,65 @@ import url from '../../../env';
 
 // component
 import Table from '../../../components/Table';
+import secureLocalStorage from 'react-secure-storage';
 
 // Define types
-interface Branch {
+interface Staff {
     _id: string;
-    branch_contact_person: string;
-    branch_mobile_number: string;
-    branch_emailId: string;
-    branch_address: string;
-    branch_city: string;
-    branch_district: string;
-    branch_taluka: string;
-    branch_status: boolean;
+    staff_name: string;
+    staff_mobile_number: string;
+    staff_emailId: string;
+    staff_department: string;
+    staff_designation: string;
+    staff_branch: string;
+    staff_status: boolean;
 }
 
 interface DataResponse {
-    branches: Branch[];
+    staff: Staff[];
 }
 
-const Branch = () => {
-    const [data, setData] = useState<any[]>([]);
+const AllStaffs = () => {
+    const [data, setData] = useState<Staff[]>([]);
     const navigate = useNavigate();
 
     // Define handleEdit function
     const handleEdit = (id: string) => {
-        navigate(`/edit-branch/${id}`);
+        navigate(`/edit-staff/${id}`);
     };
 
     // Set page title
     usePageTitle({
-        title: 'Branches',
+        title: 'Staff Members',
         breadCrumbItems: [
             {
-                path: '/branches',
-                label: 'Branches',
+                path: '/staffs',
+                label: 'Staff Members',
                 active: true,
             },
         ],
     });
 
     useEffect(() => {
-        fetch(`${url.nodeapipath}/branch/`)
+        const bearerToken = secureLocalStorage.getItem('login');
+        fetch(`${url.nodeapipath}/staff/`,{
+            method:'GET',
+            headers: {
+                'Content-Type':'application/json',
+                'Access-Control-Allow-Origin':'*',
+                'Authorization': `Bearer ${bearerToken}`
+                }
+        })
             .then((response) => response.json())
             .then((data: DataResponse) => {
                 console.log(data);
-                const formattedData = data.branches.map((branch, index) => ({
+                const formattedData = data.staff.map((staff, index) => ({
                     srNo: index + 1,
-                    ...branch,
+                    ...staff,
                 }));
                 setData(formattedData);
             })
-            .catch((error) => console.error('Error fetching branch data:', error));
+            .catch((error) => console.error('Error fetching staff data:', error));
     }, []);
 
     const sizePerPageList = [
@@ -68,8 +76,12 @@ const Branch = () => {
         { text: 'All', value: data.length },
     ];
 
-    const handleAddBranch = () => {
-        navigate('/add-branch');
+    const handleAddStaff = () => {
+        navigate('/add-staff');
+    };
+
+    const handleDelete = (id:any)=>{
+
     };
 
     const columns = [
@@ -79,49 +91,83 @@ const Branch = () => {
             sort: true,
         },
         {
-            Header: 'Branch Name',
-            accessor: 'branch_name',
+            Header: 'Staff Id',
+            accessor: 'staff_id',
             sort: true,
         },
         {
-            Header: 'Contact Person',
-            accessor: 'branch_contact_person',
+            Header: 'Name',
+            accessor: 'staff_name',
             sort: true,
         },
         {
             Header: 'Mobile Number',
-            accessor: 'branch_mobile_number',
+            accessor: 'staff_mobile_number',
             sort: true,
         },
         {
             Header: 'Email ID',
-            accessor: 'branch_emailId',
+            accessor: 'staff_emailId',
             sort: true,
         },
         {
-            Header: 'City',
-            accessor: 'branch_city',
+            Header: 'Branch',
+            accessor: 'staff_branch',
             sort: true,
         },
         {
-            Header: 'Status',
-            accessor: 'branch_status',
+            Header: 'Department',
+            accessor: 'staff_department',
             sort: true,
-            Cell: ({ value }: { value: boolean }) => (value ? 'Active' : 'Inactive'),
         },
+        {
+            Header: 'Designation',
+            accessor: 'staff_designation',
+            sort: true,
+        },
+        // {
+        //     Header: 'Status',
+        //     accessor: 'staff_status',
+        //     sort: true,
+        //     Cell: ({ value }: { value: boolean }) => (value ? 'Active' : 'Inactive'),
+        // },
         {
             Header: 'Actions',
             accessor: 'actions',
             Cell: ({ row }: { row: any }) => (
+                <>
                 <Button
                     variant="primary"
                     onClick={() => handleEdit(row.original._id)}
                 >
                     Edit
                 </Button>
+                &nbsp;
+                <Button
+                    variant="danger"
+                    onClick={() => handleDelete(row.original._id)}
+                >
+                    Delete
+                </Button>
+                </>
             ),
         },
     ];
+
+    usePageTitle({
+        title: 'All Staffs',
+        breadCrumbItems: [
+            {
+                path: '/forms/validation',
+                label: 'Forms',
+            },
+            {
+                path: '/forms/validation',
+                label: 'Validation',
+                active: true,
+            },
+        ],
+    });
 
     return (
         <Row>
@@ -130,11 +176,11 @@ const Branch = () => {
                     <Card.Body>
                         <div className="d-flex justify-content-between mb-4">
                             <div>
-                                <h4 className="header-title">Branches</h4>
-                                <p className="text-muted font-14 mb-4">A table showing all branches</p>
+                                <h4 className="header-title">Staff Members</h4>
+                                <p className="text-muted font-14 mb-4">A table showing all registered staff members</p>
                             </div>
-                            <Button style={{height:'40px', backgroundColor:'#dd4923'}} onClick={handleAddBranch}>
-                                Add Branch
+                            <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddStaff}>
+                                Add Staff
                             </Button>
                         </div>
 
@@ -154,4 +200,4 @@ const Branch = () => {
     );
 };
 
-export default Branch;
+export default AllStaffs;

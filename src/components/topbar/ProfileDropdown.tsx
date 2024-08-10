@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dropdown } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import classNames from 'classnames';
 
 // hooks
@@ -8,6 +8,7 @@ import { useToggle } from '../../hooks/';
 
 // types
 import { ProfileMenu } from '../../layouts/types';
+import secureLocalStorage from 'react-secure-storage';
 
 type ProfileDropdownProps = {
     userImage: string;
@@ -17,6 +18,7 @@ type ProfileDropdownProps = {
 
 const ProfileDropdown = ({ userImage, username, menuItems }: ProfileDropdownProps) => {
     const [isOpen, show, hide] = useToggle();
+    
 
     /*
      * toggle apps-dropdown

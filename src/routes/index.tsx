@@ -33,6 +33,19 @@ const AllClients = React.lazy(() => import('../pages/Master/Clients'));
 const EditBranch = React.lazy(() => import('../pages/Master/EditBranch'));
 const EditDepartment = React.lazy(() => import('../pages/Master/EditDeprtment'));
 const EditDesignation = React.lazy(() => import('../pages/Master/EditDesignation'));
+const AddStaff = React.lazy(() => import('../pages/Master/StaffManagement/StaffRegistration'));
+const AllStaffs = React.lazy(() => import('../pages/Master/StaffManagement/AllStaffs'));
+
+const AllSlab= React.lazy(() => import('../pages/Master/SIPManagement/SIPSlab'));
+const AddSlab= React.lazy(() => import('../pages/Master/SIPManagement/AddSIPSlab'));
+const EditSlab= React.lazy(() => import('../pages/Master/SIPManagement/EditSIPSlab'));
+
+const AddMember = React.lazy(() => import('../pages/Master/SIPManagement/Registration'));
+const EditMember= React.lazy(() => import('../pages/Master/SIPManagement/EditSIPManagement'));
+const AllMember= React.lazy(() => import('../pages/Master/SIPManagement/AllSIPManagements'));
+
+
+
 
 
 const SIPSlab = React.lazy(() => import('../pages/Master/SIPSlab'));
@@ -237,10 +250,10 @@ const AllRoutes = () => {
           path: 'add-designation',
           element: <LoadComponent component={AddDesignation} />,
         },
-        {
-          path: 'sipslab',
-          element: <LoadComponent component={SIPSlab} />,
-        },
+        // {
+        //   path: 'sipslab',
+        //   element: <LoadComponent component={SIPSlab} />,
+        // },
         {
           path: 'client-registration',
           element: <LoadComponent component={ClientRegistration} />,
@@ -260,6 +273,38 @@ const AllRoutes = () => {
         {
           path: 'edit-department/:id',
           element: <LoadComponent component={EditDepartment} />,
+        },
+        {
+          path: 'add-staff',
+          element: <LoadComponent component={AddStaff} />,
+        },
+        {
+          path: 'staff',
+          element: <LoadComponent component={AllStaffs} />,
+        },
+        {
+          path: 'add-slab',
+          element: <LoadComponent component={AddSlab} />,
+        },
+        {
+          path: 'sipslab',
+          element: <LoadComponent component={AllSlab} />,
+        },
+        {
+          path: 'edit-slab/:id',
+          element: <LoadComponent component={EditSlab} />,
+        },
+        {
+          path: 'add-sipmember',
+          element: <LoadComponent component={AddMember} />,
+        },
+        {
+          path: 'all-sipmember',
+          element: <LoadComponent component={AllMember} />,
+        },
+        {
+          path: 'edit-sipmember',
+          element: <LoadComponent component={EditMember} />,
         },
         {
           path: 'apps',
