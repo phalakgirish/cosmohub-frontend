@@ -28,6 +28,7 @@ interface DataResponse {
 
 const AllStaffs = () => {
     const [data, setData] = useState<Staff[]>([]);
+    const [isRefreshed,setIsRefreshed] = useState(false)
     const navigate = useNavigate();
 
     // Define handleEdit function
@@ -66,7 +67,7 @@ const AllStaffs = () => {
                 setData(formattedData);
             })
             .catch((error) => console.error('Error fetching staff data:', error));
-    }, []);
+    }, [isRefreshed]);
 
     const sizePerPageList = [
         { text: '5', value: 5 },
@@ -79,8 +80,27 @@ const AllStaffs = () => {
         navigate('/add-staff');
     };
 
-    const handleDelete = (id:any)=>{
-
+    const handleDelete = async (id: string) => {
+        const bearerToken = secureLocalStorage.getItem('login');
+        fetch(`${url.nodeapipath}/staff/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin':'*',
+                'Authorization': `Bearer ${bearerToken}`
+            }
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            // console.log(data);
+            // Optionally refresh data after deletion
+            // setData(data.sip.map((sip: SIP) => ({
+            //     ...sip,
+            //     srNo: data.sip.indexOf(sip) + 1
+            // })));
+            setIsRefreshed(true)
+        })
+        .catch((error) => console.error('Error deleting SIP data:', error));
     };
 
     const columns = [

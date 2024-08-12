@@ -47,6 +47,7 @@ const ClientRegistration = () => {
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const [branches, setBranches] = useState<Branch[]>([]);
     const [clientbranch, setClientBranch] = useState('');
+    const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
 
     const userData:any = JSON.parse(StorageuserData);
@@ -59,37 +60,45 @@ const ClientRegistration = () => {
     const onSubmit = async (data: ClientRegistrationData) => {
         // console.log(data);
         // Handle form submission
-
-        const formData = new FormData();
-            formData.append('client_name', data.client_name);
-            formData.append('client_dob', data.client_dob);
-            formData.append('client_mobile_number', data.client_mobile_number);
-            formData.append('client_emailId', data.client_emailId);
-            formData.append('client_gender', data.client_gender);
-            formData.append('client_pancard', data.client_pancard[0]);
-            formData.append('client_addharcard', data.client_addharcard[0]);
-            formData.append('client_postaladdress', data.client_postaladdress);
-            formData.append('client_landmark', data.client_landmark);
-            formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
-
-            try {
-                const bearerToken = secureLocalStorage.getItem('login');
-                const response = await fetch(`${url.nodeapipath}/client`, {
-                    body: formData,
-                    method: 'POST',
-                    headers: {
-                        // 'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin':'*',
-                        'Authorization': `Bearer ${bearerToken}`
-                    },
-                    
-                });
-                const result = await response.json();
-                console.log('Registration successful:', result);
-                navigate('/client')
-            } catch (error) {
-                console.error('Error during registration:', error);
+            if(userData.staff_branch == '0' && clientbranch == '')
+            {
+                setBranchErr(true);
             }
+            else
+            {
+                const formData = new FormData();
+                formData.append('client_name', data.client_name);
+                formData.append('client_dob', data.client_dob);
+                formData.append('client_mobile_number', data.client_mobile_number);
+                formData.append('client_emailId', data.client_emailId);
+                formData.append('client_gender', data.client_gender);
+                formData.append('client_pancard', data.client_pancard[0]);
+                formData.append('client_addharcard', data.client_addharcard[0]);
+                formData.append('client_postaladdress', data.client_postaladdress);
+                formData.append('client_landmark', data.client_landmark);
+                formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
+
+                try {
+                    const bearerToken = secureLocalStorage.getItem('login');
+                    const response = await fetch(`${url.nodeapipath}/client`, {
+                        body: formData,
+                        method: 'POST',
+                        headers: {
+                            // 'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin':'*',
+                            'Authorization': `Bearer ${bearerToken}`
+                        },
+                        
+                    });
+                    const result = await response.json();
+                    console.log('Registration successful:', result);
+                    navigate('/clients')
+                } catch (error) {
+                    console.error('Error during registration:', error);
+                }
+
+            }
+            
 
     };
 
@@ -143,6 +152,14 @@ const ClientRegistration = () => {
 
     const handleBranchChange = (e:any)=>{
         setClientBranch(e.target.value)
+        if(e.target.value == '')
+        {
+            setBranchErr(true)
+        }
+        else
+        {
+            setBranchErr(false)
+        }  
     }
 
     return (
@@ -318,7 +335,7 @@ const ClientRegistration = () => {
                                 <>
                                  <Form.Group className="mb-3">
                                  <Form.Label>Branch Name</Form.Label>
-                                 <select className="form-control" id="branch" onChange={(e)=>{handleBranchChange(e)}} >
+                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" onChange={(e)=>{handleBranchChange(e)}} >
                                          <option value="">-- Select --</option>
  
                                          {branches.map((branch) => (
@@ -327,6 +344,7 @@ const ClientRegistration = () => {
                                              </option>
                                              ))}
                                  </select>
+                                 {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
                              </Form.Group>
                              </>
                             )}

@@ -22,6 +22,7 @@ interface IFormInput {
     branch: string;
     doj: string;
     checkboxsignup: boolean;
+    role:string;
 }
 
 // Define the type for branch data
@@ -83,6 +84,7 @@ const StaffRegistration = () => {
         branch: yup.string().required('Please enter Branch'),
         doj: yup.string().required('Please enter Date of Joining'),
         checkboxsignup: yup.bool().oneOf([true], 'Must accept Terms and Conditions'),
+        role: yup.string().required('Please select staff role')
     });
 
     useEffect(() => {
@@ -181,7 +183,7 @@ const StaffRegistration = () => {
             formData.append('staff_designation', data.designation);
             formData.append('staff_branch', data.branch);
             formData.append('staff_doj', data.doj);
-            formData.append('staff_role_type', '1');
+            formData.append('staff_role_type', data.role);
 
             // console.log(formData);
             
@@ -337,6 +339,19 @@ const StaffRegistration = () => {
                                                 <option value="male">Male</option>
                                                 <option value="female">Female</option>
                                                 <option value="other">Other</option>
+                                            </select>
+                                            {errors.gender && <div className="invalid-feedback d-block">{errors.gender.message}</div>}
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="role" className="form-label">Role</label>
+                                            <select
+                                                id="role"
+                                                className="form-control"
+                                                {...register('role')}
+                                            >
+                                                <option value="">Select Role</option>
+                                                <option value="1">Admin</option>
+                                                <option value="2">Staff</option>
                                             </select>
                                             {errors.gender && <div className="invalid-feedback d-block">{errors.gender.message}</div>}
                                         </div>

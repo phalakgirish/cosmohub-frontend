@@ -186,7 +186,7 @@ const EditSIPSlabForm = () => {
                 <p className="sub-header">Update the SIP slab details.</p>
                     <Form onSubmit={handleSubmit(onSubmit)}>
                         <Form.Group className="mb-2">
-                            <Form.Label>Duration (in years): {duration[0]} - {duration[1]}</Form.Label>
+                            <Form.Label>Duration (in months): {duration[0]} - {duration[1]}</Form.Label>
                             <Controller
                                 name="duration"
                                 control={control}

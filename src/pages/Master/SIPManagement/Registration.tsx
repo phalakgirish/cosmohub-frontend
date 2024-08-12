@@ -63,6 +63,8 @@ const SIPRegistration = () => {
     const [clientbranch, setClientBranch] = useState('');
     const [clientsName, setClientsName] = useState('')
     const [sipmaturitydate,setSipMaturityDate] = useState('')
+    const [branchErr,setBranchErr] = useState(false);
+
 
 
     const navigate = useNavigate()
@@ -131,8 +133,13 @@ const SIPRegistration = () => {
 
     const onSubmit = async (data: ISIPFormInput) => {
         // console.log(data);
-
-        const formData = new FormData();
+        if(userData.staff_branch == '0' && clientbranch == '')
+        {
+            setBranchErr(true);
+        }
+        else
+        {
+            const formData = new FormData();
             formData.append('client_id', data.client_id);
             formData.append('sipmember_name', clientsName);
             formData.append('sipmember_bank_name', data.sipmember_bank_name);
@@ -172,26 +179,35 @@ const SIPRegistration = () => {
         // console.log(DataToPost);
         
         
-        try {
-            const bearerToken = secureLocalStorage.getItem('login');
-            const response = await fetch(`${url.nodeapipath}/sipmanagement`, {
-                body: formData,
-                method: 'POST',
-                headers: {
-                    'Access-Control-Allow-Origin':'*',
-                    'Authorization': `Bearer ${bearerToken}`
-                },
-            });
-            const result = await response.json();
-            console.log('Registration successful:', result);
-            navigate('/all-sipmember');
-        } catch (error) {
-            console.error('Error during registration:', error);
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/sipmanagement`, {
+                    body: formData,
+                    method: 'POST',
+                    headers: {
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                    },
+                });
+                const result = await response.json();
+                console.log('Registration successful:', result);
+                navigate('/all-sipmember');
+            } catch (error) {
+                console.error('Error during registration:', error);
+            }
         }
     };
 
     const handleBranchChange = (e:any)=>{
         setClientBranch(e.target.value)
+        if(e.target.value == '')
+        {
+            setBranchErr(true)
+        }
+        else
+        {
+            setBranchErr(false)
+        } 
     }
 
     const handleClientChange = (e:any)=>{
@@ -398,6 +414,8 @@ const SIPRegistration = () => {
                                                 {errors.sipmember_nominee_addharcard?.message}
                                             </Form.Control.Feedback>
                                         </div>
+                                        {(userData.user_role_type == '0') && (
+                                        <>
                                         <div className="mb-3">
                                             <label htmlFor="branch_id" className="form-label">Branch ID</label>
                                             <select className="form-control" id="branch" onChange={(e)=>{handleBranchChange(e)}} >
@@ -409,7 +427,10 @@ const SIPRegistration = () => {
                                                         </option>
                                                         ))}
                                             </select>
+                                            {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
                                         </div>
+                                        </>
+                                        )}
                                     </Col>
                                 </Row>
                                 <Button variant="primary" type="submit">Register</Button>

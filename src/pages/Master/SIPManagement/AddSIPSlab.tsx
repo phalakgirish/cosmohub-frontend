@@ -44,6 +44,7 @@ const AddSIPSlab = () => {
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const [branches, setBranches] = useState<Branch[]>([]);
     const [clientbranch, setClientBranch] = useState('');
+    const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
 
     const userData:any = JSON.parse(StorageuserData);
@@ -95,41 +96,55 @@ const AddSIPSlab = () => {
             // formData.append('sip_type', data.type);
             // formData.append('sip_status', data.sip_status);
             // formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
-
-            var DataToPost = {
-                sip_slab_from:  data.duration[0],
-                sip_slab_to: data.duration[1],
-                sip_rank: data.rank,
-                sip_amount: data.amount,
-                sip_type: data.type,
-                sip_status: data.sip_status,
-                branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
+            if(userData.staff_branch == '0' && clientbranch == '')
+            {
+                setBranchErr(true);
             }
+            else
+            {
+                var DataToPost = {
+                    sip_slab_from:  data.duration[0],
+                    sip_slab_to: data.duration[1],
+                    sip_rank: data.rank,
+                    sip_amount: data.amount,
+                    sip_type: data.type,
+                    sip_status: data.sip_status,
+                    branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
+                }
 
-            try {
-                const bearerToken = secureLocalStorage.getItem('login');
-                const response = await fetch(`${url.nodeapipath}/sipslab`, {
-                    body: JSON.stringify(DataToPost),
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin':'*',
-                        'Authorization': `Bearer ${bearerToken}`
-                    },
-                    
-                });
-                const result = await response.json();
-                console.log('SIP Slab Add successfully:');
-                navigate('/sipslab')
-            } catch (error) {
-                console.error('Error during registration:', error);
+                try {
+                    const bearerToken = secureLocalStorage.getItem('login');
+                    const response = await fetch(`${url.nodeapipath}/sipslab`, {
+                        body: JSON.stringify(DataToPost),
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin':'*',
+                            'Authorization': `Bearer ${bearerToken}`
+                        },
+                        
+                    });
+                    const result = await response.json();
+                    console.log('SIP Slab Add successfully:');
+                    navigate('/sipslab')
+                } catch (error) {
+                    console.error('Error during registration:', error);
+                }
             }
-
 
     };
 
     const handleBranchChange = (e:any)=>{
+        
         setClientBranch(e.target.value)
+        if(e.target.value == '')
+        {
+            setBranchErr(true)
+        }
+        else
+        {
+            setBranchErr(false)
+        }  
     }
 
     return (
@@ -238,7 +253,7 @@ const AddSIPSlab = () => {
                                 <>
                                  <Form.Group className="mb-2">
                                  <Form.Label>Branch Name</Form.Label>
-                                 <select className="form-control" id="branch" onChange={(e)=>{handleBranchChange(e)}} >
+                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" onChange={(e)=>{handleBranchChange(e)}} >
                                          <option value="">-- Select --</option>
  
                                          {branches.map((branch) => (
@@ -247,6 +262,7 @@ const AddSIPSlab = () => {
                                              </option>
                                              ))}
                                  </select>
+                                 {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
                              </Form.Group>
                              </>
                             )}

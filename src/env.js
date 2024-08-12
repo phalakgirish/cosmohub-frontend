@@ -1,3 +1,3 @@
 export default {
-    nodeapipath: 'https://localhost:9000'
+    nodeapipath: 'http://localhost:9000'
 }

@@ -26,6 +26,7 @@ interface DataResponse {
 
 const Department = () => {
     const [data, setData] = useState<any[]>([]);
+    const [isRefreshed,setIsRefreshed] = useState(false);
     const navigate = useNavigate();
 
     const handleEdit = (id: string) => {
@@ -44,7 +45,8 @@ const Department = () => {
         })
             .then((response) => response.json())
             .then((data) => {
-                console.log(data);
+                // console.log(data);d
+                setIsRefreshed(true)
             })
             .catch((error) => console.error('Error fetching branch data:', error));
     }
@@ -81,7 +83,7 @@ const Department = () => {
                 setData(formattedData);
             })
             .catch((error) => console.error('Error fetching department data:', error));
-    }, []);
+    }, [isRefreshed]);
 
     const sizePerPageList = [
         {

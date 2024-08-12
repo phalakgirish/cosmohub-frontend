@@ -27,6 +27,7 @@ interface DataResponse {
 
 const Clients = () => {
     const [clients, setClients] = useState<Client[]>([]);
+    const [isRefreshed,setIsRefreshed] = useState(false)
     const navigate = useNavigate();
     useEffect(() => {
         const bearerToken = secureLocalStorage.getItem('login');
@@ -51,14 +52,28 @@ const Clients = () => {
                 setClients(formattedData);
             })
             .catch((error) => console.error('Error fetching client data:', error));
-    }, []);
+    }, [isRefreshed]);
 
     const handleEdit = (id:any)=>{
         navigate(`/edit-client/${id}`);
     };
 
     const handleDelete = (id:any)=>{
+        const bearerToken = secureLocalStorage.getItem('login');
+        fetch(`${url.nodeapipath}/client/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin':'*',
+                'Authorization': `Bearer ${bearerToken}`
+            }
+        })
+        .then((response) => response.json())
+        .then((data) => {
 
+            setIsRefreshed(true)
+        })
+        .catch((error) => console.error('Error deleting SIP data:', error));
     }
 
     const sizePerPageList = [
