@@ -144,7 +144,7 @@ const EditDesignation = () => {
     if (error) return <Alert variant="danger">{error}</Alert>;
 
     return (
-        <Card>
+        <Card style={{marginTop:'25px'}}>
             <Card.Body>
                 <h4 className="header-title mt-0 mb-1">Edit Designation</h4>
                 <p className="sub-header">Modify the details of the designation.</p>
@@ -203,7 +203,7 @@ const EditDesignation = () => {
                         <Button variant="primary" className="me-1" type="submit">
                             Update
                         </Button>
-                        <Button variant="secondary" onClick={() => navigate('/branch')}>
+                        <Button variant="secondary" onClick={() => navigate('/designation')}>
                             Cancel
                         </Button>
                     </div>

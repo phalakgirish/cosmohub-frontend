@@ -58,7 +58,7 @@ const SIPs = () => {
 
     // Set page title
     usePageTitle({
-        title: 'SIPs',
+        title: 'SIP Slabs',
         breadCrumbItems: [
             {
                 path: '/sips',
@@ -168,14 +168,14 @@ const SIPs = () => {
     ];
 
     return (
-        <Row>
+        <Row style={{marginTop:'25px'}}>
             <Col>
                 <Card>
                     <Card.Body>
                         <div className="d-flex justify-content-between mb-4">
                             <div>
-                                <h4 className="header-title">SIP Slabs</h4>
-                                <p className="text-muted font-14 mb-4">A table showing all SIP Slabs</p>
+                                <h4 className="header-title">All SIP Slabs</h4>
+                                <p className="text-muted font-14 mb-4">A table showing all SIP slabs</p>
                             </div>
                             <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddSIP}>
                                 Add SIP

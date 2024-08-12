@@ -180,7 +180,7 @@ const EditSIPSlabForm = () => {
     };
 
     return (
-        <Card>
+        <Card style={{marginTop:'25px'}}>
             <Card.Body>
                 <h4 className="header-title mt-0 mb-1">Edit SIP Slab</h4>
                 <p className="sub-header">Update the SIP slab details.</p>

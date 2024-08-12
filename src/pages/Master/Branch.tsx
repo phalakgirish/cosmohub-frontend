@@ -55,11 +55,11 @@ const Branch = () => {
 
     // Set page title
     usePageTitle({
-        title: 'Branches',
+        title: 'Branch',
         breadCrumbItems: [
             {
-                path: '/branches',
-                label: 'Branches',
+                path: '/branch',
+                label: 'Branch',
                 active: true,
             },
         ],
@@ -159,13 +159,13 @@ const Branch = () => {
     ];
 
     return (
-        <Row>
+        <Row style={{marginTop:'25px'}}>
             <Col>
                 <Card>
                     <Card.Body>
                         <div className="d-flex justify-content-between mb-4">
                             <div>
-                                <h4 className="header-title">Branches</h4>
+                                <h4 className="header-title">Branch</h4>
                                 <p className="text-muted font-14 mb-4">A table showing all branches</p>
                             </div>
                             <Button style={{height:'40px', backgroundColor:'#dd4923'}} onClick={handleAddBranch}>

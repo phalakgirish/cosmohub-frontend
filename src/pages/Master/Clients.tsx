@@ -117,13 +117,13 @@ const Clients = () => {
     }
 
     return (
-        <Row>
+        <Row style={{marginTop:'25px'}}>
             <Col>
                 <Card>
                     <Card.Body>
                         <div className="d-flex justify-content-between mb-4">
                             <div>
-                                <h4 className="header-title">Clients</h4>
+                                <h4 className="header-title">Client</h4>
                                 <p className="text-muted font-14 mb-4">A table showing all clients</p>
                             </div>
                             <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddClient}>

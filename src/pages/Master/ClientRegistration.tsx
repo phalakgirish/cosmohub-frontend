@@ -102,7 +102,7 @@ const ClientRegistration = () => {
     };
 
     usePageTitle({
-        title: 'Client Registration',
+        title: 'Add Client',
         breadCrumbItems: [
             {
                 path: '/client-registration',
@@ -146,10 +146,10 @@ const ClientRegistration = () => {
     }
 
     return (
-        <Card>
+        <Card style={{marginTop:'25px'}}>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Client Registration</h4>
-                <p className="sub-header">Fill the form to register a new client.</p>
+                <h4 className="header-title mt-0 mb-1">Add Client</h4>
+                <p className="sub-header">Fill the form to add a new client.</p>
                 <Form onSubmit={handleSubmit(onSubmit)}>
                     <Row>
                         <Col md={6}>

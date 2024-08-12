@@ -51,11 +51,11 @@ const Department = () => {
 
     // Set page title
     usePageTitle({
-        title: 'Departments',
+        title: 'Department',
         breadCrumbItems: [
             {
-                path: '/departments',
-                label: 'Departments',
+                path: '/department',
+                label: 'Department',
                 active: true,
             },
         ],
@@ -152,13 +152,13 @@ const Department = () => {
     ];
     
     return (
-        <Row>
+        <Row style={{marginTop:'25px'}}>
             <Col>
                 <Card>
                     <Card.Body>
                         <div className="d-flex justify-content-between mb-4">
                             <div>
-                                <h4 className="header-title">Departments</h4>
+                                <h4 className="header-title">Department</h4>
                                 <p className="text-muted font-14 mb-4">A table showing all departments</p>
                             </div>
                             <Button style={{height:'40px', backgroundColor:'#dd4923'}} onClick={handleAddDepartment}>

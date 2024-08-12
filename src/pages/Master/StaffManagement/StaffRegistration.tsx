@@ -99,7 +99,6 @@ const StaffRegistration = () => {
                         }
                 });
                 const data = await response.json();
-                console.log(data);
                 
                 if (response.ok) {
                     setBranches(data.branch || []);
@@ -261,7 +260,7 @@ const StaffRegistration = () => {
         <Container>
             <Row className="justify-content-center">
                 <Col>
-                    <Card className="mt-5">
+                    <Card className="mt-4">
                         <Card.Body>
                         <h4 className="header-title mt-0 mb-1">Add Staff</h4>
                         <p className="sub-header">Fill the form to add a new Staff.</p>

@@ -59,7 +59,6 @@ const AllStaffs = () => {
         })
             .then((response) => response.json())
             .then((data: DataResponse) => {
-                console.log(data);
                 const formattedData = data.staff.map((staff, index) => ({
                     srNo: index + 1,
                     ...staff,
@@ -170,14 +169,14 @@ const AllStaffs = () => {
     });
 
     return (
-        <Row>
+        <Row style={{marginTop:'25px'}}>
             <Col>
                 <Card>
                     <Card.Body>
                         <div className="d-flex justify-content-between mb-4">
                             <div>
-                                <h4 className="header-title">Staff Members</h4>
-                                <p className="text-muted font-14 mb-4">A table showing all registered staff members</p>
+                                <h4 className="header-title">All Staff</h4>
+                                <p className="text-muted font-14 mb-4">A table showing all staff members</p>
                             </div>
                             <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddStaff}>
                                 Add Staff

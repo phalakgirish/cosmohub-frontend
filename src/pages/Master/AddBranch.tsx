@@ -254,7 +254,7 @@ const AddBranch = () => {
 
     return (
         <>
-            <Row>
+            <Row style={{marginTop:'25px'}}>
                 <Col lg={12}>
                     <BasicForm />
                 </Col>

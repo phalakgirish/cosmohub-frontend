@@ -125,7 +125,7 @@ const EditForm = () => {
     if (error) return <Alert variant="danger">{error}</Alert>;
 
     return (
-        <Card>
+        <Card style={{marginTop:'25px'}}>
             <Card.Body>
                 <h4 className="header-title mt-0 mb-1">Edit Branch</h4>
                 <p className="sub-header">Modify the details of the branch.</p>

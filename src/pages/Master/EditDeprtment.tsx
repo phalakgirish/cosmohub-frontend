@@ -71,7 +71,7 @@ const EditDepartment = () => {
                         }
                 });
                 const data = await response.json();
-                console.log(data);
+                // console.log(data);
                 
                 if (response.ok) {
                     setBranches(data.branch || []);
@@ -161,7 +161,7 @@ const EditDepartment = () => {
     if (error) return <Alert variant="danger">{error}</Alert>;
 
     return (
-        <Card>
+        <Card style={{marginTop:'25px'}}>
             <Card.Body>
                 <h4 className="header-title mt-0 mb-1">Edit Department</h4>
                 <p className="sub-header">Modify the details of the department.</p>
