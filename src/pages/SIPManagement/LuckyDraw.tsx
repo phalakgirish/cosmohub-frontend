@@ -1,105 +1,117 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Col, Row, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { usePageTitle } from '../../../hooks';
-import url from '../../../env';
-import Table from '../../../components/Table';
+import { usePageTitle } from '../../hooks';
+import url from '../../env';
+import Table from '../../components/Table';
 import secureLocalStorage from 'react-secure-storage';
 
-// Define types for SIP data
-interface SIP {
+interface LuckyDrawEntry {
     _id: string;
-    sip_name: string;
-    sip_amount: number;
-    sip_duration: number;
-    sip_type: string;
-    sip_status: boolean;
+    luckydraw_month: string;
+    sipmember: string;
+    sipmemberId:string;
+    sipMemberName:string;
+    luckydraw_rank: string;
+    payment_status:string;
 }
 
 interface DataResponse {
-    sips: SIP[];
+    luckyDraw: LuckyDrawEntry[];
 }
 
-const SIPs = () => {
-    const [data, setData] = useState<SIP[]>([]);
+const LuckyDraw = () => {
+    const [data, setData] = useState<LuckyDrawEntry[]>([]);
     const navigate = useNavigate();
-    const [sipDeleted,setSipDeleted] = useState(false)
+    const [entryDeleted, setEntryDeleted] = useState(false);
 
-    // Handle edit SIP
     const handleEdit = (id: string) => {
-        navigate(`/edit-slab/${id}`);
+        navigate(`/edit-luckydraw/${id}`);
     };
 
-    // Handle delete SIP
     const handleDelete = async (id: string) => {
         const bearerToken = secureLocalStorage.getItem('login');
         try {
-            const response = await fetch(`${url.nodeapipath}/sipslab/${id}`, {
+            const response = await fetch(`${url.nodeapipath}/luckydraw/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin':'*',
-                    'Authorization': `Bearer ${bearerToken}`
-                }
+                    'Access-Control-Allow-Origin': '*',
+                    'Authorization': `Bearer ${bearerToken}`,
+                },
             });
             const result = await response.json();
             if (response.ok) {
-                // setData(data.filter(sip => sip._id !== id)); // Remove deleted SIP from state
-                console.log('SIP deleted successfully:', result);
-                setSipDeleted(true)  
-
+                console.log('LuckyDraw entry deleted successfully:', result);
+                setEntryDeleted(true);
             } else {
-                console.error('Error deleting SIP:', result);
+                console.error('Error deleting LuckyDraw entry:', result);
             }
         } catch (error) {
             console.error('Error during API call:', error);
         }
     };
 
-    // Set page title
     usePageTitle({
-        title: 'SIP Slabs',
+        title: 'Lucky Draw',
         breadCrumbItems: [
             {
-                path: '/sips',
-                label: 'SIPs',
+                path: '/luckydraw',
+                label: 'Lucky Draw',
                 active: true,
             },
         ],
     });
+    const formatDate = (dateString:any)=> {
+        const [year, month] = dateString.split('-');
+        
+        // Create a date object using the year and month
+        const date = new Date(`${year}-${month}-01`);
+        
+        // Format the month to get the full month name
+        const options = { month: "long" };
+        const monthName = new Intl.DateTimeFormat('en-US',{ month: 'long' }).format(date);
+        
+        return `${monthName}-${year}`;
+    }
 
-    // Fetch SIPs data
     useEffect(() => {
         const bearerToken = secureLocalStorage.getItem('login');
-        const fetchSIPs = async () => {
+        const fetchLuckyDrawEntries = async () => {
             try {
-                const response = await fetch(`${url.nodeapipath}/sipslab/`, {
+                const response = await fetch(`${url.nodeapipath}/luckydraw/`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin':'*',
-                        'Authorization': `Bearer ${bearerToken}`
-                    }
+                        'Access-Control-Allow-Origin': '*',
+                        'Authorization': `Bearer ${bearerToken}`,
+                    },
                 });
                 const data: DataResponse = await response.json();
                 // console.log(data);
                 
                 if (response.ok) {
-                    const formattedData = data.sips.map((sip, index) => ({
+                    const formattedData = data.luckyDraw.map((entry, index) => ({
                         srNo: index + 1,
-                        ...sip,
+                        _id:entry._id,
+                        luckydraw_month: formatDate(entry.luckydraw_month),
+                        sipmember: `${entry.sipmemberId}-${entry.sipMemberName}`,
+                        sipmemberId:entry.sipmemberId,
+                        sipMemberName:entry.sipMemberName,
+                        luckydraw_rank: entry.luckydraw_rank,
+                        payment_status:entry.payment_status,
                     }));
                     setData(formattedData);
                 } else {
-                    console.error('Error fetching SIPs:', data);
+                    console.error('Error fetching LuckyDraw entries:', data);
                 }
             } catch (error) {
                 console.error('Error during API call:', error);
             }
         };
 
-        fetchSIPs();
-    }, [sipDeleted]);
+        fetchLuckyDrawEntries();
+    }, [entryDeleted]);
 
     const sizePerPageList = [
         { text: '5', value: 5 },
@@ -108,8 +120,8 @@ const SIPs = () => {
         { text: 'All', value: data.length },
     ];
 
-    const handleAddSIP = () => {
-        navigate('/add-slab');
+    const handleAddEntry = () => {
+        navigate('/add-luckydraw');
     };
 
     const columns = [
@@ -119,31 +131,26 @@ const SIPs = () => {
             sort: true,
         },
         {
-            Header: 'Duration (in months)',
-            accessor: 'duration',
+            Header: 'Month',
+            accessor: 'luckydraw_month',
+            sort: true,
+        },
+        {
+            Header: 'Member ID',
+            accessor: 'sipmember',
             sort: true,
         },
         {
             Header: 'Rank',
-            accessor: 'rank',
+            accessor: 'luckydraw_rank',
             sort: true,
         },
         {
-            Header: 'Amount',
-            accessor: 'amount',
+            Header: 'Payment Status',
+            accessor: 'payment_status',
             sort: true,
         },
-
-        {
-            Header: 'Type',
-            accessor: 'type',
-            sort: true,
-        },
-        {
-            Header: 'Status',
-            accessor: 'sip_status',
-            sort: true,
-        },
+        
         {
             Header: 'Actions',
             accessor: 'actions',
@@ -168,17 +175,17 @@ const SIPs = () => {
     ];
 
     return (
-        <Row style={{marginTop:'25px'}}>
+        <Row style={{ marginTop: '25px' }}>
             <Col>
                 <Card>
                     <Card.Body>
                         <div className="d-flex justify-content-between mb-4">
                             <div>
-                                <h4 className="header-title">All SIP Slabs</h4>
-                                <p className="text-muted font-14 mb-4">A table showing all SIP slabs</p>
+                                <h4 className="header-title">All LuckyDraw Entries</h4>
+                                <p className="text-muted font-14 mb-4">A table showing all LuckyDraw entries</p>
                             </div>
-                            <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddSIP}>
-                                Add SIP
+                            <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddEntry}>
+                                Add Entry
                             </Button>
                         </div>
 
@@ -198,4 +205,4 @@ const SIPs = () => {
     );
 };
 
-export default SIPs;
+export default LuckyDraw;

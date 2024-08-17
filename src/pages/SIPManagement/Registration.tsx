@@ -4,7 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm, Controller } from 'react-hook-form';
 
 import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
-import url from '../../../env';
+import url from '../../env';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
 
@@ -327,7 +327,7 @@ const SIPRegistration = () => {
                                         </div>
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_status" className="form-label">Status</label>
-                                            <select className="form-control" id="sipmember_status" {...register('sipmember_status')} onChange={(e)=>{handleClientChange(e)}}>
+                                            <select className="form-control" id="sipmember_status" {...register('sipmember_status')} >
                                             <option value="">-- Select --</option>
                                             <option value="continued">Continued</option>
                                             <option value="discontinued">Discontinued</option>

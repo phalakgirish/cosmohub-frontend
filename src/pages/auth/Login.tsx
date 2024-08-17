@@ -62,6 +62,7 @@ const Login = () => {
     const [rememberMe,setRememberMe] = useState(false)
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [errorMsg, setErrorMessge] = useState(null)
     var rememberData:any 
 
     const { user, userLoggedIn, loading, error } = appSelector((state) => ({
@@ -145,9 +146,9 @@ const Login = () => {
         })
         .then(response => response.json())
         .then(val =>{
-            // console.log(val);
+
             
-            if(val.token !==  undefined || val.error === undefined)
+            if(val.token !==  undefined)
             {
                 // console.log(val.token);
                 
@@ -165,12 +166,12 @@ const Login = () => {
                 // console.log(decode);
                 
                 secureLocalStorage.setItem('userData',JSON.stringify(decode.data));
-
+                setErrorMessge(null);
                 navigate('/dashboard');
             }
             else
             {
-                console.log('boo');
+                setErrorMessge(val.msg);
                 
             }
         })
@@ -193,9 +194,9 @@ const Login = () => {
                     <h4 className="text-uppercase mt-0">{t('Sign In')}</h4>
                 </div>
 
-                {error && (
+                {errorMsg && (
                     <Alert variant="danger" className="my-2">
-                        {error}
+                        {errorMsg}
                     </Alert>
                 )}
                 {loading && <Loader />}

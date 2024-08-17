@@ -3,8 +3,8 @@ import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Row, Col, Container, Card, Button } from 'react-bootstrap';
-import url from '../../../env';
-import { usePageTitle } from '../../../hooks';
+import url from '../../env';
+import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
 

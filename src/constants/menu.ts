@@ -148,6 +148,46 @@ const MENU_ITEMS: MenuItemTypes[] = [
             },
         ],
     },
+    {
+        key: 'sipPayment',
+        label: 'SIP Payment',
+        isTitle: false,
+        icon: 'mdi mdi-currency-inr',
+        children: [
+            {
+                key: 'allsipmember',
+                label: 'All Payment',
+                url: '/all-payement',
+                parentKey: 'sipPayment',
+            },
+            {
+                key: 'addpayment',
+                label: 'Add Payment',
+                url: '/add-payment',
+                parentKey: 'sipPayment',
+            },
+        ],
+    },
+    {
+        key: 'sipLuckyDraw',
+        label: 'SIP Lucky Draw',
+        isTitle: false,
+        icon: 'mdi mdi-currency-inr',
+        children: [
+            {
+                key: 'allluckydraw',
+                label: 'All Lucky Draw',
+                url: '/all-luckydraw',
+                parentKey: 'sipLuckyDraw',
+            },
+            {
+                key: 'addluckydraw',
+                label: 'Add Lucky Draw',
+                url: '/add-luckydraw',
+                parentKey: 'sipLuckyDraw',
+            },
+        ],
+    },
     { key: 'Staff', label: 'Staff Management', isTitle: true },
     {
         key: 'registration',

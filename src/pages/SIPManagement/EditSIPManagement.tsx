@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import url from '../../../env';
+import url from '../../env';
 
 interface ISIPFormInput {
     sipmember_id: string;

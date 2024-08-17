@@ -27,22 +27,33 @@ const AddDepartment = React.lazy(() => import('../pages/Master/AddDepartment'));
 const Designation = React.lazy(() => import('../pages/Master/Designation'));
 const AddDesignation = React.lazy(() => import('../pages/Master/AddDesignation'));
 
-const ClientRegistration = React.lazy(() => import('../pages/Master/ClientRegistration'));
-const AllClients = React.lazy(() => import('../pages/Master/Clients'));
+const ClientRegistration = React.lazy(() => import('../pages/ClientManagement/ClientRegistration'));
+const AllClients = React.lazy(() => import('../pages/ClientManagement/Clients'));
 
 const EditBranch = React.lazy(() => import('../pages/Master/EditBranch'));
 const EditDepartment = React.lazy(() => import('../pages/Master/EditDeprtment'));
 const EditDesignation = React.lazy(() => import('../pages/Master/EditDesignation'));
-const AddStaff = React.lazy(() => import('../pages/Master/StaffManagement/StaffRegistration'));
-const AllStaffs = React.lazy(() => import('../pages/Master/StaffManagement/AllStaffs'));
+const AddStaff = React.lazy(() => import('../pages/StaffManagement/StaffRegistration'));
+const AllStaffs = React.lazy(() => import('../pages/StaffManagement/AllStaffs'));
+const EditStaffs = React.lazy(() => import('../pages/StaffManagement/EditStaff'));
 
-const AllSlab= React.lazy(() => import('../pages/Master/SIPManagement/SIPSlab'));
-const AddSlab= React.lazy(() => import('../pages/Master/SIPManagement/AddSIPSlab'));
-const EditSlab= React.lazy(() => import('../pages/Master/SIPManagement/EditSIPSlab'));
+const AllSlab= React.lazy(() => import('../pages/Master/SIPSlab'));
+const AddSlab= React.lazy(() => import('../pages/Master/AddSIPSlab'));
+const EditSlab= React.lazy(() => import('../pages/Master/EditSIPSlab'));
 
-const AddMember = React.lazy(() => import('../pages/Master/SIPManagement/Registration'));
-const EditMember= React.lazy(() => import('../pages/Master/SIPManagement/EditSIPManagement'));
-const AllMember= React.lazy(() => import('../pages/Master/SIPManagement/AllSIPManagements'));
+const AddMember = React.lazy(() => import('../pages/SIPManagement/Registration'));
+const EditMember= React.lazy(() => import('../pages/SIPManagement/EditSIPManagement'));
+const AllMember= React.lazy(() => import('../pages/SIPManagement/AllSIPManagements'));
+
+const AddPayment= React.lazy(() => import('../pages/SIPManagement/AddSIPPayment'));
+const AllPayment= React.lazy(() => import('../pages/SIPManagement/PaymentReciept'));
+const EditPayment= React.lazy(() => import('../pages/SIPManagement/EditSIPPayment'));
+
+
+const AddLuckyDraw= React.lazy(() => import('../pages/SIPManagement/AddLuckyDraw'));
+const AllLuckyDraw= React.lazy(() => import('../pages/SIPManagement/LuckyDraw'));
+const EditLuckyDraw = React.lazy(() => import('../pages/SIPManagement/EditLuckyDraw'));
+
 
 
 
@@ -283,6 +294,10 @@ const AllRoutes = () => {
           element: <LoadComponent component={AllStaffs} />,
         },
         {
+          path: 'edit-staff/:id',
+          element: <LoadComponent component={EditStaffs} />,
+        },
+        {
           path: 'add-slab',
           element: <LoadComponent component={AddSlab} />,
         },
@@ -305,6 +320,30 @@ const AllRoutes = () => {
         {
           path: 'edit-sipmember',
           element: <LoadComponent component={EditMember} />,
+        },
+        {
+          path: 'add-payment',
+          element: <LoadComponent component={AddPayment} />,
+        },
+        {
+          path: 'all-payement',
+          element: <LoadComponent component={AllPayment} />,
+        },
+        {
+          path: 'edit-payment/:id',
+          element: <LoadComponent component={EditPayment} />,
+        },
+        {
+          path: 'all-luckydraw',
+          element: <LoadComponent component={AllLuckyDraw} />,
+        },
+        {
+          path: 'add-luckydraw',
+          element: <LoadComponent component={AddLuckyDraw} />,
+        },
+        {
+          path: 'edit-luckydraw/:id',
+          element: <LoadComponent component={EditLuckyDraw} />,
         },
         {
           path: 'apps',

@@ -3,11 +3,11 @@ import { Card, Col, Row, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 // hooks
-import { usePageTitle } from '../../../hooks';
-import url from '../../../env';
+import { usePageTitle } from '../../hooks';
+import url from '../../env';
 
 // component
-import Table from '../../../components/Table';
+import Table from '../../components/Table';
 import secureLocalStorage from 'react-secure-storage';
 
 // Define types

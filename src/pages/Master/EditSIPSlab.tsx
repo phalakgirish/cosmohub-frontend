@@ -6,9 +6,9 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Nouislider from 'nouislider-react';
 import 'nouislider/distribute/nouislider.css';
-import url from '../../../env';
+import url from '../../env';
 import secureLocalStorage from 'react-secure-storage';
-import { usePageTitle } from '../../../hooks';
+import { usePageTitle } from '../../hooks';
 
 // Define the type for SIP Slab data
 type SIPSlabData = {

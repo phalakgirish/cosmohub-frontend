@@ -7,7 +7,7 @@ import Nouislider from 'nouislider-react';
 import 'nouislider/distribute/nouislider.css';
 import { useNavigate } from 'react-router-dom';
 import secureLocalStorage from 'react-secure-storage';
-import url from '../../../env';
+import url from '../../env';
 
 
 // Define the type for form data
