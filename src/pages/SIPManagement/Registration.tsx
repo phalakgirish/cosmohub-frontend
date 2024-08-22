@@ -329,8 +329,8 @@ const SIPRegistration = () => {
                                             <label htmlFor="sipmember_status" className="form-label">Status</label>
                                             <select className="form-control" id="sipmember_status" {...register('sipmember_status')} >
                                             <option value="">-- Select --</option>
-                                            <option value="continued">Continued</option>
-                                            <option value="discontinued">Discontinued</option>
+                                            <option value="Continue">Continue</option>
+                                            <option value="Discontinue">Discontinue</option>
 
                                             </select>
                                             {errors.sipmember_status && <div className="invalid-feedback d-block">{errors.sipmember_status.message}</div>}

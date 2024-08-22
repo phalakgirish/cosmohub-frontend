@@ -39,6 +39,8 @@ const EditDesignation = React.lazy(() => import('../pages/Master/EditDesignation
 const AddStaff = React.lazy(() => import('../pages/StaffManagement/StaffRegistration'));
 const AllStaffs = React.lazy(() => import('../pages/StaffManagement/AllStaffs'));
 const EditStaffs = React.lazy(() => import('../pages/StaffManagement/EditStaff'));
+const AllUsers = React.lazy(() => import('../pages/StaffManagement/AllUsers'));
+
 
 const AllSlab= React.lazy(() => import('../pages/Master/SIPSlab'));
 const AddSlab= React.lazy(() => import('../pages/Master/AddSIPSlab'));
@@ -368,7 +370,10 @@ const AllRoutes = () => {
           path: 'edit-maturity/:id',
           element: <LoadComponent component={EditMaturity} />,
         },
-
+        {
+          path: 'users',
+          element: <LoadComponent component={AllUsers} />,
+        },
         {
           path: 'apps',
           children: [

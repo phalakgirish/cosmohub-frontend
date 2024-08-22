@@ -102,7 +102,7 @@ const Login = () => {
         secureLocalStorage.removeItem('login');
         secureLocalStorage.removeItem('userData')
         var localStorageData:any = secureLocalStorage.getItem('rememberMe')
-        var loginStorageData:any = secureLocalStorage.getItem('login')
+        // var loginStorageData:any = secureLocalStorage.getItem('login')
 
         // console.log(loginStorageData);
         
