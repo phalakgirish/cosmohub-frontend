@@ -104,25 +104,37 @@ const Clients = () => {
         // { Header: 'Postal Address', accessor: 'postalAddress',sort: true, },
         // { Header: 'Landmark', accessor: 'landmark',sort: true, },
         {
+            Header: 'Status',
+            accessor: 'client_status',
+            sort: true,
+            Cell: ({ value }: { value: boolean }) => (value ? 'Active' : 'Inactive'),
+        },
+        {
             Header: 'Actions',
             accessor: 'actions',
             sort: true,
             Cell: ({ row }: { row: any }) => (
-                <>
-                <Button
-                    variant="primary"
-                    onClick={() => handleEdit(row.original._id)}
-                >
-                    Edit
-                </Button>
-                &nbsp;
-                <Button
-                    variant="danger"
-                    onClick={() => handleDelete(row.original._id)}
-                >
-                    Delete
-                </Button>
-                </>
+                 <>
+                 <Button
+                     variant="primary"
+                     onClick={() => handleEdit(row.original._id)}
+                     style={{borderRadius: '35px',
+                         width: '38px',
+                         padding: '7px 7px'}}
+                 >
+                      <i className='fe-edit-2'/>
+                 </Button>
+                 &nbsp;
+                 <Button
+                 variant="danger"
+                 onClick={() => handleDelete(row.original._id)}
+                 style={{borderRadius: '35px',
+                     width: '38px',
+                     padding: '7px 7px'}}
+                 >
+                 <i className='fe-trash-2'/> 
+             </Button>
+         </>
             ),
         },
     ];

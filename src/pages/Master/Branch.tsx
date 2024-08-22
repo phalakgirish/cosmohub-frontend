@@ -107,6 +107,11 @@ const Branch = () => {
             sort: true,
         },
         {
+            Header: 'Branch Code',
+            accessor: 'branch_code',
+            sort: true,
+        },
+        {
             Header: 'Branch Name',
             accessor: 'branch_name',
             sort: true,
@@ -121,11 +126,11 @@ const Branch = () => {
             accessor: 'branch_mobile_number',
             sort: true,
         },
-        {
-            Header: 'Email ID',
-            accessor: 'branch_emailId',
-            sort: true,
-        },
+        // {
+        //     Header: 'Email ID',
+        //     accessor: 'branch_emailId',
+        //     sort: true,
+        // },
         {
             Header: 'City',
             accessor: 'branch_city',
@@ -145,15 +150,21 @@ const Branch = () => {
                     <Button
                         variant="primary"
                         onClick={() => handleEdit(row.original._id)}
+                        style={{borderRadius: '35px',
+                            width: '38px',
+                            padding: '7px 7px'}}
                     >
-                        Edit
+                         <i className='fe-edit-2'/>
                     </Button>
                     &nbsp;
                     <Button
                     variant="danger"
                     onClick={() => handleDelete(row.original._id)}
+                    style={{borderRadius: '35px',
+                        width: '38px',
+                        padding: '7px 7px'}}
                     >
-                    Delete
+                    <i className='fe-trash-2'/> 
                 </Button>
             </>
             ),

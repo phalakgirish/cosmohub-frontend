@@ -10,6 +10,7 @@ import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 
 type BranchData = {
+    branch_code: string;
     branch_name: string;
     branch_contact_person: string;
     branch_mobile_number: string;
@@ -19,11 +20,13 @@ type BranchData = {
     branch_district: string;
     branch_taluka: string;
     branch_pincode: string;
+    branch_state: string
     branch_status: boolean;
 };
 
 const schemaResolver = yupResolver(
     yup.object().shape({
+        branch_code: yup.string().required('Please enter Branch code'),
         branch_name: yup.string().required('Please enter Branch name'),
         branch_contact_person: yup.string().required('Please enter Contact Person'),
         branch_mobile_number: yup.string().required('Please enter Mobile Number'),
@@ -36,6 +39,7 @@ const schemaResolver = yupResolver(
         branch_district: yup.string().required('Please enter District'),
         branch_taluka: yup.string().required('Please enter Taluka'),
         branch_pincode: yup.string().required('Please enter Pincode'),
+        branch_state: yup.string().required('Please enter state'),
         branch_status: yup.boolean().required('Please select Status'),
     })
 );
@@ -43,7 +47,7 @@ const schemaResolver = yupResolver(
 const EditForm = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { control, handleSubmit, reset, setValue } = useForm<BranchData>({
+    const { control, handleSubmit, reset, setValue,formState:{errors} } = useForm<BranchData>({
         resolver: schemaResolver,
     });
 
@@ -133,6 +137,19 @@ const EditForm = () => {
                     <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
+                                <Form.Label>Branch Code</Form.Label>
+                                <Controller
+                                    name="branch_code"
+                                    control={control}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_code} placeholder="Enter Branch code" />}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_code?.message}
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group className="mb-2">
                                 <Form.Label>Branch Name</Form.Label>
                                 <Controller
                                     name="branch_name"
@@ -143,6 +160,8 @@ const EditForm = () => {
                                 />
                             </Form.Group>
                         </Col>
+                    </Row>
+                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Contact Person</Form.Label>
@@ -155,8 +174,6 @@ const EditForm = () => {
                                 />
                             </Form.Group>
                         </Col>
-                    </Row>
-                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Mobile Number</Form.Label>
@@ -169,6 +186,8 @@ const EditForm = () => {
                                 />
                             </Form.Group>
                         </Col>
+                    </Row>
+                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Email Address</Form.Label>
@@ -185,8 +204,6 @@ const EditForm = () => {
                                 />
                             </Form.Group>
                         </Col>
-                    </Row>
-                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Area</Form.Label>
@@ -199,6 +216,8 @@ const EditForm = () => {
                                 />
                             </Form.Group>
                         </Col>
+                    </Row>
+                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>City</Form.Label>
@@ -211,8 +230,6 @@ const EditForm = () => {
                                 />
                             </Form.Group>
                         </Col>
-                    </Row>
-                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>District</Form.Label>
@@ -225,6 +242,8 @@ const EditForm = () => {
                                 />
                             </Form.Group>
                         </Col>
+                    </Row>
+                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Taluka</Form.Label>
@@ -237,8 +256,6 @@ const EditForm = () => {
                                 />
                             </Form.Group>
                         </Col>
-                    </Row>
-                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Pincode</Form.Label>
@@ -251,7 +268,22 @@ const EditForm = () => {
                                 />
                             </Form.Group>
                         </Col>
+                    </Row>
+                    <Row>
                         <Col md={6}>
+                            <Form.Group className="mb-2">
+                                <Form.Label>State</Form.Label>
+                                <Controller
+                                    name="branch_state"
+                                    control={control}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_state} placeholder="Enter state" />}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_state?.message}
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                    <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Status</Form.Label>
                                 <Controller

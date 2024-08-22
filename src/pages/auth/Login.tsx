@@ -44,12 +44,12 @@ const BottomLink = () => {
                         {t('Forgot your password?')}
                     </Link>
                 </p>
-                <p className="text-muted">
+                {/* <p className="text-muted">
                     {t("Don't have an account?")}{' '}
                     <Link to={'/auth/register'} className="text-dark ms-1">
                         <b>{t('Sign Up')}</b>
                     </Link>
-                </p>
+                </p> */}
             </Col>
         </Row>
     );

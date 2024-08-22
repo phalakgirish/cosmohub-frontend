@@ -138,17 +138,23 @@ const Department = () => {
                 <Button
                     variant="primary"
                     onClick={() => handleEdit(row.original._id)}
+                    style={{borderRadius: '35px',
+                        width: '38px',
+                        padding: '7px 7px'}}
                 >
-                    Edit
+                     <i className='fe-edit-2'/>
                 </Button>
                 &nbsp;
                 <Button
-                    variant="danger"
-                    onClick={() => handleDelete(row.original._id)}
+                variant="danger"
+                onClick={() => handleDelete(row.original._id)}
+                style={{borderRadius: '35px',
+                    width: '38px',
+                    padding: '7px 7px'}}
                 >
-                    Delete
-                </Button>
-                </>
+                <i className='fe-trash-2'/> 
+            </Button>
+        </>
             ),
         },
     ];

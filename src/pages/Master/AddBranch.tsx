@@ -13,6 +13,7 @@ import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
 
 type BranchData = {
+    branch_code: string;
     branch_name: string;
     branch_contact_person: string;
     branch_mobile_number: string;
@@ -32,6 +33,7 @@ const BasicForm = () => {
 
     const schemaResolver = yupResolver(
         yup.object().shape({
+            branch_code: yup.string().required('Please Enter Branch code'),
             branch_name: yup.string().required('Please enter Branch name'),
             branch_contact_person: yup.string().required('Please enter Contact Person'),
             branch_mobile_number: yup.string().required('Please enter Mobile Number'),
@@ -93,114 +95,158 @@ const BasicForm = () => {
                     <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
+                                <Form.Label>Branch Code</Form.Label>
+                                <Controller
+                                    name="branch_code"
+                                    control={control}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_code} placeholder="Enter Branch code" />}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_code?.message}
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group className="mb-2">
                                 <Form.Label>Branch Name</Form.Label>
                                 <Controller
                                     name="branch_name"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter Branch name" />}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_name} placeholder="Enter Branch name" />}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_name?.message}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
-                        <Col md={6}>
+                    </Row>
+                    <Row>
+                    <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Contact Person</Form.Label>
                                 <Controller
                                     name="branch_contact_person"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter contact person name" />}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_contact_person} placeholder="Enter contact person name" />}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_contact_person?.message}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
-                    </Row>
-                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Mobile Number</Form.Label>
                                 <Controller
                                     name="branch_mobile_number"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter mobile number" />}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_mobile_number} placeholder="Enter mobile number" />}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_mobile_number?.message}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
+                    </Row>
+                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Email Address</Form.Label>
                                 <Controller
                                     name="branch_emailId"
                                     control={control}
-                                    render={({ field }) => <Form.Control type="email" {...field} placeholder="Enter email address" />}
+                                    render={({ field }) => <Form.Control type="email" {...field} isInvalid={!!errors.branch_emailId} placeholder="Enter email address" />}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_emailId?.message}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
-                    </Row>
-                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Area</Form.Label>
                                 <Controller
                                     name="branch_area"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter area" />}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_area} placeholder="Enter area" />}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_area?.message}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
+                    </Row>
+                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>City</Form.Label>
                                 <Controller
                                     name="branch_city"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter city" />}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_city} placeholder="Enter city" />}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_city?.message}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
-                    </Row>
-                    <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>District</Form.Label>
                                 <Controller
                                     name="branch_district"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter district" />}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_district} placeholder="Enter district" />}
                                 />
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Taluka</Form.Label>
-                                <Controller
-                                    name="branch_taluka"
-                                    control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter taluka" />}
-                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_district?.message}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
                     </Row>
                     <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
+                                <Form.Label>Taluka</Form.Label>
+                                <Controller
+                                    name="branch_taluka"
+                                    control={control}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_taluka} placeholder="Enter taluka" />}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_taluka?.message}
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group className="mb-2">
                                 <Form.Label>Pincode</Form.Label>
                                 <Controller
                                     name="branch_pincode"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter pincode" />}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_pincode} placeholder="Enter pincode" />}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_pincode?.message}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
+
+                        </Row>
+                        <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>State</Form.Label>
                                 <Controller
                                     name="branch_state"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter state" />}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_state} placeholder="Enter state" />}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_state?.message}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
-                        </Row>
-                        <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Status</Form.Label>
@@ -211,13 +257,16 @@ const BasicForm = () => {
                                         <Form.Select
                                             {...field}
                                             value={field.value.toString()}
-                                            onChange={(e) => field.onChange(e.target.value === 'true')}>
+                                            onChange={(e) => field.onChange(e.target.value === 'true')} isInvalid={!!errors.branch_status}>
                                             <option value="">Select status</option>
                                             <option value="true">Active</option>
                                             <option value="false">Inactive</option>
                                         </Form.Select>
                                     )}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.branch_status?.message}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
                     </Row>

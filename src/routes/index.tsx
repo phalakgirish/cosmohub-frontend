@@ -29,6 +29,8 @@ const AddDesignation = React.lazy(() => import('../pages/Master/AddDesignation')
 
 const ClientRegistration = React.lazy(() => import('../pages/ClientManagement/ClientRegistration'));
 const AllClients = React.lazy(() => import('../pages/ClientManagement/Clients'));
+const EditClient = React.lazy(() => import('../pages/ClientManagement/EditClient'));
+
 
 const EditBranch = React.lazy(() => import('../pages/Master/EditBranch'));
 const EditDepartment = React.lazy(() => import('../pages/Master/EditDeprtment'));
@@ -53,6 +55,10 @@ const EditPayment= React.lazy(() => import('../pages/SIPManagement/EditSIPPaymen
 const AddLuckyDraw= React.lazy(() => import('../pages/SIPManagement/AddLuckyDraw'));
 const AllLuckyDraw= React.lazy(() => import('../pages/SIPManagement/LuckyDraw'));
 const EditLuckyDraw = React.lazy(() => import('../pages/SIPManagement/EditLuckyDraw'));
+
+const AddMaturity= React.lazy(() => import('../pages/SIPManagement/AddMaturity'));
+const AllMaturity= React.lazy(() => import('../pages/SIPManagement/Maturity'));
+const EditMaturity = React.lazy(() => import('../pages/SIPManagement/EditMaturity'));
 
 
 
@@ -274,6 +280,10 @@ const AllRoutes = () => {
           element: <LoadComponent component={AllClients} />,
         },
         {
+          path: 'edit-client/:id',
+          element: <LoadComponent component={EditClient} />,
+        },
+        {
           path: `edit-branch/:id`,
           element: <LoadComponent component={EditBranch} />,
         },
@@ -345,6 +355,19 @@ const AllRoutes = () => {
           path: 'edit-luckydraw/:id',
           element: <LoadComponent component={EditLuckyDraw} />,
         },
+        {
+          path: 'add-maturity',
+          element: <LoadComponent component={AddMaturity} />,
+        },
+        {
+          path: 'all-maturity',
+          element: <LoadComponent component={AllMaturity} />,
+        },
+        {
+          path: 'edit-maturity/:id',
+          element: <LoadComponent component={EditMaturity} />,
+        },
+
         {
           path: 'apps',
           children: [

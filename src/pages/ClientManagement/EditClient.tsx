@@ -6,10 +6,11 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import url from '../../env';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 // Define the type for form data
 type ClientRegistrationData = {
+    client_id:string;
     client_name: string;
     client_dob: string;
     client_mobile_number: string;
@@ -19,7 +20,7 @@ type ClientRegistrationData = {
     client_addharcard: FileList;
     client_postaladdress: string;
     client_landmark: string;
-    client_status: boolean;
+    client_status: string;
 };
 
 // Define the type for branch data
@@ -36,21 +37,25 @@ const schemaResolver = yupResolver(
         client_mobile_number: yup.string().required('Please enter your mobile number'),
         client_emailId: yup.string().email('Invalid email format').required('Please enter your email'),
         client_gender: yup.string().required('Please select your gender'),
-        client_pancard: yup.mixed().required('Please upload your PAN card'),
-        client_addharcard: yup.mixed().required('Please upload your Aadhar card'),
         client_postaladdress: yup.string().required('Please enter your postal address'),
         client_landmark: yup.string().required('Please enter a landmark'),
-        client_status: yup.boolean().required('Please enter a landmark'),
+        client_status: yup.boolean().required('Please enter a Status'),
 
     })
 );
 
-const ClientRegistration = () => {
-
+const ClientEdit = () => {
+    const { id } = useParams();
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const [branches, setBranches] = useState<Branch[]>([]);
     const [clientbranch, setClientBranch] = useState('');
     const [branchErr,setBranchErr] = useState(false);
+    const [errFile, setErrFile] = useState(false);
+    const [fileName, setFileName] = useState('');
+    const [clientPancard, setClientPancard] = useState<File | null>(null);
+    const [clientAadharcard, setClientAadharcard] = useState<File | null>(null);
+    const [panFileStatus, setPanFileStatus] = useState(false);
+    const [aadharFileStatus, setAadharFileStatus] = useState(false);
     const navigate = useNavigate();
 
     const userData:any = JSON.parse(StorageuserData);
@@ -58,13 +63,11 @@ const ClientRegistration = () => {
     
     const { handleSubmit, control, formState: { errors }, setValue } = useForm<ClientRegistrationData>({
         resolver: schemaResolver,
-        defaultValues: {
-            client_status: true, // Default value if needed
-        },
+
     });
 
     const onSubmit = async (data: ClientRegistrationData) => {
-        // console.log(data);
+        console.log(data);
         // Handle form submission
             if(userData.staff_branch == '0' && clientbranch == '')
             {
@@ -78,18 +81,18 @@ const ClientRegistration = () => {
                 formData.append('client_mobile_number', data.client_mobile_number);
                 formData.append('client_emailId', data.client_emailId);
                 formData.append('client_gender', data.client_gender);
-                formData.append('client_pancard', data.client_pancard[0]);
-                formData.append('client_addharcard', data.client_addharcard[0]);
+                formData.append('client_pancard', data.client_pancard instanceof FileList ? data.client_pancard[0]:'');
+                formData.append('client_addharcard', data.client_addharcard instanceof FileList ? data.client_addharcard[0]:'');
                 formData.append('client_postaladdress', data.client_postaladdress);
                 formData.append('client_landmark', data.client_landmark);
-                formData.append('client_status', data.client_status.toString());
+                formData.append('client_status', data.client_status);
                 formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
 
                 try {
                     const bearerToken = secureLocalStorage.getItem('login');
-                    const response = await fetch(`${url.nodeapipath}/client`, {
+                    const response = await fetch(`${url.nodeapipath}/client/${id}`, {
                         body: formData,
-                        method: 'POST',
+                        method: 'PUT',
                         headers: {
                             // 'Content-Type': 'application/json',
                             'Access-Control-Allow-Origin':'*',
@@ -129,21 +132,19 @@ const ClientRegistration = () => {
     });
 
     useEffect(() => {
-        // Fetch branches from the backend
         const fetchBranches = async () => {
             try {
                 const bearerToken = secureLocalStorage.getItem('login');
-                const response = await fetch(`${url.nodeapipath}/branch/all/all`,{
-                    method:'GET',
+                const response = await fetch(`${url.nodeapipath}/branch/all/all`, {
+                    method: 'GET',
                     headers: {
-                        'Content-Type':'application/json',
-                        'Access-Control-Allow-Origin':'*',
-                        'Authorization': `Bearer ${bearerToken}`
-                        }
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                        'Authorization': `Bearer ${bearerToken}`,
+                    }
                 });
                 const data = await response.json();
-                // console.log(data);   
-                
+
                 if (response.ok) {
                     setBranches(data.branch || []);
                 } else {
@@ -155,6 +156,43 @@ const ClientRegistration = () => {
         };
 
         fetchBranches();
+
+        const fetchClientDetails = async () => {
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/client/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                        'Authorization': `Bearer ${bearerToken}`,
+                    },
+                });
+                const data = await response.json();
+                console.log(data);
+                
+                if (response.ok && data.client) {
+                    const clientDetails = data.client[0];
+                    setValue('client_id',clientDetails.client_id)
+                    setValue('client_name', clientDetails.client_name);
+                    setValue('client_dob', new Date(clientDetails.client_dob).toISOString().substring(0, 10));
+                    setValue('client_mobile_number', clientDetails.client_mobile_number);
+                    setValue('client_emailId', clientDetails.client_emailId);
+                    setValue('client_gender', clientDetails.client_gender);
+                    setValue('client_postaladdress', clientDetails.client_postaladdress);
+                    setValue('client_landmark', clientDetails.client_landmark);
+                    setValue('client_status',clientDetails.client_status.toString())
+                    setClientBranch(clientDetails.branch_id);
+
+                } else {
+                    console.error('Error fetching client details:', data);
+                }
+            } catch (error) {
+                console.error('Error during API call:', error);
+            }
+        };
+
+        fetchClientDetails();
     }, []);
 
     const handleBranchChange = (e:any)=>{
@@ -172,11 +210,20 @@ const ClientRegistration = () => {
     return (
         <Card style={{marginTop:'25px'}}>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Add Client</h4>
-                <p className="sub-header">Fill the form to add a new client.</p>
+                <h4 className="header-title mt-0 mb-1">Edit Client</h4>
+                <p className="sub-header">Modify the client details below.</p>
                 <Form onSubmit={handleSubmit(onSubmit)}>
                     <Row>
                         <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label> Client Id</Form.Label>
+                                <Controller
+                                    name="client_id"
+                                    control={control}
+                                    render={({ field }) => <Form.Control {...field} value={field.value || ""} 
+                                    placeholder="Enter Elient Id" disabled={true}/>}
+                                />
+                            </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Name</Form.Label>
                                 <Controller
@@ -274,26 +321,7 @@ const ClientRegistration = () => {
                                     {errors.client_gender?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Status</Form.Label>
-                                <Controller
-                                    name="client_status"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Select
-                                            {...field}
-                                            value={field.value.toString()}
-                                            onChange={(e) => field.onChange(e.target.value === 'true')} isInvalid={!!errors.client_status}>
-                                            <option value="">Select status</option>
-                                            <option value="true">Active</option>
-                                            <option value="false">Inactive</option>
-                                        </Form.Select>
-                                    )}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.client_status?.message}
-                                </Form.Control.Feedback>
-                            </Form.Group>
+                            
                         </Col>
 
                         <Col md={6}>
@@ -340,11 +368,7 @@ const ClientRegistration = () => {
                                 <Form.Control
                                     type="file"
                                     onChange={(event) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'client_addharcard')}
-                                    isInvalid={!!errors.client_addharcard}
                                 />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.client_addharcard?.message}
-                                </Form.Control.Feedback>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -352,17 +376,33 @@ const ClientRegistration = () => {
                                 <Form.Control
                                     type="file"
                                     onChange={(event) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'client_pancard')}
-                                    isInvalid={!!errors.client_pancard}
+                                />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Status</Form.Label>
+                                <Controller
+                                    name="client_status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value || ''}
+                                            isInvalid={!!errors.client_status}>
+                                            <option value="">Select status</option>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </Form.Select>
+                                    )}
                                 />
                                 <Form.Control.Feedback type="invalid">
-                                    {errors.client_pancard?.message}
+                                    {errors.client_status?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
                             {(userData.user_role_type == '0') && (
                                 <>
                                  <Form.Group className="mb-3">
                                  <Form.Label>Branch Name</Form.Label>
-                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" onChange={(e)=>{handleBranchChange(e)}} >
+                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" value={clientbranch} onChange={(e)=>{handleBranchChange(e)}} >
                                          <option value="">-- Select --</option>
  
                                          {branches.map((branch) => (
@@ -381,9 +421,9 @@ const ClientRegistration = () => {
 
                     <div className="text-md-end mb-0">
                         <Button variant="primary" className="me-1" type="submit">
-                            Submit
+                            Update
                         </Button>
-                        <Button variant="secondary" type="reset">
+                        <Button variant="secondary" type="reset" onClick={()=>{navigate('/clients')}}>
                             Cancel
                         </Button>
                     </div>
@@ -393,4 +433,4 @@ const ClientRegistration = () => {
     );
 };
 
-export default ClientRegistration
+export default ClientEdit
