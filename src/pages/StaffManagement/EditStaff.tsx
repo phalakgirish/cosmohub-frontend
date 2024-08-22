@@ -526,9 +526,14 @@ const EditStaff = () => {
                                         </div>
                                     </Col>
                                 </Row>
-                                <Button variant="primary" type="submit">
-                                    Update Staff Member
-                                </Button>
+                                <div className="text-md-end mb-0">
+                                    <Button variant="primary" className="me-1" type="submit">
+                                        Update
+                                    </Button>
+                                    <Button variant="secondary" type="reset" onClick={()=>{navigate('/staff')}}>
+                                        Cancel
+                                    </Button>
+                                </div>
                             </form>
                         </Card.Body>
                     </Card>
