@@ -35,6 +35,7 @@ const EditClient = React.lazy(() => import('../pages/ClientManagement/EditClient
 const EditBranch = React.lazy(() => import('../pages/Master/EditBranch'));
 const EditDepartment = React.lazy(() => import('../pages/Master/EditDeprtment'));
 const EditDesignation = React.lazy(() => import('../pages/Master/EditDesignation'));
+
 const AddStaff = React.lazy(() => import('../pages/StaffManagement/StaffRegistration'));
 const AllStaffs = React.lazy(() => import('../pages/StaffManagement/AllStaffs'));
 const EditStaffs = React.lazy(() => import('../pages/StaffManagement/EditStaff'));
@@ -328,7 +329,7 @@ const AllRoutes = () => {
           element: <LoadComponent component={AllMember} />,
         },
         {
-          path: 'edit-sipmember',
+          path: 'edit-sipmember/:id',
           element: <LoadComponent component={EditMember} />,
         },
         {

@@ -23,7 +23,8 @@ interface SIP {
     sipmember_nominee_name: string,
     sipmember_nominee_age:number,
     sipmember_nominee_relation:string,
-    sipmember_nominee_mobile:string
+    sipmember_nominee_mobile:string,
+    sipmember_status:string,
 }
 
 interface DataResponse {
@@ -37,7 +38,7 @@ const AllSIPManagement = () => {
 
     // Define handleEdit function
     const handleEdit = (id: string) => {
-        navigate(`/edit-sip/${id}`);
+        navigate(`/edit-sipmember/${id}`);
     };
 
     const handleDelete = async (id: string) => {
@@ -110,7 +111,8 @@ const AllSIPManagement = () => {
                 sipmember_nominee_name: sip.sipmember_nominee_name,
                 sipmember_nominee_age:sip.sipmember_nominee_age,
                 sipmember_nominee_relation:sip.sipmember_nominee_relation,
-                sipmember_nominee_mobile:sip.sipmember_nominee_mobile
+                sipmember_nominee_mobile:sip.sipmember_nominee_mobile,
+                sipmember_status:sip.sipmember_status
             }));
 
             setData(formattedData);
@@ -168,6 +170,11 @@ const AllSIPManagement = () => {
         {
             Header: 'Nominee Mobile No',
             accessor: 'sipmember_nominee_mobile',
+            sort: true,
+        },
+        {
+            Header: 'Status',
+            accessor: 'sipmember_status',
             sort: true,
         },
         {

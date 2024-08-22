@@ -433,7 +433,14 @@ const SIPRegistration = () => {
                                         )}
                                     </Col>
                                 </Row>
-                                <Button variant="primary" type="submit">Register</Button>
+                                <div className="text-md-end mb-0">
+                                    <Button variant="primary" className="me-1" type="submit">
+                                        Submit
+                                    </Button>
+                                    <Button variant="secondary" type="reset" onClick={()=>{navigate('/all-sipmember')}}>
+                                        Cancel
+                                    </Button>
+                                </div>
                             </form>
                         </Card.Body>
                     </Card>

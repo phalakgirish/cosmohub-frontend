@@ -67,7 +67,7 @@ const ClientEdit = () => {
     });
 
     const onSubmit = async (data: ClientRegistrationData) => {
-        console.log(data);
+
         // Handle form submission
             if(userData.staff_branch == '0' && clientbranch == '')
             {
@@ -169,7 +169,7 @@ const ClientEdit = () => {
                     },
                 });
                 const data = await response.json();
-                console.log(data);
+
                 
                 if (response.ok && data.client) {
                     const clientDetails = data.client[0];
