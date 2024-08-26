@@ -9,6 +9,8 @@ import url from '../../env';
 import Table from '../../components/Table';
 import { useNavigate } from 'react-router-dom';
 import secureLocalStorage from 'react-secure-storage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Define types
 interface Designation {
@@ -33,6 +35,8 @@ const Designation = () => {
     };
 
     const handleDelete = async (id:string) =>{
+        const confirmed = window.confirm("Are you sure you want to delete Designation?");
+        if (confirmed) {
         const bearerToken = secureLocalStorage.getItem('login');
         fetch(`${url.nodeapipath}/designation/${id}`,{
             method:'DELETE',
@@ -45,9 +49,18 @@ const Designation = () => {
             .then((response) => response.json())
             .then((data) => {
                 // console.log(data);
-                setIsRefreshed(true)
+                if (data.status) {
+                    toast.success('Designation deleted successfully');
+                    setIsRefreshed(true)}
+                else {
+                        toast.error('Failed to delete designation');
+                    }
             })
-            .catch((error) => console.error('Error fetching branch data:', error));
+            .catch((error) => {
+                // console.error('Error fetching branch data:', error);
+                toast.error('An error occurred while deleting the designation');
+            });
+        }
     }
 
     usePageTitle({
@@ -185,6 +198,7 @@ const columns = [
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer />
         </Row>
     );
 };

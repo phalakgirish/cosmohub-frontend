@@ -7,6 +7,7 @@ import url from '../../env';
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 type MaturityData = {
     client_id: string;
@@ -104,9 +105,19 @@ const MaturityForm = () => {
                 });
                 const result = await response.json();
                 // console.log('Registration successful:', result);
-                navigate('/all-maturity');
+                if (response.ok) {
+                    // console.log('Maturity added successfully:', result);
+                    toast.success(result.message || 'Maturity added successfully');
+                    navigate('/all-maturity');
+                } else {
+                    // console.error('Error adding maturity:', result);
+                    toast.error(result.message || 'Failed to add maturity');
+                    navigate('/all-maturity');
+                }
             } catch (error) {
-                console.error('Error during registration:', error);
+                // console.error('Error during registration:', error);
+                toast.error('An error occurred. Please try again.');
+
             }
         }
 

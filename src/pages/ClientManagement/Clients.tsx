@@ -4,6 +4,8 @@ import url from '../../env';  // Adjust the import path as necessary
 import secureLocalStorage from 'react-secure-storage';
 import Table from '../../components/Table';
 import { useNavigate } from 'react-router-dom';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer , toast} from 'react-toastify';
 
 // Define types
 interface Client {
@@ -59,21 +61,34 @@ const Clients = () => {
     };
 
     const handleDelete = (id:any)=>{
-        const bearerToken = secureLocalStorage.getItem('login');
-        fetch(`${url.nodeapipath}/client/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin':'*',
-                'Authorization': `Bearer ${bearerToken}`
-            }
-        })
-        .then((response) => response.json())
-        .then((data) => {
+        const confirmed = window.confirm("Are you sure you want to delete this client?");
+        if (confirmed) {
+            const bearerToken = secureLocalStorage.getItem('login');
+            fetch(`${url.nodeapipath}/client/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin':'*',
+                    'Authorization': `Bearer ${bearerToken}`
+                }
+            })
+            .then((response) => response.json())
+            .then((data) => {
 
-            setIsRefreshed(true)
-        })
-        .catch((error) => console.error('Error deleting SIP data:', error));
+                if (data.status) {
+                    toast.success('Client deleted successfully');
+                    // setIsRefreshed(prev => !prev);
+                    setIsRefreshed(true)
+
+                } else {
+                    toast.error('Failed to delete client');
+                }
+            })
+            .catch((error) => {
+                // console.error('Error deleting SIP data:', error);
+                toast.error('An error occurred while deleting the client');
+            });
+        }
     }
 
     const sizePerPageList = [
@@ -195,6 +210,7 @@ const Clients = () => {
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer />
         </Row>
     );
 };

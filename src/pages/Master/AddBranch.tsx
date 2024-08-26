@@ -11,6 +11,8 @@ import { usePageTitle } from '../../hooks';
 import { FormInput, VerticalForm } from '../../components/form';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+
 
 type BranchData = {
     branch_code: string;
@@ -74,15 +76,21 @@ const BasicForm = () => {
 
             if (response.ok) {
                 console.log('Branch added successfully:', result);
-                navigate('/branch');
+                toast.success( result.message || 'Branch added successfully');
+
+                setTimeout(()=>{
+                    navigate('/branch');
+                },1000)
                 // reset(); // Reset form fields on successful submission
             } else {
                 console.error('Error adding branch:', result);
                 // Optionally, handle error (e.g., show an error message)
+                toast.error(result.message || 'Failed to Add branch');
             }
         } catch (error) {
             console.error('Error during API call:', error);
             // Optionally, handle error (e.g., show an error message)
+            toast.error('An error occurred. Please try again.');
         }
     };
 

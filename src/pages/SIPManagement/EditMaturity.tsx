@@ -7,6 +7,7 @@ import url from '../../env';
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 type MaturityData = {
     sipmaturity_receiptno: string;
@@ -74,7 +75,7 @@ const EditMaturityForm = () => {
     });
 
     const onSubmit = async (data: MaturityData) => {
-        console.log('Form data:', data);
+        // console.log('Form data:', data);
 
         if(userData.staff_branch == '0' && clientbranch == '')
         {
@@ -106,9 +107,19 @@ const EditMaturityForm = () => {
                 });
                 const result = await response.json();
                 // console.log('Registration successful:', result);
-                navigate('/all-maturity');
+                if (response.ok) {
+                    // console.log('Maturity updated successfully:', result);
+                    toast.success(result.message || 'Maturity updated successfully');
+                    navigate('/all-maturity');
+                } else {
+                    // console.error('Error updating maturity:', result);
+                    toast.error(result.message || 'Failed to update maturity');
+                    navigate('/all-maturity');
+                }
+                
             } catch (error) {
-                console.error('Error during registration:', error);
+                // console.error('Error during registration:', error);
+                toast.error('An error occurred. Please try again.');
             }
         }
 

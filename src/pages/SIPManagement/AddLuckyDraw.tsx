@@ -8,6 +8,7 @@ import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 // Define types
 type LuckyDrawData = {
@@ -80,9 +81,17 @@ const LuckyDrawForm = () => {
                 });
                 const result = await response.json();
                 // console.log('Lucky Draw Added successful:', result);
-                navigate('/all-luckydraw')
+                if (response.ok) {
+                    toast.success( result.message || 'Luckydraw added successfully');
+                    navigate('/all-luckydraw')
+                } else {
+                    console.error('Error adding luckydraw:', result);
+                    toast.error(result.message || 'Failed to add luckydraw');
+                }
+                
             } catch (error) {
                 console.error('Error during Payment:', error);
+                toast.error('An error occurred during adding. Please try again.');
             }
             
         }

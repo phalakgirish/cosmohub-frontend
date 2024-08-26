@@ -8,6 +8,7 @@ import url from '../../env';
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 // Define the type for branch data
 type Branch = {
@@ -93,13 +94,16 @@ const BasicForm = () => {
             console.log(result);
 
             if (response.ok) {
-                console.log('Department added successfully:', result);
+                // console.log('Department added successfully:', result);
+                toast.success(result.message ||'Department added successfully');
                 navigate('/department')
             } else {
-                console.error('Error adding department:', result);
+                // console.error('Error adding department:', result);
+                toast.error(result.message || 'Failed to add department');
             }
         } catch (error) {
-            console.error('Error during API call:', error);
+            // console.error('Error during API call:', error);
+            toast.error('An error occurred during adding. Please try again.');
         }
     };
 

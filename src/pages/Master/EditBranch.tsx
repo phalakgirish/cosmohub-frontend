@@ -8,6 +8,7 @@ import url from '../../env';
 // hooks
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
+import { toast } from 'react-toastify';
 
 type BranchData = {
     branch_code: string;
@@ -109,18 +110,27 @@ const EditForm = () => {
                 },
                 body: JSON.stringify(formData),
             });
-
-            if (!response.ok) {
-                const result = await response.json();
-                throw new Error(result.message || 'Error updating branch');
+            const result = await response.json();
+            // if (!response.ok) {
+                
+            //     throw new Error(result.message || 'Error updating branch');
+            // }
+            if (response.ok) {
+                toast.success(result.message || 'Branch updated successfully');
+                navigate('/branch');
+                
+            } else {
+                toast.error(result.message || 'Failed to update branch');
             }
 
-            navigate('/branch'); // Redirect after successful update
+             // Redirect after successful update
         } catch (err) {
             if (err instanceof Error) {
                 setError(err.message);
+                toast.error('An error occurred during updating. Please try again.');
             } else {
                 setError('An unknown error occurred during API call');
+                toast.error('An error occurred during updating. Please try again.');
             }
         }
     };

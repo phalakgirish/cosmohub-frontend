@@ -9,6 +9,8 @@ import url from '../../env';
 import Table from '../../components/Table';
 import { useNavigate } from 'react-router-dom';
 import secureLocalStorage from 'react-secure-storage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Define types
 interface Department {
@@ -34,6 +36,8 @@ const Department = () => {
     };
 
     const handleDelete = async (id:string) =>{
+        const confirmed = window.confirm("Are you sure you want to delete Department?");
+        if (confirmed) {
         const bearerToken = secureLocalStorage.getItem('login');
         fetch(`${url.nodeapipath}/department/${id}`,{
             method:'DELETE',
@@ -46,9 +50,16 @@ const Department = () => {
             .then((response) => response.json())
             .then((data) => {
                 // console.log(data);d
-                setIsRefreshed(true)
+                if (data.status) {
+                    toast.success('Department deleted successfully');
+                    setIsRefreshed(true)
+                }
+                else {
+                    toast.error('Failed to delete department');
+                }
             })
             .catch((error) => console.error('Error fetching branch data:', error));
+        }
     }
 
     // Set page title
@@ -186,6 +197,7 @@ const Department = () => {
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer />
         </Row>
     );
 };

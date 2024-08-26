@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import url from '../../env';
 import secureLocalStorage from 'react-secure-storage';
+import { toast } from 'react-toastify';
 
 interface ISIPFormInput {
     sipmember_id: string;
@@ -17,7 +18,7 @@ interface ISIPFormInput {
     sipmember_ifsc_code: string;
     sipmember_upi_id: string;
     sipmember_doj: string;
-    // sipmember_maturity_date: string;
+    sipmember_maturity_date: string;
     sipmember_nominee_name: string;
     sipmember_nominee_age: string;
     sipmember_nominee_relation: string;
@@ -155,8 +156,9 @@ const SIPEdit = () => {
                     setValue("sipmember_ifsc_code", sipMemberdetails.sipmember_ifsc_code)
                     setValue("sipmember_upi_id", sipMemberdetails.sipmember_upi_id)
                     setValue("sipmember_doj", new Date(sipMemberdetails.sipmember_doj).toISOString().substring(0, 10))
+                    setValue("sipmember_maturity_date", new Date(sipMemberdetails.sipmember_maturity_date).toISOString().substring(0, 10))
                     // sipmember_maturity_date", sipMemberdetails.)
-                    handleDateChange({target:{value:new Date(sipMemberdetails.sipmember_doj).toISOString().substring(0, 10)}})
+                    // handleDateChange({target:{value:new Date(sipMemberdetails.sipmember_doj).toISOString().substring(0, 10)}})
                     setValue("sipmember_nominee_name", sipMemberdetails.sipmember_nominee_name)
                     setValue("sipmember_nominee_age", sipMemberdetails.sipmember_nominee_age)
                     setValue("sipmember_nominee_relation", sipMemberdetails.sipmember_nominee_relation)
@@ -191,6 +193,7 @@ const SIPEdit = () => {
         const formattedDate = newDate.toISOString().split('T')[0];
         // console.log(formattedDate); 
         setSipMaturityDate(formattedDate);
+        setValue('sipmember_maturity_date',formattedDate)
 
 
     }
@@ -234,7 +237,7 @@ const SIPEdit = () => {
             formData.append('sipmember_ifsc_code', data.sipmember_ifsc_code);
             formData.append('sipmember_upi_id', data.sipmember_upi_id);
             formData.append('sipmember_doj', data.sipmember_doj);
-            formData.append('sipmember_maturity_date', sipmaturitydate);
+            formData.append('sipmember_maturity_date', data.sipmember_maturity_date);
             formData.append('sipmember_nominee_name', data.sipmember_nominee_name);
             formData.append('sipmember_nominee_age', data.sipmember_nominee_age);
             formData.append('sipmember_nominee_relation', data.sipmember_nominee_relation);
@@ -254,15 +257,20 @@ const SIPEdit = () => {
                     },
                     body: formData,
                 });
+                const result = await response.json();
 
                 if (response.ok) {
-                    alert('SIP registration updated successfully.');
+                    toast.success(result.message || 'SIP Member updated successfully');
                     navigate('/all-sipmember'); // Adjust path as needed
                 } else {
-                    console.error('Failed to update SIP registration.');
+                    toast.error(result.message || 'Failed to update SIP Member');
                 }
             } catch (error) {
-                console.error('Error during form submission:', error);
+                if (error instanceof Error) {
+                    toast.error('An error occurred during updating. Please try again.');
+                } else {
+                    toast.error('An error occurred during updating. Please try again.');
+                }
             }
         }
     };
@@ -329,8 +337,9 @@ const SIPEdit = () => {
                                                 type="date"
                                                 id="sipmember_maturity_date"
                                                 className="form-control"
-                                                disabled = {true}
-                                                value={sipmaturitydate}
+                                                // disabled = {true}
+                                                // value={sipmaturitydate}
+                                                {...register('sipmember_maturity_date')}
                                             />
                                         </div>
                                         <div className="mb-3">

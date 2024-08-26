@@ -5,6 +5,8 @@ import { usePageTitle } from '../../hooks';
 import url from '../../env';
 import Table from '../../components/Table';
 import secureLocalStorage from 'react-secure-storage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface Payment {
     _id:string;
@@ -31,6 +33,8 @@ const AllPayments = () => {
     };
 
     const handleDelete = async (id: string) => {
+        const confirmed = window.confirm("Are you sure you want to delete this SIP Payment?");
+        if (confirmed) {
         const bearerToken = secureLocalStorage.getItem('login');
         try {
             const response = await fetch(`${url.nodeapipath}/sippayment/${id}`, {
@@ -43,14 +47,19 @@ const AllPayments = () => {
             });
             const result = await response.json();
             if (response.ok) {
-                console.log('Payment deleted successfully:', result);
+                // console.log('Payment deleted successfully:', result);
+                toast.success('Payment deleted successfully');
                 setPaymentDeleted(true);
             } else {
-                console.error('Error deleting payment:', result);
+                // console.error('Error deleting payment:', result);
+                toast.error('Failed to delete Payment Receipt');
+
             }
         } catch (error) {
-            console.error('Error during API call:', error);
+            // console.error('Error during API call:', error);
+            toast.error('An error occurred while deleting the Payment Receipt');
         }
+    }
     };
 
     usePageTitle({
@@ -232,6 +241,7 @@ const AllPayments = () => {
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer/>
         </Row>
     );
 };

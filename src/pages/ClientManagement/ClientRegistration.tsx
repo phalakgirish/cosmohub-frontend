@@ -7,6 +7,7 @@ import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import url from '../../env';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 // Define the type for form data
 type ClientRegistrationData = {
@@ -98,10 +99,16 @@ const ClientRegistration = () => {
                         
                     });
                     const result = await response.json();
-                    console.log('Registration successful:', result);
-                    navigate('/clients')
+
+                    if (response.ok) {
+                        toast.success(`Registration successful: ${result.message || 'Client registered successfully'}`);
+                        navigate('/clients');
+                    } else {
+                        toast.error(`Registration failed: ${result.message || 'Failed to register client'}`);
+                    }
                 } catch (error) {
-                    console.error('Error during registration:', error);
+                    // console.error('Error during registration:', error);
+                    toast.error('An error occurred during registration. Please try again.');
                 }
 
             }

@@ -9,6 +9,7 @@ import url from '../../env';
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 // Define types
 type PaymentData = {
@@ -128,10 +129,20 @@ const PaymentForm = () => {
                     
                 });
                 const result = await response.json();
-                console.log('Payment successful:', result);
-                navigate('/all-payement')
+                if(response.ok)
+                {
+                    console.log('Payment successful:', result);
+                    toast.success(result.message || 'Payment added Successfully.')
+                    navigate('/all-payement')
+                }
+                else
+                {
+                    toast.error(result.message || 'Failed To add SIP Payment.')
+                }
+                
             } catch (error) {
-                console.error('Error during Payment:', error);
+                // console.error('Error during Payment:', error);
+                toast.error('Error adding payment');
             }
         }
             

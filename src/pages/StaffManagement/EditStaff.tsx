@@ -8,6 +8,7 @@ import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate, useParams } from 'react-router-dom';
 import { log } from 'console';
+import { ToastContainer, toast } from 'react-toastify';
 
 interface IFormInput {
     staff_id:string
@@ -284,7 +285,7 @@ const EditStaff = () => {
     
 
     const onSubmit = async (data: IFormInput) => {
-        console.log(data);
+        // console.log(data);
         
         // if (!panFileStatus) {
         //     setErrFile(true);
@@ -320,10 +321,21 @@ const EditStaff = () => {
                     },
                 });
                 const result = await response.json();
-                console.log('Update successful:', result);
-                navigate('/staff');
+                if(response.ok)
+                {
+                    // console.log('Update successful:', result);
+                    toast.success( result.message || 'Staff Updated successfully');
+                    navigate('/staff');
+                }
+                else
+                {
+                    toast.error(result.message || 'Failed to update Staff.');
+                }
+                
             } catch (error) {
-                console.error('Error during update:', error);
+                // console.error('Error during update:', error);
+                toast.error(`Error during updated staff: ${error}`);
+
             }
         // }
     };

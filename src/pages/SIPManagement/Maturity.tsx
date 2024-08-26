@@ -5,6 +5,8 @@ import { usePageTitle } from '../../hooks';
 import url from '../../env';
 import Table from '../../components/Table';
 import secureLocalStorage from 'react-secure-storage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface Maturity {
     _id: string;
@@ -30,25 +32,32 @@ const AllMaturities = () => {
     };
 
     const handleDelete = async (id: string) => {
-        const bearerToken = secureLocalStorage.getItem('login');
-        try {
-            const response = await fetch(`${url.nodeapipath}/sipmaturity/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                    'Authorization': `Bearer ${bearerToken}`,
-                },
-            });
-            const result = await response.json();
-            if (response.ok) {
-                console.log('Maturity deleted successfully:', result);
-                setMaturityDeleted(true);
-            } else {
-                console.error('Error deleting maturity:', result);
+        const confirmed = window.confirm("Are you sure you want to delete this SIP Maturity?");
+        if (confirmed) {
+            const bearerToken = secureLocalStorage.getItem('login');
+            try {
+                const response = await fetch(`${url.nodeapipath}/sipmaturity/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                        'Authorization': `Bearer ${bearerToken}`,
+                    },
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    toast.success(result.message ||'Maturity deleted successfully');
+                    // console.log('Maturity deleted successfully:', result);
+                    setMaturityDeleted(true);
+                } else {
+                    toast.error(result.message || 'Failed to delete maturity');
+                }
+            } catch (error) {
+                // console.error('Error during API call:', error);
+                toast.error('An error occurred while deleting the maturity');
+                
             }
-        } catch (error) {
-            console.error('Error during API call:', error);
         }
     };
 
@@ -211,6 +220,7 @@ const AllMaturities = () => {
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer />
         </Row>
     );
 };

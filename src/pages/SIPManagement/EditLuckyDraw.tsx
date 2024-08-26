@@ -8,6 +8,7 @@ import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 // Define types
 type LuckyDrawData = {
@@ -81,9 +82,17 @@ const EditLuckyDrawForm = () => {
                 });
                 const result = await response.json();
                 // console.log('Lucky Draw Added successful:', result);
-                navigate('/all-luckydraw')
+                if (response.ok) {
+                    toast.success(result.message || 'Luckydraw updated successfully');
+                    navigate('/all-luckydraw')
+                } else {
+                    toast.error(result.message || 'Failed to update Luckydraw');
+                }
+                
             } catch (error) {
-                console.error('Error during Payment:', error);
+                // console.error('Error during Payment:', error);
+                toast.error('An error occurred. Please try again.');
+
             }
             
         }

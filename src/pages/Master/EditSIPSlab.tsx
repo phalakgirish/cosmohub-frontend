@@ -9,6 +9,7 @@ import 'nouislider/distribute/nouislider.css';
 import url from '../../env';
 import secureLocalStorage from 'react-secure-storage';
 import { usePageTitle } from '../../hooks';
+import { toast } from 'react-toastify';
 
 // Define the type for SIP Slab data
 type SIPSlabData = {
@@ -169,13 +170,16 @@ const EditSIPSlabForm = () => {
             const result = await response.json();
 
             if (response.ok) {
-                console.log('SIP Slab updated successfully:', result);
+                // console.log('SIP Slab updated successfully:', result);
+                toast.success(result.message || 'SIP Slab updated successfully');
                 navigate('/sipslab');
             } else {
-                console.error('Error updating SIP Slab:', result);
+                // console.error('Error updating SIP Slab:', result);
+                toast.error('Failed to update SIP Slab');
             }
         } catch (error) {
-            console.error('Error during API call:', error);
+            // console.error('Error during API call:', error);
+            toast.error('An error occurred during updating. Please try again.');
         }
     };
 

@@ -8,6 +8,7 @@ import 'nouislider/distribute/nouislider.css';
 import { useNavigate } from 'react-router-dom';
 import secureLocalStorage from 'react-secure-storage';
 import url from '../../env';
+import { toast } from 'react-toastify';
 
 
 // Define the type for form data
@@ -125,10 +126,18 @@ const AddSIPSlab = () => {
                         
                     });
                     const result = await response.json();
-                    console.log('SIP Slab Add successfully:');
-                    navigate('/sipslab')
+                    if (response.ok) {
+                    // console.log('SIP Slab Add successfully:');
+                        toast.success( result.message || 'SIP Slab added successfully');
+                        navigate('/sipslab')
+                    }
+                    else
+                    {
+                        toast.error(result.message || 'Failed to add SIP Slab.');
+                    }
                 } catch (error) {
-                    console.error('Error during registration:', error);
+                    // console.error('Error during registration:', error);
+                    toast.error('Failed to add SIP Slab');
                 }
             }
 

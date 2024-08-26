@@ -9,6 +9,8 @@ import url from '../../env';
 // component
 import Table from '../../components/Table';
 import secureLocalStorage from 'react-secure-storage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Define types
 interface User {
@@ -50,34 +52,37 @@ const UserManagement = () => {
         // console.log(e.target.value);
 
         // var userStatus = (e.target.value == 'on')?true:false
-        
-        try
-        {
-            const bearerToken = secureLocalStorage.getItem('login');
-            const response = await fetch(`${url.nodeapipath}/users/all/${id}`,{
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                    'Authorization': `Bearer ${bearerToken}`,
-                },
-                body:JSON.stringify({user_status:!e})
-            })
-            const data = await response.json();
-            if (response.ok)
+        const confirmed = window.confirm(`Are you sure you want to ${(e)?'Inactive':'Active'} this User?`);
+        if (confirmed) {
+            try
             {
-                // console.log(data);
-                FetchUserData();
-                setIsRefreshed('true')
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/users/all/${id}`,{
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                        'Authorization': `Bearer ${bearerToken}`,
+                    },
+                    body:JSON.stringify({user_status:!e})
+                })
+                const data = await response.json();
+                if (response.ok)
+                {
+                    // console.log(data);
+                    FetchUserData();
+                    toast.success(`User ${(e)?'Inactiveted':'Activated'} successfully`);
+                    setIsRefreshed('true')
+                }
+                else 
+                {
+                    console.error('Error fetching user details:', data);
+                }
             }
-            else 
-            {
-                console.error('Error fetching user details:', data);
+            catch(error){
+                console.error('Error during API call:', error);
             }
-        }
-        catch(error){
-            console.error('Error during API call:', error);
-        }
+    }
     }
 
     useEffect(() => {
@@ -210,6 +215,7 @@ const UserManagement = () => {
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer />
         </Row>
     );
 };

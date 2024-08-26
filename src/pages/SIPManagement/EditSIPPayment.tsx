@@ -9,6 +9,7 @@ import url from '../../env';
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 // Define types
 type PaymentData = {
@@ -94,7 +95,7 @@ const EditPaymentForm = () => {
     };
 
     const onSubmit = async(formData: PaymentData) => {
-        console.log('Form data:', formData);
+        // console.log('Form data:', formData);
 
         if(userData.staff_branch == '0' && clientbranch == '')
         {
@@ -131,10 +132,18 @@ const EditPaymentForm = () => {
                     
                 });
                 const result = await response.json();
-                console.log('Payment update  successful:', result);
-                navigate('/all-payement')
+                if (response.ok) {
+                    toast.success(result.message || 'SIP Payment Updated successfully');
+                    navigate('/all-payement')
+                } else {
+                    // console.error('Error adding Payment', result);
+                    toast.error(result.message || 'Failed to Update SIP Payment');
+                }
+                // console.log('Payment update  successful:', result);
+                
             } catch (error) {
-                console.error('Error during Payment:', error);
+                // console.error('Error during Payment:', error);
+                toast.error('An error occurred during adding. Please try again.');
             }
         }
             

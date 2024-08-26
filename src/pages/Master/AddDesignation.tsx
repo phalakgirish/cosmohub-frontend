@@ -8,6 +8,7 @@ import url from '../../env';
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 // Define the type for department data
 type Department = {
@@ -40,7 +41,6 @@ const BasicForm = () => {
                         }
                 });
                 const data = await response.json();
-                console.log(data);
 
                 if (response.ok) {
                     setDepartments(data.department || []);
@@ -91,10 +91,12 @@ const BasicForm = () => {
             // console.log(result);
 
             if (response.ok) {
-                console.log('Designation added successfully:', result);
+                // console.log('Designation added successfully:', result);
+                toast.success( result.message || 'Designation added successfully');
                 navigate('/designation')
             } else {
-                console.error('Error adding designation:', result);
+                // console.error('Error adding designation:', result);
+                toast.error(result.message || 'Failed to add designation.');
             }
         } catch (error) {
             console.error('Error during API call:', error);

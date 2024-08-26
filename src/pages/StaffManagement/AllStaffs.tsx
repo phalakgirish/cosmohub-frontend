@@ -9,6 +9,8 @@ import url from '../../env';
 // component
 import Table from '../../components/Table';
 import secureLocalStorage from 'react-secure-storage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Define types
 interface Staff {
@@ -81,26 +83,37 @@ const AllStaffs = () => {
     };
 
     const handleDelete = async (id: string) => {
-        const bearerToken = secureLocalStorage.getItem('login');
-        fetch(`${url.nodeapipath}/staff/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin':'*',
-                'Authorization': `Bearer ${bearerToken}`
-            }
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            // console.log(data);
-            // Optionally refresh data after deletion
-            // setData(data.sip.map((sip: SIP) => ({
-            //     ...sip,
-            //     srNo: data.sip.indexOf(sip) + 1
-            // })));
-            setIsRefreshed(true)
-        })
-        .catch((error) => console.error('Error deleting SIP data:', error));
+        const confirmed = window.confirm("Are you sure you want to delete this staff?");
+        if (confirmed) {
+            const bearerToken = secureLocalStorage.getItem('login');
+            fetch(`${url.nodeapipath}/staff/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin':'*',
+                    'Authorization': `Bearer ${bearerToken}`
+                }
+            })
+            .then((response) => response.json())
+            .then((data) => {
+
+                if (data.status) {
+                    // setData(data.filter(sip => sip._id !== id)); // Remove deleted SIP from state
+                    // console.log('SIP deleted successfully:', result);
+                    toast.success(data.message || 'Staff deleted successfully');
+                    setIsRefreshed(true)  
+                } else {
+                    // console.error('Error deleting SIP:', result);
+                    toast.error('Failed to delete Staff');
+                    }
+                
+            })
+            .catch((error) => {
+                // console.error('Error deleting Staff data:', error);
+                toast.error('An error occurred while deleting the staff');
+
+            });
+        }
     };
 
     const columns = [
@@ -221,6 +234,7 @@ const AllStaffs = () => {
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer />
         </Row>
     );
 };

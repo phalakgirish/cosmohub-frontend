@@ -7,6 +7,8 @@ import url from '../../env';
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+
 
 interface IFormInput {
     fullname: string;
@@ -201,10 +203,22 @@ const StaffRegistration = () => {
                     
                 });
                 const result = await response.json();
-                console.log('Registration successful:', result);
-                navigate('/staff')
+                if(response.ok)
+                {
+                    console.log('Registration successful:', result);
+                    var toasterMessage = `${result.message},<br /> User email: ${result.usesCreatedData.staff_email_id} and Password: ${result.usesCreatedData.password}`
+                    toast.success( result.message || 'Staff added successfully');
+                    navigate('/staff')
+                }
+                else
+                {
+                    toast.error(result.message || 'Failed to add Staff.');
+                }
+                
             } catch (error) {
-                console.error('Error during registration:', error);
+                // console.error('Error during registration:', error);
+                toast.error(`Error during registration:${error}`);
+
             }
         }
         

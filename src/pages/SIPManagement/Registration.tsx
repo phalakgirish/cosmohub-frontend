@@ -7,6 +7,7 @@ import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import url from '../../env';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 interface ISIPFormInput {
     client_id: string;
@@ -15,7 +16,7 @@ interface ISIPFormInput {
     sipmember_ifsc_code: string;
     sipmember_upi_id: string;
     sipmember_doj: string;
-    // sipmember_maturity_date: string;
+    sipmember_maturity_date: string;
     sipmember_nominee_name: string;
     sipmember_nominee_age: string;
     sipmember_nominee_relation: string;
@@ -132,7 +133,7 @@ const SIPRegistration = () => {
 },[])
 
     const onSubmit = async (data: ISIPFormInput) => {
-        // console.log(data);
+        console.log(data);
         if(userData.staff_branch == '0' && clientbranch == '')
         {
             setBranchErr(true);
@@ -147,7 +148,7 @@ const SIPRegistration = () => {
             formData.append('sipmember_ifsc_code', data.sipmember_ifsc_code);
             formData.append('sipmember_upi_id', data.sipmember_upi_id);
             formData.append('sipmember_doj', data.sipmember_doj);
-            formData.append('sipmember_maturity_date', sipmaturitydate);
+            formData.append('sipmember_maturity_date', data.sipmember_maturity_date);
             formData.append('sipmember_nominee_name', data.sipmember_nominee_name);
             formData.append('sipmember_nominee_age', data.sipmember_nominee_age);
             formData.append('sipmember_nominee_relation', data.sipmember_nominee_relation);
@@ -190,10 +191,17 @@ const SIPRegistration = () => {
                     },
                 });
                 const result = await response.json();
-                console.log('Registration successful:', result);
-                navigate('/all-sipmember');
+                
+                if (response.ok) {
+                    toast.success( result.message || 'SIP Member added successfully');
+                    navigate('/all-sipmember');
+                } else {
+                    // console.error('Error adding SIP Member:', result);
+                    toast.error(result.message || 'Failed to add SIP Member');
+                }
             } catch (error) {
-                console.error('Error during registration:', error);
+                // console.error('Error during API call:', error);
+                toast.error('An error occurred during adding. Please try again.');
             }
         }
     };
@@ -230,7 +238,8 @@ const SIPRegistration = () => {
 
         const formattedDate = newDate.toISOString().split('T')[0];
         // console.log(formattedDate); 
-        setSipMaturityDate(formattedDate);
+        // setSipMaturityDate(formattedDate);
+        setValue('sipmember_maturity_date',formattedDate)
 
 
     }
@@ -377,8 +386,9 @@ const SIPRegistration = () => {
                                                 type="date"
                                                 id="sipmember_maturity_date"
                                                 className="form-control"
-                                                disabled = {true}
-                                                value={sipmaturitydate}
+                                                // disabled = {true}
+                                                // value={sipmaturitydate}
+                                                {...register('sipmember_maturity_date')}
                                             />
                                         </div>
                                         <div className="mb-3">

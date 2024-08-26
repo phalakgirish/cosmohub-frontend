@@ -9,6 +9,9 @@ import url from '../../env';
 // component
 import Table from '../../components/Table';
 import secureLocalStorage from 'react-secure-storage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 // Define types
 interface Branch {
@@ -38,6 +41,8 @@ const Branch = () => {
     };
 
     const handleDelete = async (id:string) =>{
+        const confirmed = window.confirm("Are you sure you want to delete this Branch?");
+        if (confirmed) {
         const bearerToken = secureLocalStorage.getItem('login');
         fetch(`${url.nodeapipath}/branch/${id}`,{
             method:'DELETE',
@@ -50,10 +55,19 @@ const Branch = () => {
             .then((response) => response.json())
             .then((data) => {
                 // console.log(data);
-                setIsRefreshed(true)
+                    if (data.status) {
+                        toast.success('Branch deleted successfully');
+                        setIsRefreshed(prev => !prev);
+                    } else {
+                        toast.error('Failed to delete branch');
+                    }
+                // setIsRefreshed(true)
             })
-            .catch((error) => console.error('Error fetching branch data:', error));
+            .catch((error) => {console.error('Error fetching branch data:', error)
+                toast.error('An error occurred while deleting the client');
+            });
     }
+}
 
     // Set page title
     usePageTitle({
@@ -198,6 +212,7 @@ const Branch = () => {
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer />
         </Row>
     );
 };

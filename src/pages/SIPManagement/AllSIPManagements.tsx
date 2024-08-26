@@ -9,6 +9,8 @@ import url from '../../env';
 // component
 import Table from '../../components/Table';
 import secureLocalStorage from 'react-secure-storage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Define types
 interface SIP {
@@ -42,6 +44,8 @@ const AllSIPManagement = () => {
     };
 
     const handleDelete = async (id: string) => {
+        const confirmed = window.confirm("Are you sure you want to delete this SIP Member?");
+        if (confirmed) {
         const bearerToken = secureLocalStorage.getItem('login');
         fetch(`${url.nodeapipath}/sipmanagement/${id}`, {
             method: 'DELETE',
@@ -54,14 +58,19 @@ const AllSIPManagement = () => {
         .then((response) => response.json())
         .then((data) => {
             // console.log(data);
-            // Optionally refresh data after deletion
-            // setData(data.sip.map((sip: SIP) => ({
-            //     ...sip,
-            //     srNo: data.sip.indexOf(sip) + 1
-            // })));
-            setIsRefreshed(true)
+            if (data.status) {
+                toast.success('SIP Member deleted successfully');
+                // setIsRefreshed(prev => !prev);
+                setIsRefreshed(true)
+            } else {
+                toast.error('Failed to delete SIP Member');
+            }
         })
-        .catch((error) => console.error('Error deleting SIP data:', error));
+        .catch((error) => {
+            console.error('Error deleting SIP Member data:', error);
+            toast.error('An error occurred while deleting the SIP Member');
+        });
+    }
     };
 
     // Set page title
@@ -233,6 +242,7 @@ const AllSIPManagement = () => {
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer />
         </Row>
     );
 };

@@ -5,6 +5,8 @@ import { usePageTitle } from '../../hooks';
 import url from '../../env';
 import Table from '../../components/Table';
 import secureLocalStorage from 'react-secure-storage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Define types for SIP data
 interface SIP {
@@ -32,6 +34,8 @@ const SIPs = () => {
 
     // Handle delete SIP
     const handleDelete = async (id: string) => {
+        const confirmed = window.confirm("Are you sure you want to delete this SIP Slab?");
+        if (confirmed) {
         const bearerToken = secureLocalStorage.getItem('login');
         try {
             const response = await fetch(`${url.nodeapipath}/sipslab/${id}`, {
@@ -45,14 +49,18 @@ const SIPs = () => {
             const result = await response.json();
             if (response.ok) {
                 // setData(data.filter(sip => sip._id !== id)); // Remove deleted SIP from state
-                console.log('SIP deleted successfully:', result);
+                // console.log('SIP deleted successfully:', result);
+                toast.success(result.message || 'SIP Slab deleted successfully');
                 setSipDeleted(true)  
 
             } else {
-                console.error('Error deleting SIP:', result);
+                // console.error('Error deleting SIP:', result);
+                toast.error('Failed to delete SIP');
+                }
+            } catch (error) {
+                // console.error('Error during API call:', error);
+                toast.error('An error occurred while deleting the SIP');
             }
-        } catch (error) {
-            console.error('Error during API call:', error);
         }
     };
 
@@ -200,6 +208,7 @@ const SIPs = () => {
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer />
         </Row>
     );
 };

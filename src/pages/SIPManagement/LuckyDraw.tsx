@@ -5,6 +5,8 @@ import { usePageTitle } from '../../hooks';
 import url from '../../env';
 import Table from '../../components/Table';
 import secureLocalStorage from 'react-secure-storage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface LuckyDrawEntry {
     _id: string;
@@ -30,25 +32,32 @@ const LuckyDraw = () => {
     };
 
     const handleDelete = async (id: string) => {
-        const bearerToken = secureLocalStorage.getItem('login');
-        try {
-            const response = await fetch(`${url.nodeapipath}/luckydraw/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                    'Authorization': `Bearer ${bearerToken}`,
-                },
-            });
-            const result = await response.json();
-            if (response.ok) {
-                console.log('LuckyDraw entry deleted successfully:', result);
-                setEntryDeleted(true);
-            } else {
-                console.error('Error deleting LuckyDraw entry:', result);
+        const confirmed = window.confirm("Are you sure you want to delete this lucky draw?");
+        if (confirmed) {
+            const bearerToken = secureLocalStorage.getItem('login');
+            try {
+                const response = await fetch(`${url.nodeapipath}/luckydraw/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                        'Authorization': `Bearer ${bearerToken}`,
+                    },
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    // console.log('LuckyDraw entry deleted successfully:', result);
+                    toast.success('LuckyDraw deleted successfully');
+                    setEntryDeleted(true);
+                } else {
+                    // console.error('Error deleting LuckyDraw entry:', result);
+                    toast.error('Failed to delete LuckyDraw');
+                }
+            } catch (error) {
+                // console.error('Error during API call:', error);
+                toast.error('An error occurred while deleting the Luckydraw');
+
             }
-        } catch (error) {
-            console.error('Error during API call:', error);
         }
     };
 
@@ -207,6 +216,7 @@ const LuckyDraw = () => {
                     </Card.Body>
                 </Card>
             </Col>
+            <ToastContainer />
         </Row>
     );
 };

@@ -52,21 +52,21 @@ const DashBoard1 = () => {
         <>
         <h1 style={{ color: 'white' }}>Dashboard</h1>
 
-            {/* <Statistics />
+            <Statistics />
 
             <Row>
-                <Col xl={4}>
+                {/*<Col xl={4}>
                     <SalesChart />
                 </Col>
-                <Col xl={4}>
+                 <Col xl={4}>
                     <StatisticsChart />
                 </Col>
                 <Col xl={4}>
                     <RevenueChart />
-                </Col>
+                </Col> */}
             </Row>
 
-            <Users />
+            {/* <Users />
 
             <Row>
                 <Col xl={4}>
