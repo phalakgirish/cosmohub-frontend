@@ -75,7 +75,7 @@ const StaffRegistration = () => {
     const schema = yup.object().shape({
         fullname: yup.string().required('Please enter Fullname'),
         email: yup.string().required('Please enter Email').email('Please enter a valid Email'),
-        password: yup.string().required('Please enter Password'),
+        // password: yup.string().required('Please enter Password'),
         dob: yup.string().required('Please enter Date of Birth'),
         mobile_number: yup.string().required('Please enter Mobile Number'),
         gender: yup.string().required('Please select Gender'),
@@ -207,7 +207,7 @@ const StaffRegistration = () => {
                 {
                     console.log('Registration successful:', result);
                     var toasterMessage = `${result.message},<br /> User email: ${result.usesCreatedData.staff_email_id} and Password: ${result.usesCreatedData.password}`
-                    toast.success( result.message || 'Staff added successfully');
+                    toast.success( toasterMessage || 'Staff added successfully');
                     navigate('/staff')
                 }
                 else
@@ -316,7 +316,7 @@ const StaffRegistration = () => {
                                                 className="form-control"
                                                 {...register('password')}
                                             />
-                                            {errors.password && <div className="invalid-feedback d-block">{errors.password.message}</div>}
+                                            {/* {errors.password && <div className="invalid-feedback d-block">{errors.password.message}</div>} */}
                                         </div>
 
                                         <div className="mb-3">
