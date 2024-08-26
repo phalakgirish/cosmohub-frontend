@@ -205,8 +205,8 @@ const StaffRegistration = () => {
                 const result = await response.json();
                 if(response.ok)
                 {
-                    console.log('Registration successful:', result);
-                    var toasterMessage = `${result.message},<br /> User email: ${result.usesCreatedData.staff_email_id} and Password: ${result.usesCreatedData.password}`
+                    // console.log('Registration successful:', result);
+                    var toasterMessage = `${result.message}, User email Id: ${result.usesCreatedData.staff_email_id} and Password: ${result.usesCreatedData.password}`
                     toast.success( toasterMessage || 'Staff added successfully');
                     navigate('/staff')
                 }
