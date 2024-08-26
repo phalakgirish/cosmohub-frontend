@@ -8,6 +8,7 @@ import { findAllParent, findMenuItem } from '../helpers/menu';
 
 // constants
 import { MenuItemTypes } from '../constants/menu';
+import secureLocalStorage from 'react-secure-storage';
 
 type SubMenus = {
     item: MenuItemTypes;
@@ -136,6 +137,8 @@ const AppMenu = ({ menuItems }: AppMenuProps) => {
     const menuRef: any = useRef(null);
 
     const [activeMenuItems, setActiveMenuItems] = useState<Array<string>>([]);
+    const StorageuserData:any = secureLocalStorage.getItem('userData');
+    const userData:any = JSON.parse(StorageuserData);
 
     /*
      * toggle the menus
@@ -173,12 +176,16 @@ const AppMenu = ({ menuItems }: AppMenuProps) => {
     useEffect(() => {
         activeMenu();
     }, [activeMenu]);
+    
 
     return (
         <>
             <ul className="side-menu" ref={menuRef} id="side-menu">
                 {(menuItems || []).map((item, idx) => {
+                    
+
                     return (
+                        (item.usershow?.includes(userData.user_role_type))?
                         <React.Fragment key={idx}>
                             {item.isTitle ? (
                                 <li
@@ -208,7 +215,7 @@ const AppMenu = ({ menuItems }: AppMenuProps) => {
                                     )}
                                 </>
                             )}
-                        </React.Fragment>
+                        </React.Fragment>:''
                     );
                 })}
             </ul>

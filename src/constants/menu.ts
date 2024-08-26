@@ -10,11 +10,12 @@ export type MenuItemTypes = {
     };
     parentKey?: string;
     target?: string;
+    usershow?:Array<string>;
     children?: MenuItemTypes[];
 };
 
 const MENU_ITEMS: MenuItemTypes[] = [
-    { key: 'navigation', label: 'Navigation', isTitle: true },
+    { key: 'navigation', label: 'Navigation', isTitle: true, usershow:["0","1","2"] },
     {
         key: 'dashboard',
         label: 'Dashboard',
@@ -22,13 +23,15 @@ const MENU_ITEMS: MenuItemTypes[] = [
         icon: 'mdi mdi-view-dashboard-outline',
         // badge: { variant: 'success', text: '9+' },
         url: '/dashboard',
+        usershow:["0","1","2"]
     },
-    { key: 'master', label: 'Master Management', isTitle: true },
+    { key: 'master', label: 'Master Management', isTitle: true, usershow:["0"] },
     {
         key: 'branch',
         label: 'Branch',
         isTitle: false,
         icon: 'mdi mdi-office-building',
+        usershow:["0"],
         children: [
             {
                 key: 'allbranch',
@@ -49,6 +52,7 @@ const MENU_ITEMS: MenuItemTypes[] = [
         label: 'Department',
         isTitle: false,
         icon: 'mdi mdi-domain',
+        usershow:["0"],
         children: [
             {
                 key: 'alldepartment',
@@ -69,6 +73,7 @@ const MENU_ITEMS: MenuItemTypes[] = [
         label: 'Designation',
         isTitle: false,
         icon: 'mdi mdi-account-tie',
+        usershow:["0"],
         children: [
             {
                 key: 'alldesignation',
@@ -96,6 +101,7 @@ const MENU_ITEMS: MenuItemTypes[] = [
         label: 'SIP Slab',
         isTitle: false,
         icon: 'mdi mdi-ballot',
+        usershow:["0"],
         children: [
             {
                 key: 'allsipslab',
@@ -112,13 +118,14 @@ const MENU_ITEMS: MenuItemTypes[] = [
         ],
     },
 
-    { key: 'client', label: 'Client Management', isTitle: true },
+    { key: 'client', label: 'Client Management', isTitle: true, usershow:["0","1","2"] },
     {
         key: 'registration',
         label: 'Add Client',
         isTitle: false,
         icon: 'mdi mdi-account',
         url: '/client-registration',
+        usershow:["0","1","2"],
     },
     {
         key: 'clients',
@@ -126,13 +133,15 @@ const MENU_ITEMS: MenuItemTypes[] = [
         isTitle: false,
         icon: 'dripicons-view-list',
         url: '/clients',
+        usershow:["0","1","2"],
     },
-    { key: 'sip', label: 'SIP Management', isTitle: true },
+    { key: 'sip', label: 'SIP Management', isTitle: true, usershow:["0","1","2"], },
     {
         key: 'sipMember',
         label: 'SIP Member',
         isTitle: false,
         icon: 'mdi mdi-account',
+        usershow:["0","1","2"],
         children: [
             {
                 key: 'allsipmember',
@@ -153,6 +162,7 @@ const MENU_ITEMS: MenuItemTypes[] = [
         label: 'SIP Payment',
         isTitle: false,
         icon: 'mdi mdi-currency-inr',
+        usershow:["0","1","2"],
         children: [
             {
                 key: 'allsipmember',
@@ -173,6 +183,7 @@ const MENU_ITEMS: MenuItemTypes[] = [
         label: 'SIP Lucky Draw',
         isTitle: false,
         icon: 'mdi mdi-currency-inr',
+        usershow:["0","1","2"],
         children: [
             {
                 key: 'allluckydraw',
@@ -193,6 +204,7 @@ const MENU_ITEMS: MenuItemTypes[] = [
         label: 'SIP Maturity',
         isTitle: false,
         icon: 'mdi mdi-currency-inr',
+        usershow:["0","1","2"],
         children: [
             {
                 key: 'allMaturity',
@@ -208,13 +220,14 @@ const MENU_ITEMS: MenuItemTypes[] = [
             },
         ],
     },
-    { key: 'Staff', label: 'Staff Management', isTitle: true },
+    { key: 'Staff', label: 'Staff Management', isTitle: true, usershow:["0","1"], },
     {
         key: 'registration',
         label: 'Add Staff',
         isTitle: false,
         icon: 'mdi mdi-account',
         url: '/add-staff',
+        usershow:["0","1"],
     },
     {
         key: 'staff',
@@ -222,6 +235,7 @@ const MENU_ITEMS: MenuItemTypes[] = [
         isTitle: false,
         icon: 'dripicons-view-list',
         url: '/staff',
+        usershow:["0","1"],
     },
     {
         key: 'users',
@@ -229,6 +243,7 @@ const MENU_ITEMS: MenuItemTypes[] = [
         isTitle: false,
         icon: 'dripicons-view-list',
         url: '/users',
+        usershow:["0","1"],
     },
     // { key: 'apps', label: 'Apps', isTitle: true },
     // {
