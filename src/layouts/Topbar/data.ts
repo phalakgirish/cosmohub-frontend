@@ -63,6 +63,11 @@ const profileMenus: ProfileMenu[] = [
     //     redirectTo: '/auth/lock-screen',
     // },
     {
+        label: 'Change Password',
+        icon: 'mdi mdi-key',
+        redirectTo: '/changepassword',
+    },
+    {
         label: 'Logout',
         icon: 'fe-log-out',
         redirectTo: '/auth/login',

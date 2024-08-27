@@ -13,7 +13,6 @@ import { ToastContainer, toast } from 'react-toastify';
 interface IFormInput {
     fullname: string;
     email: string;
-    password: string;
     dob: string;
     mobile_number: string;
     gender: string;
@@ -175,7 +174,6 @@ const StaffRegistration = () => {
             const formData = new FormData();
             formData.append('staff_name', data.fullname);
             formData.append('staff_dob', data.dob);
-            formData.append('staff_password', data.password);
             formData.append('staff_mobile_number', data.mobile_number);
             formData.append('staff_emailId', data.email);
             formData.append('staff_gender', data.gender);
@@ -307,7 +305,7 @@ const StaffRegistration = () => {
                                             {errors.email && <div className="invalid-feedback d-block">{errors.email.message}</div>}
                                         </div>
 
-                                        <div className="mb-3">
+                                        {/* <div className="mb-3">
                                             <label htmlFor="password" className="form-label">Password</label>
                                             <input
                                                 type="password"
@@ -316,8 +314,8 @@ const StaffRegistration = () => {
                                                 className="form-control"
                                                 {...register('password')}
                                             />
-                                            {/* {errors.password && <div className="invalid-feedback d-block">{errors.password.message}</div>} */}
-                                        </div>
+                                            {/* {errors.password && <div className="invalid-feedback d-block">{errors.password.message}</div>} 
+                                        </div> */}
 
                                         <div className="mb-3">
                                             <label htmlFor="dob" className="form-label">Date of Birth</label>

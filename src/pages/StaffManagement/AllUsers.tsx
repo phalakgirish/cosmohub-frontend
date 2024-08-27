@@ -33,8 +33,42 @@ const UserManagement = () => {
     const [isRefreshed,setIsRefreshed] = useState('false');
     const navigate = useNavigate();
 
-    const handleChangePassword = (id: string) => {
-        navigate(`/change-password/${id}`);
+    const handleChangePassword = async(id: string) => {
+        
+        // navigate(`/change-password/${id}`);
+        const confirmed = window.confirm(`Are you sure you want to change password for this User?`);
+        if (confirmed) {
+            try
+            {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/users/changepassword/${id}`,{
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                        'Authorization': `Bearer ${bearerToken}`,
+                    },
+                })
+                const data = await response.json();
+
+                
+                if (response.ok)
+                {
+                    // console.log(data);
+                    FetchUserData();
+                    var toasterMessage = `${data.message}, User email Id: ${data.usesCreatedData.staff_email_id} and Password: ${data.usesCreatedData.password}`
+                    toast.success( toasterMessage || 'Staff added successfully');
+                    setIsRefreshed('true')
+                }
+                else 
+                {
+                    console.error('Error fetching user details:', data);
+                }
+            }
+            catch(error){
+                console.error('Error during API call:', error);
+            }
+        }
     };
 
     usePageTitle({
@@ -82,7 +116,7 @@ const UserManagement = () => {
             catch(error){
                 console.error('Error during API call:', error);
             }
-    }
+        }
     }
 
     useEffect(() => {

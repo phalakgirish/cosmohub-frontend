@@ -54,18 +54,20 @@ const EditLuckyDrawForm = () => {
 
     const onSubmit =async  (formData: LuckyDrawData) => {
 
-        if(userData.staff_branch == '0' && clientbranch == '')
-        {
-            setBranchErr(true);
-        }
-        else
-        {
+        // if(userData.staff_branch == '0' && clientbranch == '')
+        // {
+        //     setBranchErr(true);
+        // }
+        // else
+        // {
             var dataToPost = {
                 luckydraw_month: formData.luckydraw_month,
                 spimember_id:formData.spimember_id,
                 luckydraw_rank: formData.luckydraw_rank,
                 payment_status: formData.payment_status,
-                branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
+                // branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
+                branch_id:''
+
             }
 
             try {
@@ -95,7 +97,7 @@ const EditLuckyDrawForm = () => {
 
             }
             
-        }
+        // }
 
     };
 
@@ -285,7 +287,7 @@ const EditLuckyDrawForm = () => {
                         </Col>
                     </Row>
                     <Row>
-                    {(userData.user_role_type == '0') && (
+                    {/* {(userData.user_role_type == '0') && (
                                 <>
                                 <Col md={6}>
                                  <Form.Group className="mb-3">
@@ -303,7 +305,7 @@ const EditLuckyDrawForm = () => {
                              </Form.Group>
                              </Col>
                              </>
-                            )}
+                            )} */}
                     </Row>
 
                     <div className="text-md-end mb-0">

@@ -100,7 +100,7 @@ const UserBox = () => {
                     </div>
                 </Dropdown.Menu>
             </Dropdown>
-            <p className=" left-user-info" style={{ color: '#DADADA' }}> {(userData !== null)?(userData.user_role_type == "0")?"Super Admin":"Admin":''}</p>
+            <p className=" left-user-info" style={{ color: '#DADADA' }}> {(userData !== null)?(userData.user_role_type == "0")?"Super Admin":(userData.user_role_type == "1")?"Admin":"Staff":''}</p>
 
             <ul className="list-inline">
                 <li className="list-inline-item">

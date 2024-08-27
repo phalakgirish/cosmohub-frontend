@@ -17,6 +17,8 @@ import { messages, projectDetails } from './data';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const DashBoard1 = () => {
     // set pagetitle
@@ -64,6 +66,7 @@ const DashBoard1 = () => {
                 <Col xl={4}>
                     <RevenueChart />
                 </Col> */}
+                <ToastContainer />
             </Row>
 
             {/* <Users />

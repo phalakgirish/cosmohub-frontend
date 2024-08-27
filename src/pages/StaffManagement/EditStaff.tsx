@@ -14,7 +14,6 @@ interface IFormInput {
     staff_id:string
     fullname: string;
     email: string;
-    password: string;
     dob: string;
     mobile_number: string;
     gender: string;
@@ -298,7 +297,6 @@ const EditStaff = () => {
             const formData = new FormData();
             formData.append('staff_name', data.fullname);
             formData.append('staff_dob', data.dob);
-            formData.append('staff_password', data.password);
             formData.append('staff_mobile_number', data.mobile_number);
             formData.append('staff_emailId', data.email);
             formData.append('staff_gender', data.gender);
@@ -378,7 +376,7 @@ const EditStaff = () => {
                                             {errors.email && <div className="invalid-feedback d-block">{errors.email.message}</div>}
                                         </div>
 
-                                        <div className="mb-3">
+                                        {/* <div className="mb-3">
                                             <label htmlFor="password" className="form-label">Password</label>
                                             <input
                                                 type="password"
@@ -387,8 +385,8 @@ const EditStaff = () => {
                                                 className="form-control"
                                                 {...register('password')}
                                             />
-                                            {/* {errors.password && <div className="invalid-feedback d-block">{errors.password.message}</div>} */}
-                                        </div>
+                                            {/* {errors.password && <div className="invalid-feedback d-block">{errors.password.message}</div>}
+                                        </div> */}
 
                                         <div className="mb-3">
                                             <label htmlFor="dob" className="form-label">Date of Birth</label>
@@ -439,6 +437,16 @@ const EditStaff = () => {
                                                 <option value="2">Staff</option>
                                             </select>
                                             {errors.gender && <div className="invalid-feedback d-block">{errors.gender.message}</div>}
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="doj" className="form-label">Date of Joining</label>
+                                            <input
+                                                type="date"
+                                                id="doj"
+                                                className="form-control"
+                                                {...register('doj')}
+                                            />
+                                            {errors.doj && <div className="invalid-feedback d-block">{errors.doj.message}</div>}
                                         </div>
                                     </Col>
 
@@ -526,16 +534,7 @@ const EditStaff = () => {
                                             {errors.designation && <div className="invalid-feedback d-block">{errors.designation.message}</div>}
                                         </div>
 
-                                        <div className="mb-3">
-                                            <label htmlFor="doj" className="form-label">Date of Joining</label>
-                                            <input
-                                                type="date"
-                                                id="doj"
-                                                className="form-control"
-                                                {...register('doj')}
-                                            />
-                                            {errors.doj && <div className="invalid-feedback d-block">{errors.doj.message}</div>}
-                                        </div>
+                                        
                                     </Col>
                                 </Row>
                                 <div className="text-md-end mb-0">

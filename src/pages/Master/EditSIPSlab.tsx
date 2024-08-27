@@ -153,7 +153,9 @@ const EditSIPSlabForm = () => {
             sip_amount: data.amount,
             sip_type: data.type,
             sip_status: data.sip_status,
-            branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
+            // branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
+            branch_id:''
+
         }
         try {
             const bearerToken = getBearerToken();
@@ -288,7 +290,7 @@ const EditSIPSlabForm = () => {
                             </Form.Control.Feedback>
                         </Form.Group>
 
-                        {(userData.user_role_type == '0') && (
+                        {/* {(userData.user_role_type == '0') && (
                                 <>
                                  <Form.Group className="mb-2">
                                  <Form.Label>Branch Name</Form.Label>
@@ -303,7 +305,7 @@ const EditSIPSlabForm = () => {
                                  </select>
                              </Form.Group>
                              </>
-                            )}
+                            )} */}
 
                         <div className="text-md-end mb-0">
                             <Button variant="primary" className="me-1" type="submit">

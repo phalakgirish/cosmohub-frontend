@@ -86,23 +86,14 @@ const AddSIPSlab = () => {
     }, []);
 
     const onSubmit = async (data: SIPSlabData) => {
-        // console.log(formData);
-        // Handle form submission
 
-            // const formData = new FormData();
-            // formData.append('sip_slab_from', data.duration[0].toString());
-            // formData.append('sip_slab_to', data.duration[1].toString());
-            // formData.append('sip_rank', data.rank.toString());
-            // formData.append('sip_amount', data.amount.toString());
-            // formData.append('sip_type', data.type);
-            // formData.append('sip_status', data.sip_status);
-            // formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
-            if(userData.staff_branch == '0' && clientbranch == '')
-            {
-                setBranchErr(true);
-            }
-            else
-            {
+
+            // if(userData.staff_branch == '0' && clientbranch == '')
+            // {
+            //     setBranchErr(true);
+            // }
+            // else
+            // {
                 var DataToPost = {
                     sip_slab_from:  data.duration[0],
                     sip_slab_to: data.duration[1],
@@ -110,7 +101,8 @@ const AddSIPSlab = () => {
                     sip_amount: data.amount,
                     sip_type: data.type,
                     sip_status: data.sip_status,
-                    branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
+                    // branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
+                    branch_id:''
                 }
 
                 try {
@@ -139,7 +131,7 @@ const AddSIPSlab = () => {
                     // console.error('Error during registration:', error);
                     toast.error('Failed to add SIP Slab');
                 }
-            }
+            // }
 
     };
 
@@ -258,7 +250,7 @@ const AddSIPSlab = () => {
                             {errors.sip_status?.message}
                         </Form.Control.Feedback>
                     </Form.Group>
-                    {(userData.user_role_type == '0') && (
+                    {/* {(userData.user_role_type == '0') && (
                                 <>
                                  <Form.Group className="mb-2">
                                  <Form.Label>Branch Name</Form.Label>
@@ -274,7 +266,7 @@ const AddSIPSlab = () => {
                                  {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
                              </Form.Group>
                              </>
-                            )}
+                            )} */}
 
                     <div className="text-md-end mb-0">
                         <Button variant="primary" className="me-1" type="submit">

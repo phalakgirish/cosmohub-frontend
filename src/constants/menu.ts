@@ -245,6 +245,23 @@ const MENU_ITEMS: MenuItemTypes[] = [
         url: '/users',
         usershow:["0","1"],
     },
+    { key: 'Reports', label: 'Reports', isTitle: true, usershow:["0","1","2"], },
+    {
+        key: 'paymentReport',
+        label: 'Monthly Payment Report',
+        isTitle: false,
+        icon: 'mdi mdi-account',
+        url: '/payment-report',
+        usershow:["0","1","2"],
+    },
+    {
+        key: 'memberpaymentReport',
+        label: 'Member Payment Report',
+        isTitle: false,
+        icon: 'mdi mdi-account',
+        url: '/memberpayment-report',
+        usershow:["0","1","2"],
+    },
     // { key: 'apps', label: 'Apps', isTitle: true },
     // {
     //     key: 'apps-calendar',

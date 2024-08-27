@@ -53,18 +53,20 @@ const LuckyDrawForm = () => {
 
     const onSubmit =async  (formData: LuckyDrawData) => {
 
-        if(userData.staff_branch == '0' && clientbranch == '')
-        {
-            setBranchErr(true);
-        }
-        else
-        {
+        // if(userData.staff_branch == '0' && clientbranch == '')
+        // {
+        //     setBranchErr(true);
+        // }
+        // else
+        // {
             var dataToPost = {
                 luckydraw_month: formData.month,
                 spimember_id:formData.memberId,
                 luckydraw_rank: formData.rank,
                 payment_status: formData.payemnt_status,
-                branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
+                // branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
+                branch_id:''
+                
             }
 
             try {
@@ -94,7 +96,7 @@ const LuckyDrawForm = () => {
                 toast.error('An error occurred during adding. Please try again.');
             }
             
-        }
+        // }
 
     };
 
@@ -251,7 +253,7 @@ const LuckyDrawForm = () => {
                         </Col>
                     </Row>
                     <Row>
-                    {(userData.user_role_type == '0') && (
+                    {/* {(userData.user_role_type == '0') && (
                                 <>
                                 <Col md={6}>
                                  <Form.Group className="mb-3">
@@ -269,7 +271,7 @@ const LuckyDrawForm = () => {
                              </Form.Group>
                              </Col>
                              </>
-                            )}
+                            )} */}
                     </Row>
 
                     <div className="text-md-end mb-0">
