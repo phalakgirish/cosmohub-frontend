@@ -105,6 +105,11 @@ const PaymentForm = () => {
         doc.setTextColor(0, 0, 0);
         doc.setFont('helvetica', 'normal');
         doc.text('A-222, Kasturi Plaza, Manpada Rd, Dombivali(East),Pin: 421202', 35, 17);
+
+        doc.setFontSize(8);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+        doc.text('( CIN : U96906MH2024PTC430524, GSTIN : )', 35, 22);
         
         // Draw a line after the header with minimal spacing
         doc.line(10, 25, 138, 25); // Adjusted y-coordinates for a straight line with minimal space
@@ -463,7 +468,7 @@ const PaymentForm = () => {
                         </Col>
                         <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>Penalty Month</Form.Label>
+                                <Form.Label>Penalty Recovery Month</Form.Label>
                                 {/* <Controller
                                     name="penaltyMonth"
                                     control={control}

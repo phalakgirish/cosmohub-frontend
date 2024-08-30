@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Button } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../hooks';
 import url from '../../env';
@@ -27,39 +27,56 @@ const AllPayments = () => {
     const [data, setData] = useState<Payment[]>([]);
     const navigate = useNavigate();
     const [paymentDeleted, setPaymentDeleted] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
 
     const handleEdit = (id: string) => {
         navigate(`/edit-payment/${id}`);
     };
 
-    const handleDelete = async (id: string) => {
-        const confirmed = window.confirm("Are you sure you want to delete this SIP Payment?");
-        if (confirmed) {
-        const bearerToken = secureLocalStorage.getItem('login');
-        try {
-            const response = await fetch(`${url.nodeapipath}/sippayment/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                    'Authorization': `Bearer ${bearerToken}`,
-                },
-            });
-            const result = await response.json();
-            if (response.ok) {
-                // console.log('Payment deleted successfully:', result);
-                toast.success('Payment deleted successfully');
-                setPaymentDeleted(true);
-            } else {
-                // console.error('Error deleting payment:', result);
-                toast.error('Failed to delete Payment Receipt');
+    const handleShowModal = (id: string) => {
+        setSelectedPaymentId(id);
+        setShowModal(true);
+    };
 
-            }
-        } catch (error) {
-            // console.error('Error during API call:', error);
-            toast.error('An error occurred while deleting the Payment Receipt');
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setSelectedPaymentId(null);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (selectedPaymentId) {
+            // const confirmed = window.confirm("Are you sure you want to delete this SIP Payment?");
+            // if (confirmed) {
+                const bearerToken = secureLocalStorage.getItem('login');
+                try {
+                    const response = await fetch(`${url.nodeapipath}/sippayment/${selectedPaymentId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*',
+                            'Authorization': `Bearer ${bearerToken}`,
+                        },
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        // console.log('Payment deleted successfully:', result);
+                        toast.success('Payment deleted successfully');
+                        setPaymentDeleted(true);
+                    } else {
+                        // console.error('Error deleting payment:', result);
+                        toast.error('Failed to delete Payment Receipt');
+
+                    }
+                } catch (error) {
+                    // console.error('Error during API call:', error);
+                    toast.error('An error occurred while deleting the Payment Receipt');
+                }
+                finally {
+                    handleCloseModal();
+                }
+            // }
         }
-    }
     };
 
     usePageTitle({
@@ -202,7 +219,7 @@ const AllPayments = () => {
                 &nbsp;
                 <Button
                 variant="danger"
-                onClick={() => handleDelete(row.original._id)}
+                onClick={() => handleShowModal(row.original._id)}
                 style={{borderRadius: '35px',
                     width: '38px',
                     padding: '7px 7px'}}
@@ -242,6 +259,22 @@ const AllPayments = () => {
                 </Card>
             </Col>
             <ToastContainer/>
+
+            {/* Modal for Delete Confirmation */}
+            <Modal show={showModal} onHide={handleCloseModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Delete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>Are you sure you want to delete this payment?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleConfirmDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Row>
     );
 };

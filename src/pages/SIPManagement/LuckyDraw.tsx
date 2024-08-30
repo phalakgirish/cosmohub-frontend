@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Button } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../hooks';
 import url from '../../env';
@@ -26,17 +26,18 @@ const LuckyDraw = () => {
     const [data, setData] = useState<LuckyDrawEntry[]>([]);
     const navigate = useNavigate();
     const [entryDeleted, setEntryDeleted] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
 
     const handleEdit = (id: string) => {
         navigate(`/edit-luckydraw/${id}`);
     };
 
-    const handleDelete = async (id: string) => {
-        const confirmed = window.confirm("Are you sure you want to delete this lucky draw?");
-        if (confirmed) {
+    const handleDelete = async () => {
             const bearerToken = secureLocalStorage.getItem('login');
+            if (deleteId) {
             try {
-                const response = await fetch(`${url.nodeapipath}/luckydraw/${id}`, {
+                const response = await fetch(`${url.nodeapipath}/luckydraw/${deleteId}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -56,9 +57,17 @@ const LuckyDraw = () => {
             } catch (error) {
                 // console.error('Error during API call:', error);
                 toast.error('An error occurred while deleting the Luckydraw');
-
+            } finally {
+                setShowModal(false);
+                setDeleteId(null);
             }
+            
         }
+    };
+
+    const handleShowModal = (id: string) => {
+        setDeleteId(id);
+        setShowModal(true);
     };
 
     usePageTitle({
@@ -177,7 +186,7 @@ const LuckyDraw = () => {
                 &nbsp;
                 <Button
                 variant="danger"
-                onClick={() => handleDelete(row.original._id)}
+                onClick={() => handleShowModal(row.original._id)}
                 style={{borderRadius: '35px',
                     width: '38px',
                     padding: '7px 7px'}}
@@ -217,6 +226,21 @@ const LuckyDraw = () => {
                 </Card>
             </Col>
             <ToastContainer />
+
+            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Deletion</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>Are you sure you want to delete this lucky draw?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowModal(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Row>
     );
 };

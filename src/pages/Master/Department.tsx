@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Button } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal } from 'react-bootstrap';
 
 // hooks
 import { usePageTitle } from '../../hooks';
@@ -29,17 +29,30 @@ interface DataResponse {
 const Department = () => {
     const [data, setData] = useState<any[]>([]);
     const [isRefreshed,setIsRefreshed] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
     const navigate = useNavigate();
 
     const handleEdit = (id: string) => {
         navigate(`/edit-department/${id}`);
     };
 
-    const handleDelete = async (id:string) =>{
-        const confirmed = window.confirm("Are you sure you want to delete Department?");
-        if (confirmed) {
+    // Handle opening of delete confirmation modal
+    const handleOpenDeleteModal = (id: string) => {
+        setDepartmentToDelete(id);
+        setShowDeleteModal(true);
+    };
+
+    // Handle closing of delete confirmation modal
+    const handleCloseDeleteModal = () => {
+        setShowDeleteModal(false);
+        setDepartmentToDelete(null);
+    };
+
+    const handleDelete = async () =>{
+        if (!departmentToDelete) return;
         const bearerToken = secureLocalStorage.getItem('login');
-        fetch(`${url.nodeapipath}/department/${id}`,{
+        fetch(`${url.nodeapipath}/department/${departmentToDelete}`,{
             method:'DELETE',
             headers: {
                 'Content-Type':'application/json',
@@ -58,8 +71,11 @@ const Department = () => {
                     toast.error('Failed to delete department');
                 }
             })
-            .catch((error) => console.error('Error fetching branch data:', error));
-        }
+            .catch((error) => {
+                // console.error('Error fetching branch data:', error)
+                toast.error('An error occurred while deleting the department',error);
+            });
+            handleCloseDeleteModal();
     }
 
     // Set page title
@@ -158,7 +174,7 @@ const Department = () => {
                 &nbsp;
                 <Button
                 variant="danger"
-                onClick={() => handleDelete(row.original._id)}
+                onClick={() => handleOpenDeleteModal(row.original._id)}
                 style={{borderRadius: '35px',
                     width: '38px',
                     padding: '7px 7px'}}
@@ -198,6 +214,23 @@ const Department = () => {
                 </Card>
             </Col>
             <ToastContainer />
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={handleCloseDeleteModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Delete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete this department?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseDeleteModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Row>
     );
 };

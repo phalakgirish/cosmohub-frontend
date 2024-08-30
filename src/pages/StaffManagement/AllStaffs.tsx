@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Button } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 // hooks
@@ -31,11 +31,18 @@ interface DataResponse {
 const AllStaffs = () => {
     const [data, setData] = useState<Staff[]>([]);
     const [isRefreshed,setIsRefreshed] = useState(false)
+    const [showModal, setShowModal] = useState(false);
+    const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
     const navigate = useNavigate();
 
     // Define handleEdit function
     const handleEdit = (id: string) => {
         navigate(`/edit-staff/${id}`);
+    };
+
+    const handleDeleteClick = (id: string) => {
+        setSelectedStaffId(id);
+        setShowModal(true);
     };
 
     // Set page title
@@ -82,38 +89,53 @@ const AllStaffs = () => {
         navigate('/add-staff');
     };
 
-    const handleDelete = async (id: string) => {
-        const confirmed = window.confirm("Are you sure you want to delete this staff?");
-        if (confirmed) {
+    const handleDeleteConfirm = async () => {
+        if (selectedStaffId) {
+            
             const bearerToken = secureLocalStorage.getItem('login');
-            fetch(`${url.nodeapipath}/staff/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin':'*',
-                    'Authorization': `Bearer ${bearerToken}`
-                }
-            })
-            .then((response) => response.json())
-            .then((data) => {
-
-                if (data.status) {
-                    // setData(data.filter(sip => sip._id !== id)); // Remove deleted SIP from state
-                    // console.log('SIP deleted successfully:', result);
-                    toast.success(data.message || 'Staff deleted successfully');
-                    setIsRefreshed(true)  
-                } else {
-                    // console.error('Error deleting SIP:', result);
-                    toast.error('Failed to delete Staff');
+            try{
+                fetch(`${url.nodeapipath}/staff/${selectedStaffId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
                     }
-                
-            })
-            .catch((error) => {
-                // console.error('Error deleting Staff data:', error);
+                })
+                .then((response) => response.json())
+                .then((data) => {
+
+                    if (data.status) {
+                        // setData(data.filter(sip => sip._id !== id)); // Remove deleted SIP from state
+                        // console.log('SIP deleted successfully:', result);
+                        toast.success(data.message || 'Staff deleted successfully');
+                        setIsRefreshed(true)  
+                    } else {
+                        // console.error('Error deleting SIP:', result);
+                        toast.error('Failed to delete Staff');
+                        }
+                    
+                })
+                .catch((error) => {
+                    // console.error('Error deleting Staff data:', error);
+                    toast.error('An error occurred while deleting the staff');
+
+                });
+            }
+            catch(error)
+            {
                 toast.error('An error occurred while deleting the staff');
 
-            });
+            }finally{
+                setShowModal(false);
+                setSelectedStaffId(null);
+            }
         }
+    };
+
+    const handleDeleteCancel = () => {
+        setShowModal(false);
+        setSelectedStaffId(null);
     };
 
     const columns = [
@@ -180,7 +202,7 @@ const AllStaffs = () => {
                 &nbsp;
                 <Button
                 variant="danger"
-                onClick={() => handleDelete(row.original._id)}
+                onClick={() => handleDeleteClick(row.original._id)}
                 style={{borderRadius: '35px',
                     width: '38px',
                     padding: '7px 7px'}}
@@ -235,6 +257,21 @@ const AllStaffs = () => {
                 </Card>
             </Col>
             <ToastContainer />
+
+            <Modal show={showModal} onHide={handleDeleteCancel} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Delete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>Are you sure you want to delete this staff?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleDeleteCancel}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleDeleteConfirm}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Row>
     );
 };

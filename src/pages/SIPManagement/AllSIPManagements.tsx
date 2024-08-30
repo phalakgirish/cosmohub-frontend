@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Button } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom'; // Use useNavigate for navigation
 
 // hooks
@@ -35,6 +35,9 @@ interface DataResponse {
 
 const AllSIPManagement = () => {
     const [data, setData] = useState<SIP[]>([]);
+    const [showModal, setShowModal] = useState(false);
+    const [showReplicaModal, setShowReplicaModal] = useState(false);
+    const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
     const navigate = useNavigate();
     const [isRefreshed,setIsRefreshed] = useState(false)
 
@@ -43,33 +46,100 @@ const AllSIPManagement = () => {
         navigate(`/edit-sipmember/${id}`);
     };
 
-    const handleDelete = async (id: string) => {
-        const confirmed = window.confirm("Are you sure you want to delete this SIP Member?");
-        if (confirmed) {
+    const handleShowModal = (id: string) => {
+        setSelectedMemberId(id);
+        setShowModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setSelectedMemberId(null);
+    };
+
+    const handleShowReplicaModal = (id: string) => {
+        setSelectedMemberId(id);
+        setShowReplicaModal(true);
+    };
+
+    const handleCloseReplicaModal = () => {
+        setShowReplicaModal(false);
+        setSelectedMemberId(null);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (selectedMemberId) {
         const bearerToken = secureLocalStorage.getItem('login');
-        fetch(`${url.nodeapipath}/sipmanagement/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin':'*',
-                'Authorization': `Bearer ${bearerToken}`
-            }
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            // console.log(data);
-            if (data.status) {
-                toast.success('SIP Member deleted successfully');
-                // setIsRefreshed(prev => !prev);
-                setIsRefreshed(true)
-            } else {
-                toast.error('Failed to delete SIP Member');
-            }
-        })
-        .catch((error) => {
-            console.error('Error deleting SIP Member data:', error);
+        try{
+            fetch(`${url.nodeapipath}/sipmanagement/${selectedMemberId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin':'*',
+                    'Authorization': `Bearer ${bearerToken}`
+                }
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                // console.log(data);
+                if (data.status) {
+                    toast.success('SIP Member deleted successfully');
+                    // setIsRefreshed(prev => !prev);
+                    setIsRefreshed(prev => !prev)
+                } else {
+                    toast.error('Failed to delete SIP Member');
+                }
+            })
+            .catch((error) => {
+                // console.error('Error deleting SIP Member data:', error);
+                toast.error('An error occurred while deleting the SIP Member');
+            });
+        }
+        catch(error){
             toast.error('An error occurred while deleting the SIP Member');
-        });
+        }
+        finally {
+            handleCloseModal();
+        }
+    }
+    };
+
+    const handleConfirmReplica = async () => {
+        
+        if (selectedMemberId) {
+        const bearerToken = secureLocalStorage.getItem('login');
+        console.log(bearerToken);
+        
+        try{
+            fetch(`${url.nodeapipath}/sipmanagement/replicate/${selectedMemberId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin':'*',
+                    'Authorization': `Bearer ${bearerToken}`
+                }
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                // console.log(data);
+                if (data.status) {
+                    toast.success(data.message ||'SIP Member Added successfully');
+                    // setIsRefreshed(prev => !prev);
+                    setIsRefreshed(prev => !prev)
+                } else {
+                    toast.error('Failed to add SIP Member');
+                }
+            })
+            .catch((error) => {
+                // console.error('Error deleting SIP Member data:', error);
+                toast.error('An error occurred while adding the SIP Member');
+            });
+        }
+        catch(error){
+            toast.error('An error occurred while adding the SIP Member');
+        }
+        finally {
+            handleCloseModal();
+        }
     }
     };
 
@@ -191,25 +261,65 @@ const AllSIPManagement = () => {
             accessor: 'actions',
             Cell: ({ row }: { row: any }) => (
                 <>
-                <Button
-                    variant="primary"
-                    onClick={() => handleEdit(row.original._id)}
+                <OverlayTrigger
+                            key={'edit-right'}
+                            placement={'right'}
+                            overlay={
+                                <Tooltip id={`tooltip-${'right'}`}>
+                                    Edit
+                                </Tooltip>
+                            }
+                        >
+                    <Button
+                        variant="primary"
+                        onClick={() => handleEdit(row.original._id)}
+                        style={{borderRadius: '35px',
+                            width: '38px',
+                            padding: '7px 7px'}}
+                    >
+                        <i className='fe-edit-2'/>
+                    </Button>
+                </OverlayTrigger>
+                &nbsp;
+                <OverlayTrigger
+                            key={'delete-right'}
+                            placement={'right'}
+                            overlay={
+                                <Tooltip id={`tooltip-${'right'}`}>
+                                    Delete
+                                </Tooltip>
+                            }
+                        >
+                    <Button
+                    variant="danger"
+                    onClick={() => handleShowModal(row.original._id)}
                     style={{borderRadius: '35px',
                         width: '38px',
                         padding: '7px 7px'}}
-                >
-                     <i className='fe-edit-2'/>
+                    >
+                    <i className='fe-trash-2'/> 
                 </Button>
-                &nbsp;
-                <Button
-                variant="danger"
-                onClick={() => handleDelete(row.original._id)}
+            </OverlayTrigger>
+            &nbsp;
+            <OverlayTrigger
+                            key={'left'}
+                            placement={'left'}
+                            overlay={
+                                <Tooltip id={`tooltip-${'left'}`}>
+                                    Replicate Member Details
+                                </Tooltip>
+                            }
+                        >
+            <Button
+                variant="warning"
+                onClick={() => handleShowModal(row.original._id)}
                 style={{borderRadius: '35px',
                     width: '38px',
                     padding: '7px 7px'}}
                 >
-                <i className='fe-trash-2'/> 
+                <i className='fe-copy'/> 
             </Button>
+            </OverlayTrigger>
         </>
             ),
         },
@@ -243,6 +353,38 @@ const AllSIPManagement = () => {
                 </Card>
             </Col>
             <ToastContainer />
+
+            {/* Modal for Delete Confirmation */}
+            <Modal show={showModal} onHide={handleCloseModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Delete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>Are you sure you want to delete this SIP Member?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleConfirmDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Modal for Replica Creation Confirmation */}
+            <Modal show={showReplicaModal} onHide={handleCloseReplicaModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Delete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>Are you sure you want to create replica of this SIP Member with new SIP ID?</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseReplicaModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="warning" onClick={handleConfirmReplica}>
+                        Create
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Row>
     );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Button } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../hooks';
 import url from '../../env';
@@ -25,6 +25,8 @@ interface DataResponse {
 const SIPs = () => {
     const [data, setData] = useState<SIP[]>([]);
     const navigate = useNavigate();
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [sipToDelete, setSipToDelete] = useState<string | null>(null);
     const [sipDeleted,setSipDeleted] = useState(false)
 
     // Handle edit SIP
@@ -32,13 +34,25 @@ const SIPs = () => {
         navigate(`/edit-slab/${id}`);
     };
 
+    // Handle opening of delete confirmation modal
+    const handleOpenDeleteModal = (id: string) => {
+        setSipToDelete(id);
+        setShowDeleteModal(true);
+    };
+
+    // Handle closing of delete confirmation modal
+    const handleCloseDeleteModal = () => {
+        setShowDeleteModal(false);
+        setSipToDelete(null);
+    };
+
     // Handle delete SIP
-    const handleDelete = async (id: string) => {
-        const confirmed = window.confirm("Are you sure you want to delete this SIP Slab?");
-        if (confirmed) {
+    const handleDelete = async () => {
+        if (!sipToDelete) return;
+
         const bearerToken = secureLocalStorage.getItem('login');
         try {
-            const response = await fetch(`${url.nodeapipath}/sipslab/${id}`, {
+            const response = await fetch(`${url.nodeapipath}/sipslab/${sipToDelete}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -60,8 +74,10 @@ const SIPs = () => {
             } catch (error) {
                 // console.error('Error during API call:', error);
                 toast.error('An error occurred while deleting the SIP');
+            }finally{
+                handleCloseDeleteModal();
             }
-        }
+        
     };
 
     // Set page title
@@ -169,7 +185,7 @@ const SIPs = () => {
                 &nbsp;
                 <Button
                 variant="danger"
-                onClick={() => handleDelete(row.original._id)}
+                onClick={() => handleOpenDeleteModal(row.original._id)}
                 style={{borderRadius: '35px',
                     width: '38px',
                     padding: '7px 7px'}}
@@ -209,6 +225,24 @@ const SIPs = () => {
                 </Card>
             </Col>
             <ToastContainer />
+
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={handleCloseDeleteModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Delete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete this SIP Slab?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseDeleteModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Row>
     );
 };

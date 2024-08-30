@@ -389,7 +389,7 @@ const EditPaymentForm = () => {
                     <Row>
                     <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>Penalty Month</Form.Label>
+                                <Form.Label>Penalty Recovery Month</Form.Label>
                                 {/* <Controller
                                     name="sip_penalty_month"
                                     control={control}

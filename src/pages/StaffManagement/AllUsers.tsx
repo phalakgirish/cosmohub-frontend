@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Button, Form } from 'react-bootstrap';
+import { Card, Col, Row, Button, Form, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 // hooks
@@ -28,20 +28,44 @@ interface DataResponse {
 
 const UserManagement = () => {
     const [data, setData] = useState<any[]>([]);
+    const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+    const [showToggleStatusModal, setShowToggleStatusModal] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [selectedUserStatus, setSelectedUserStatus] = useState<boolean | null>(null);
+    const [actionType, setActionType] = useState<'changePassword' | 'toggleStatus' | null>(null);
+
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const userData:any = JSON.parse(StorageuserData);
     const [isRefreshed,setIsRefreshed] = useState('false');
     const navigate = useNavigate();
 
-    const handleChangePassword = async(id: string) => {
+    const handleCloseModal = () => {
+        setShowChangePasswordModal(false);
+        setShowToggleStatusModal(false);
+    };
+
+    const handleOpenChangePasswordModal = (userId: string) => {
+        setSelectedUserId(userId);
+        setActionType('changePassword');
+        setShowChangePasswordModal(true);
+    };
+
+    const handleOpenToggleStatusModal = (userId: string, userStatus: boolean) => {
+        setSelectedUserId(userId);
+        setSelectedUserStatus(userStatus);
+        setActionType('toggleStatus');
+        setShowToggleStatusModal(true);
+    };
+
+    const handleChangePassword = async() => {
+        if (!selectedUserId) return;
         
         // navigate(`/change-password/${id}`);
-        const confirmed = window.confirm(`Are you sure you want to change password for this User?`);
-        if (confirmed) {
+
             try
             {
                 const bearerToken = secureLocalStorage.getItem('login');
-                const response = await fetch(`${url.nodeapipath}/users/changepassword/${id}`,{
+                const response = await fetch(`${url.nodeapipath}/users/changepassword/${selectedUserId}`,{
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -67,8 +91,10 @@ const UserManagement = () => {
             }
             catch(error){
                 console.error('Error during API call:', error);
+            }finally{
+                setSelectedUserId(null)
+                setShowChangePasswordModal(false)
             }
-        }
     };
 
     usePageTitle({
@@ -82,30 +108,33 @@ const UserManagement = () => {
         ],
     });
 
-    const handleToggleStatus = async (e:any,id:any)=>{
+    const handleToggleStatus = async ()=>{
         // console.log(e.target.value);
 
         // var userStatus = (e.target.value == 'on')?true:false
-        const confirmed = window.confirm(`Are you sure you want to ${(e)?'Inactive':'Active'} this User?`);
-        if (confirmed) {
+
+        if (selectedUserId === null || selectedUserStatus === null) return;
+
+        const newStatus = !selectedUserStatus;
+
             try
             {
                 const bearerToken = secureLocalStorage.getItem('login');
-                const response = await fetch(`${url.nodeapipath}/users/all/${id}`,{
+                const response = await fetch(`${url.nodeapipath}/users/all/${selectedUserId}`,{
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*',
                         'Authorization': `Bearer ${bearerToken}`,
                     },
-                    body:JSON.stringify({user_status:!e})
+                    body:JSON.stringify({ user_status: newStatus })
                 })
                 const data = await response.json();
                 if (response.ok)
                 {
                     // console.log(data);
                     FetchUserData();
-                    toast.success(`User ${(e)?'Inactiveted':'Activated'} successfully`);
+                    toast.success(`User ${newStatus ? 'Activated' : 'Inactivated'} successfully`);
                     setIsRefreshed('true')
                 }
                 else 
@@ -115,8 +144,10 @@ const UserManagement = () => {
             }
             catch(error){
                 console.error('Error during API call:', error);
+            }finally{
+                setSelectedUserStatus(null)
+                setShowToggleStatusModal(false);
             }
-        }
     }
 
     useEffect(() => {
@@ -195,7 +226,7 @@ const UserManagement = () => {
                     type="switch"
                     id={`status-switch-${row.original._id}`}
                     checked={row.original.user_status}
-                    onChange={(e) => handleToggleStatus(row.original.user_status,row.original._id)}
+                    onChange={(e) => handleOpenToggleStatusModal(row.original._id,row.original.user_status)}
                 />
             ),
             sort: true,
@@ -216,7 +247,7 @@ const UserManagement = () => {
                             alignItems: 'center',
                             cursor: 'pointer',
                         }}
-                        onClick={() => handleChangePassword(row.original._id)}
+                        onClick={() => handleOpenChangePasswordModal(row.original._id)}
                     >
                         <i className="mdi mdi-key" style={{ color: '#fff' }}></i>
                     </div>
@@ -250,6 +281,42 @@ const UserManagement = () => {
                 </Card>
             </Col>
             <ToastContainer />
+
+                        {/* Change Password Modal */}
+                        <Modal show={showChangePasswordModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Change Password</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to change the password for this user?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Close
+                    </Button>
+                    <Button variant="primary" onClick={handleChangePassword}>
+                        Change Password
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Toggle Status Modal */}
+            <Modal show={showToggleStatusModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Change User Status</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to {selectedUserStatus ? 'Deactivate' : 'Activate'} this user?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Close
+                    </Button>
+                    <Button variant="primary" onClick={handleToggleStatus}>
+                        {selectedUserStatus ? 'Deactivate' : 'Activate'}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Row>
     );
 };

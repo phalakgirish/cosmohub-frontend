@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Button } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../hooks';
 import url from '../../env';
@@ -26,17 +26,35 @@ const AllMaturities = () => {
     const [data, setData] = useState<Maturity[]>([]);
     const navigate = useNavigate();
     const [maturityDeleted, setMaturityDeleted] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
 
     const handleEdit = (id: string) => {
         navigate(`/edit-maturity/${id}`);
     };
 
-    const handleDelete = async (id: string) => {
-        const confirmed = window.confirm("Are you sure you want to delete this SIP Maturity?");
-        if (confirmed) {
+    const handleDelete = (id: string) => {
+        setDeleteId(id);
+        setShowConfirm(true);
+    };
+
+    usePageTitle({
+        title: 'Maturity',
+        breadCrumbItems: [
+            {
+                path: '/maturity',
+                label: 'Maturity',
+                active: true,
+            },
+        ],
+    });
+
+    const confirmDelete = async () => {
+        if (!deleteId) return;
+
             const bearerToken = secureLocalStorage.getItem('login');
             try {
-                const response = await fetch(`${url.nodeapipath}/sipmaturity/${id}`, {
+                const response = await fetch(`${url.nodeapipath}/sipmaturity/${deleteId}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -55,10 +73,11 @@ const AllMaturities = () => {
                 }
             } catch (error) {
                 // console.error('Error during API call:', error);
-                toast.error('An error occurred while deleting the maturity');
-                
+                toast.error('An error occurred while deleting the maturity');  
+            }finally {
+                setShowConfirm(false);
+                setDeleteId(null);
             }
-        }
     };
 
     usePageTitle({
@@ -221,6 +240,24 @@ const AllMaturities = () => {
                 </Card>
             </Col>
             <ToastContainer />
+
+            {/* Confirmation Modal */}
+            <Modal show={showConfirm} onHide={() => setShowConfirm(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Deletion</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete this SIP Maturity?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowConfirm(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={confirmDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Row>
     );
 };

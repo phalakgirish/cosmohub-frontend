@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Button } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom'; // Use useNavigate for navigation
 
 // hooks
@@ -33,6 +33,8 @@ interface DataResponse {
 const Branch = () => {
     const [data, setData] = useState<any[]>([]);
     const [isRefreshed,setIsRefreshed] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [branchToDelete, setBranchToDelete] = useState<string | null>(null);
     const navigate = useNavigate();
 
     // Define handleEdit function
@@ -40,11 +42,22 @@ const Branch = () => {
         navigate(`/edit-branch/${id}`);
     };
 
-    const handleDelete = async (id:string) =>{
-        const confirmed = window.confirm("Are you sure you want to delete this Branch?");
-        if (confirmed) {
+     // Handle opening of delete confirmation modal
+     const handleOpenDeleteModal = (id: string) => {
+        setBranchToDelete(id);
+        setShowDeleteModal(true);
+    };
+
+    // Handle closing of delete confirmation modal
+    const handleCloseDeleteModal = () => {
+        setShowDeleteModal(false);
+        setBranchToDelete(null);
+    };
+
+    const handleDelete = async () =>{
+        if (!branchToDelete) return;
         const bearerToken = secureLocalStorage.getItem('login');
-        fetch(`${url.nodeapipath}/branch/${id}`,{
+        fetch(`${url.nodeapipath}/branch/${branchToDelete}`,{
             method:'DELETE',
             headers: {
                 'Content-Type':'application/json',
@@ -66,7 +79,8 @@ const Branch = () => {
             .catch((error) => {console.error('Error fetching branch data:', error)
                 toast.error('An error occurred while deleting the client');
             });
-    }
+            handleCloseDeleteModal();
+    
 }
 
     // Set page title
@@ -173,7 +187,7 @@ const Branch = () => {
                     &nbsp;
                     <Button
                     variant="danger"
-                    onClick={() => handleDelete(row.original._id)}
+                    onClick={() => handleOpenDeleteModal(row.original._id)}
                     style={{borderRadius: '35px',
                         width: '38px',
                         padding: '7px 7px'}}
@@ -213,6 +227,25 @@ const Branch = () => {
                 </Card>
             </Col>
             <ToastContainer />
+
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={handleCloseDeleteModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Delete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete this branch?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseDeleteModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
         </Row>
     );
 };

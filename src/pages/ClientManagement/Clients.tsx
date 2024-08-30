@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Button } from 'react-bootstrap';
+import { Card, Row, Col, Button, Modal } from 'react-bootstrap';
 import url from '../../env';  // Adjust the import path as necessary
 import secureLocalStorage from 'react-secure-storage';
 import Table from '../../components/Table';
@@ -29,6 +29,8 @@ interface DataResponse {
 
 const Clients = () => {
     const [clients, setClients] = useState<Client[]>([]);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [clientToDelete, setClientToDelete] = useState<string | null>(null);
     const [isRefreshed,setIsRefreshed] = useState(false)
     const navigate = useNavigate();
     useEffect(() => {
@@ -60,11 +62,22 @@ const Clients = () => {
         navigate(`/edit-client/${id}`);
     };
 
-    const handleDelete = (id:any)=>{
-        const confirmed = window.confirm("Are you sure you want to delete this client?");
-        if (confirmed) {
+    const handleOpenDeleteModal = (id: string) => {
+        setClientToDelete(id);
+        setShowDeleteModal(true);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setShowDeleteModal(false);
+        setClientToDelete(null);
+    };
+
+    const handleDelete = ()=>{
+        if (!clientToDelete) return;
+        
             const bearerToken = secureLocalStorage.getItem('login');
-            fetch(`${url.nodeapipath}/client/${id}`, {
+            try{
+            fetch(`${url.nodeapipath}/client/${clientToDelete}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -88,6 +101,12 @@ const Clients = () => {
                 // console.error('Error deleting SIP data:', error);
                 toast.error('An error occurred while deleting the client');
             });
+        }
+        catch(error)
+        {
+
+        }finally{
+
         }
     }
 
@@ -142,7 +161,7 @@ const Clients = () => {
                  &nbsp;
                  <Button
                  variant="danger"
-                 onClick={() => handleDelete(row.original._id)}
+                 onClick={() => handleOpenDeleteModal(row.original._id)}
                  style={{borderRadius: '35px',
                      width: '38px',
                      padding: '7px 7px'}}
@@ -211,6 +230,24 @@ const Clients = () => {
                 </Card>
             </Col>
             <ToastContainer />
+
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={handleCloseDeleteModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Delete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete this client?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseDeleteModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Row>
     );
 };

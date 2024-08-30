@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Button } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal } from 'react-bootstrap';
 
 // hooks
 import { usePageTitle } from '../../hooks';
@@ -28,17 +28,31 @@ interface DataResponse {
 const Designation = () => {
     const [data, setData] = useState<any[]>([]);
     const [isRefreshed,setIsRefreshed] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [designationToDelete, setDesignationToDelete] = useState<string | null>(null);
     const navigate = useNavigate(); 
 
     const handleEdit = (id: string) => {
         navigate(`/edit-designation/${id}`);
     };
 
-    const handleDelete = async (id:string) =>{
-        const confirmed = window.confirm("Are you sure you want to delete Designation?");
-        if (confirmed) {
+    // Handle opening of delete confirmation modal
+    const handleOpenDeleteModal = (id: string) => {
+        setDesignationToDelete(id);
+        setShowDeleteModal(true);
+    };
+
+    // Handle closing of delete confirmation modal
+    const handleCloseDeleteModal = () => {
+        setShowDeleteModal(false);
+        setDesignationToDelete(null);
+    };
+
+    const handleDelete = async () =>{
+        if (!designationToDelete) return;
+
         const bearerToken = secureLocalStorage.getItem('login');
-        fetch(`${url.nodeapipath}/designation/${id}`,{
+        fetch(`${url.nodeapipath}/designation/${designationToDelete}`,{
             method:'DELETE',
             headers: {
                 'Content-Type':'application/json',
@@ -60,7 +74,7 @@ const Designation = () => {
                 // console.error('Error fetching branch data:', error);
                 toast.error('An error occurred while deleting the designation');
             });
-        }
+            handleCloseDeleteModal();
     }
 
     usePageTitle({
@@ -159,7 +173,7 @@ const columns = [
             &nbsp;
             <Button
             variant="danger"
-            onClick={() => handleDelete(row.original._id)}
+            onClick={() => handleOpenDeleteModal(row.original._id)}
             style={{borderRadius: '35px',
                 width: '38px',
                 padding: '7px 7px'}}
@@ -199,6 +213,24 @@ const columns = [
                 </Card>
             </Col>
             <ToastContainer />
+
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={handleCloseDeleteModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Delete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete this designation?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseDeleteModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Row>
     );
 };

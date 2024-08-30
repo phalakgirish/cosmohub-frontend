@@ -262,6 +262,14 @@ const MENU_ITEMS: MenuItemTypes[] = [
         url: '/memberpayment-report',
         usershow:["0","1","2"],
     },
+    {
+        key: 'memberReport',
+        label: 'Member Details Report',
+        isTitle: false,
+        icon: 'mdi mdi-account',
+        url: '/memberdetails-report',
+        usershow:["0","1"],
+    },
     // { key: 'apps', label: 'Apps', isTitle: true },
     // {
     //     key: 'apps-calendar',
