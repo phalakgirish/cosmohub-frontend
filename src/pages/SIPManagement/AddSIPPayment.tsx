@@ -60,9 +60,9 @@ const PaymentForm = () => {
     const [clientbranch, setClientBranch] = useState('');
     const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
-
-
     const [sipMemberName,setSipMemberName] = useState('');
+    const [sipmember_id,setSipmember_id] = useState('')
+    const [sipmember_month,setSipmember_month] = useState('')
     var today = new Date();
     var TodayDate = today.toISOString().split('T')[0];
     const { control, handleSubmit, reset,formState: { errors }, setValue } = useForm<PaymentData>({
@@ -366,10 +366,54 @@ const PaymentForm = () => {
         fetchStaff();
     },[])
 
+    const handleFetchPenaltyAmount = async (sip_id:any,sip_month:any)=>{
+        console.log('fetch Panalty');
+        console.log(sip_id,sip_month);
+        
+        
+        if(sip_id != '' && sip_month != '')
+        {
+            console.log('Fetch Penalty amount');
+            
+            try{
+                const bearerToken = secureLocalStorage.getItem('login');
+                    var DataToPost = {
+                        sip_id:sip_id,
+                        month:sip_month,
+                        date:TodayDate,
+                    }
+                    const response = await fetch(`${url.nodeapipath}/sippayment/penaltyamt`,{
+                        body:JSON.stringify(DataToPost),
+                        method:'POST',
+                        headers: {
+                            'Content-Type':'application/json',
+                            'Access-Control-Allow-Origin':'*',
+                            'Authorization': `Bearer ${bearerToken}`
+                            }
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        // setStaff(data.staff || []);
+                        // console.log(data);
+                        setValue('penaltyAmount',data.penaltyAmount);
+                        
+        
+                    } else {
+                        console.error('Error fetching branches:', data);
+                    }
+                }
+                catch(error){
+                    console.log('Error while fetch data.', error); 
+                }
+        }
+        
+    }
+
     const handleSIPMemberChange = (e:any)=>{
         var Membername = simembers.filter((item)=> item._id == e.target.value)
-        
+        setSipmember_id(e.target.value);
         setSipMemberName(Membername[0].sipmember_name);
+        handleFetchPenaltyAmount(e.target.value,sipmember_month);
     }
 
     const handleBranchChange = (e:any)=>{
@@ -383,6 +427,13 @@ const PaymentForm = () => {
             setBranchErr(false)
         }  
     }
+
+    const handleSIPMonthChnge = (e:any)=>{
+        setSipmember_month(e.target.value);
+        handleFetchPenaltyAmount(sipmember_id,e.target.value);
+    }
+
+    
 
     return (
         <Card>
@@ -447,7 +498,7 @@ const PaymentForm = () => {
                                 <Controller
                                     name="sipmonth"
                                     control={control}
-                                    render={({ field }) => <Form.Control type="month" {...field} isInvalid={!!errors.sipmonth} placeholder="Select Month" />}
+                                    render={({ field }) => <Form.Control type="month" {...field} isInvalid={!!errors.sipmonth} placeholder="Select Month" onChange={(e)=>{field.onChange(e.target.value); handleSIPMonthChnge(e)}}/>}
                                 />
                                 <Form.Control.Feedback type="invalid">
                                     {errors.sipmonth?.message}

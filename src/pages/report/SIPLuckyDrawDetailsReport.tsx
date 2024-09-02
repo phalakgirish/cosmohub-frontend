@@ -8,7 +8,12 @@ import secureLocalStorage from 'react-secure-storage';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Controller, useForm } from 'react-hook-form';
+import { Document, Page, pdfjs } from 'react-pdf';
+import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.82/pdf.worker.min.js`;
 
 interface Payment {
     sippayment_receiptno:string;
@@ -22,6 +27,7 @@ interface Payment {
     sip_payment_refno: string;
     sip_payment_receivedBy:string;
     sip_payment_receivedDate:string;
+    branch:string;
 }
 
 interface Month {
@@ -32,13 +38,17 @@ interface DataResponse {
     sipPayment: Payment[];
 }
 
-const SIPPaymentMonthlyReport = () => {
+
+
+const SIPLuckyDrawDetailsReport = () => {
     const [data, setData] = useState<Payment[]>([]);
     const navigate = useNavigate();
     const [paymentDeleted, setPaymentDeleted] = useState(false);
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const userData:any = JSON.parse(StorageuserData);
     const [month,setMonth] = useState('');
+    const [pdfData, setPdfData] = useState<string | null>(null);
+    let pdfurl:string |null = null
 
     usePageTitle({
         title: 'Monthly SIP Payment Report',
@@ -73,11 +83,92 @@ const SIPPaymentMonthlyReport = () => {
         return `${monthName}-${year}`;
     }
 
-    useEffect(() => {
-        fetchPayments();
-    }, []);
+    // useEffect(() => {
+    //     fetchPayments();
+    // }, []);
 
+    const generatePDF = (data:any) => {
+        
+        const doc = new jsPDF('p', 'pt', 'a4');
 
+        const xStart = 70;
+        const yStart = 90;
+        const boxWidth = 198.5;
+        const boxHeight = 140;
+        const gap = 10;
+
+        const width = doc.internal.pageSize.getWidth();
+        const height = doc.internal.pageSize.getHeight();
+        
+
+        // Define the number of rows and columns
+        const rows = 4;
+        const cols = 2;
+
+        // Calculate the width and height of each part
+        const partWidth = width / cols;
+        const partHeight = height / rows;
+
+        // Draw lines to divide the page into 8 parts
+        // for (let i = 1; i < cols; i++) {
+        //     doc.line(i * partWidth, 0, i * partWidth, height);
+        // }
+        // for (let i = 1; i < rows; i++) {
+        //     doc.line(0, i * partHeight, width, i * partHeight);
+        // }
+        
+        // Add your content here
+        // doc.text("Hello World!", 20, 20);
+        let y = yStart;
+        doc.setFont("helvetica", "bold");
+        data.forEach((record:any, index:any) => {
+            const x = xStart + (index % 2) * (partWidth);
+             y = yStart + Math.floor(index / 2) * (partHeight);
+
+            // if (y + partHeight > height) { // Check if space left on page is enough for the box
+            //     doc.addPage();
+            //     // y = yStart+ Math.floor(index / 2) * (partHeight); // Reset y to start position
+            //   }
+
+            if (y > height) { // Check if space left on page is enough for the box
+                doc.addPage();
+
+                y = yStart; // Reset y to start position
+              }
+      
+            doc.setFontSize(14);
+
+            // Calculate text width and position for centering
+            const nameStatusText = `${record.Sip_id}, ${record.sipmember_name}`;
+            const nameStatusTextWidth = doc.getTextWidth(nameStatusText);
+            const nameStatusX = x + (partWidth - nameStatusTextWidth) / 2;
+            
+            const branchText = record.branch;
+            const branchTextWidth = doc.getTextWidth(branchText);
+            const branchX = x + (partWidth - branchTextWidth) / 2;
+            
+            const amountText = `${record.sip_amount}  &  ${record.sip_payment_mode}`;
+            const amountTextWidth = doc.getTextWidth(amountText);
+            const amountX = x + (partWidth - amountTextWidth) / 2;
+            
+            doc.text(nameStatusText, nameStatusX-70, y);
+            doc.text(branchText, branchX-70, y + 20);
+            doc.text(amountText, amountX-70, y + 40);
+            doc.rect(x-70, y-90, partWidth, partHeight);
+      
+            // if ((index + 1) % 8 === 0) {
+            //   doc.addPage();
+            //   y = yStart;
+            // }
+          });
+        
+        // Save the generated PDF as a blob and set it to state
+        doc.save(`Lucky Draw Details - ${formatMonthDate(month)}.pdf`)
+        const pdfBlob = doc.output('blob');
+        // console.log(pdfBlob);
+        pdfurl = URL.createObjectURL(pdfBlob)
+        setPdfData(URL.createObjectURL(pdfBlob));
+      };
     
         const fetchPayments = async () => {
             try {
@@ -107,8 +198,16 @@ const SIPPaymentMonthlyReport = () => {
                         sip_payment_refno: payment.sip_payment_refno,
                         sip_payment_receivedBy:payment.sip_payment_receivedBy,
                         sip_payment_receivedDate:formatDate(new Date(payment.sip_payment_receivedDate)),
+                        branch:payment.branch
                     }));
                     setData(formattedData);
+                    if(data.sipPayment.length == 0)
+                    {
+                        setPdfData(null)
+                        return;
+                    } 
+                    generatePDF(formattedData)
+                    
                 } else {
                     console.error('Error fetching payments:', data);
                 }
@@ -133,7 +232,7 @@ const SIPPaymentMonthlyReport = () => {
         { text: 'All', value: data.length },
     ];
 
-    const Excelcolumns = ['Sr. No','Reciept No.','SIP Id','Member Name','Amount','Month','Penalty Amount','Penalty Recovery Month','Payment Mode','Received By','Received Date'];
+    const Excelcolumns = ['Sr. No','Reciept No.','SIP Id','Member Name','Amount','Month','Penalty Amount','Penalty Month','Payment Mode','Received By','Received Date'];
 
     const columns = [
         {
@@ -172,7 +271,7 @@ const SIPPaymentMonthlyReport = () => {
             sort: true,
         },
         {
-            Header: 'Penalty Recovery Month',
+            Header: 'Penalty Month',
             accessor: 'sip_penalty_month',
             sort: true,
         },
@@ -245,15 +344,11 @@ const SIPPaymentMonthlyReport = () => {
                                         <Button style={{ height: '40px', backgroundColor: '#dd4923'}} onClick={handleSearchPayment}>
                                                 Search
                                         </Button>
-                                        &nbsp;
-                                        <Button style={{ height: '40px', backgroundColor: '#05711e'}} onClick={handleExportPayment}>
-                                                Export
-                                        </Button>
                                     </Col>
                                 </Row>
                         </div>
                         <hr />
-                        <Table
+                        {/* <Table
                             columns={columns}
                             data={data}
                             pageSize={5}
@@ -261,7 +356,20 @@ const SIPPaymentMonthlyReport = () => {
                             isSortable={true}
                             pagination={true}
                             // isSearchable={true}
-                        />
+                        /> */}
+
+                    {(pdfData)? (
+                            
+
+                        //  <Worker workerUrl={pdfjs.GlobalWorkerOptions.workerSrc}>
+                        //     <Viewer fileUrl='http://localhost:3000/ed85d4ed-7ebc-4248-ab01-df90dc592587' />
+                        // </Worker>
+                        <iframe
+                            src={pdfData}
+                            style={{ width: '100%', height: '100vh' }}
+                            frameBorder="0"
+                            ></iframe>
+                 ):'No Data Found'} 
                     </Card.Body>
                 </Card>
             </Col>
@@ -270,4 +378,4 @@ const SIPPaymentMonthlyReport = () => {
     );
 };
 
-export default SIPPaymentMonthlyReport;
+export default SIPLuckyDrawDetailsReport;

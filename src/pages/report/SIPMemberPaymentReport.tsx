@@ -245,7 +245,7 @@ const SIPMemberPaymentReport = () => {
         { text: 'All', value: data.length },
     ];
 
-    const Excelcolumns = ['Sr. No','Reciept No.','SIP Id','Member Name','Amount','Month','Penalty Amount','Penalty Month','Payment Mode','Received By','Received Date'];
+    const Excelcolumns = ['Sr. No','Reciept No.','SIP Id','Member Name','Amount','Month','Penalty Amount','Penalty Recovery Month','Payment Mode','Received By','Received Date'];
 
     const columns = [
         {
@@ -284,7 +284,7 @@ const SIPMemberPaymentReport = () => {
             sort: true,
         },
         {
-            Header: 'Penalty Month',
+            Header: 'Penalty Recovery Month',
             accessor: 'sip_penalty_month',
             sort: true,
         },

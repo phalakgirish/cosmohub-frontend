@@ -270,6 +270,14 @@ const MENU_ITEMS: MenuItemTypes[] = [
         url: '/memberdetails-report',
         usershow:["0","1"],
     },
+    {
+        key: 'luckydrawReport',
+        label: 'Lucky Draw Details Report',
+        isTitle: false,
+        icon: 'mdi mdi-account',
+        url: '/luckydraw-report',
+        usershow:["0","1"],
+    },
     // { key: 'apps', label: 'Apps', isTitle: true },
     // {
     //     key: 'apps-calendar',

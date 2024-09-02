@@ -62,7 +62,7 @@ const AllPayments = () => {
                     if (response.ok) {
                         // console.log('Payment deleted successfully:', result);
                         toast.success('Payment deleted successfully');
-                        setPaymentDeleted(true);
+                        setPaymentDeleted(prev => !prev);
                     } else {
                         // console.error('Error deleting payment:', result);
                         toast.error('Failed to delete Payment Receipt');

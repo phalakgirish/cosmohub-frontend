@@ -66,7 +66,7 @@ const EditMaturity = React.lazy(() => import('../pages/SIPManagement/EditMaturit
 const PaymentReport = React.lazy(() => import('../pages/report/SIPPaymentMonthlyReport'));
 const MemberPaymentReport = React.lazy(() => import('../pages/report/SIPMemberPaymentReport'));
 const MemberDetailsReport = React.lazy(() => import('../pages/report/SIPMemberDetailsReport'));
-
+const LuvkyDrawDetails = React.lazy(() => import('../pages/report/SIPLuckyDrawDetailsReport'));
 
 const ChangePassword = React.lazy(() => import('../pages/StaffManagement/ChangePassword'));
 
@@ -393,6 +393,10 @@ const AllRoutes = () => {
         {
           path: 'changepassword',
           element: <LoadComponent component={ChangePassword} />,
+        },
+        {
+          path: 'luckydraw-report',
+          element: <LoadComponent component={LuvkyDrawDetails} />,
         },
         {
           path: 'apps',
