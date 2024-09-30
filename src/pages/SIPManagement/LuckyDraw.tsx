@@ -205,11 +205,11 @@ const LuckyDraw = () => {
                     <Card.Body>
                         <div className="d-flex justify-content-between mb-4">
                             <div>
-                                <h4 className="header-title">All LuckyDraw Entries</h4>
-                                <p className="text-muted font-14 mb-4">A table showing all LuckyDraw entries</p>
+                                <h4 className="header-title">All Lucky Draw Entries</h4>
+                                <p className="text-muted font-14 mb-4">A table showing all lucky draw entries</p>
                             </div>
                             <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddEntry}>
-                                Add Entry
+                                Add Lucky Draw
                             </Button>
                         </div>
 

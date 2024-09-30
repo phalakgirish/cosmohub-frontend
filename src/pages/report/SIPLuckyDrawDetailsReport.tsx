@@ -16,17 +16,11 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.82/pdf.worker.min.js`;
 
 interface Payment {
-    sippayment_receiptno:string;
     Sip_id:string;
     sipmember_name:string;
-    sip_payment_month: string;
     sip_amount: number;
-    sip_penalty_month: string;
-    sip_penalty_amount: number;
     sip_payment_mode: string;
-    sip_payment_refno: string;
-    sip_payment_receivedBy:string;
-    sip_payment_receivedDate:string;
+    totalSIPAmount: number
     branch:string;
 }
 
@@ -51,11 +45,11 @@ const SIPLuckyDrawDetailsReport = () => {
     let pdfurl:string |null = null
 
     usePageTitle({
-        title: 'Monthly SIP Payment Report',
+        title: 'SIP Lucky Draw Detail Report',
         breadCrumbItems: [
             {
-                path: '/payments',
-                label: 'Payments',
+                path: '/luckydraw-report',
+                label: 'SIP Lucky Draw Detail Report',
                 active: true,
             },
         ],
@@ -173,7 +167,7 @@ const SIPLuckyDrawDetailsReport = () => {
         const fetchPayments = async () => {
             try {
                 const bearerToken = secureLocalStorage.getItem('login');
-                const response = await fetch(`${url.nodeapipath}/report/payment?branchId=${userData.staff_branch}&month=${month}`, {
+                const response = await fetch(`${url.nodeapipath}/report/sip_luckydraw?month=${month}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -187,17 +181,11 @@ const SIPLuckyDrawDetailsReport = () => {
                 if (response.ok) {
                     const formattedData = data.sipPayment.map((payment, index) => ({
                         srNo: index + 1,
-                        sippayment_receiptno:payment.sippayment_receiptno,
                         Sip_id:payment.Sip_id,
                         sipmember_name:payment.sipmember_name,
                         sip_amount: payment.sip_amount,
-                        sip_payment_month: formatMonthDate(payment.sip_payment_month),
-                        sip_penalty_amount: payment.sip_penalty_amount,
-                        sip_penalty_month: formatMonthDate(payment.sip_penalty_month),
                         sip_payment_mode: payment.sip_payment_mode,
-                        sip_payment_refno: payment.sip_payment_refno,
-                        sip_payment_receivedBy:payment.sip_payment_receivedBy,
-                        sip_payment_receivedDate:formatDate(new Date(payment.sip_payment_receivedDate)),
+                        totalSIPAmount:payment.totalSIPAmount,
                         branch:payment.branch
                     }));
                     setData(formattedData);
@@ -327,8 +315,8 @@ const SIPLuckyDrawDetailsReport = () => {
                     <Card.Body>
                         <div className="d-flex justify-content-between">
                             <div>
-                                <h4 className="header-title">Monthly SIP Payment Report</h4>
-                                <p className="text-muted font-14">A table showing monthly payment report</p>
+                                <h4 className="header-title">SIP Lucky Draw Detail Report</h4>
+                                <p className="text-muted font-14">A PDF showing lucky draw member list report</p>
                             </div>
                         </div>
                         <hr />

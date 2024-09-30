@@ -208,7 +208,7 @@ const SIPs = () => {
                                 <p className="text-muted font-14 mb-4">A table showing all SIP slabs</p>
                             </div>
                             <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddSIP}>
-                                Add SIP
+                                Add Slab
                             </Button>
                         </div>
 

@@ -138,7 +138,7 @@ const AllSIPManagement = () => {
             toast.error('An error occurred while adding the SIP Member');
         }
         finally {
-            handleCloseModal();
+            handleCloseReplicaModal();
         }
     }
     };
@@ -312,7 +312,7 @@ const AllSIPManagement = () => {
                         >
             <Button
                 variant="warning"
-                onClick={() => handleShowModal(row.original._id)}
+                onClick={() => handleShowReplicaModal(row.original._id)}
                 style={{borderRadius: '35px',
                     width: '38px',
                     padding: '7px 7px'}}
@@ -373,7 +373,7 @@ const AllSIPManagement = () => {
             {/* Modal for Replica Creation Confirmation */}
             <Modal show={showReplicaModal} onHide={handleCloseReplicaModal} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Confirm Delete</Modal.Title>
+                    <Modal.Title>Confirm Replicate</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>Are you sure you want to create replica of this SIP Member with new SIP ID?</Modal.Body>
                 <Modal.Footer>
