@@ -20,6 +20,7 @@ type ClientRegistrationData = {
     client_addharcard: FileList;
     client_postaladdress: string;
     client_landmark: string;
+    client_sip_refrence_level: number;
     client_status: boolean;
 };
 
@@ -27,6 +28,13 @@ type ClientRegistrationData = {
 type Branch = {
     _id: string;
     branch_name: string;
+};
+
+// Define the type for Client data
+type Client = {
+    _id: string;
+    client_id: string;
+    client_name: string
 };
 
 // Validation schema
@@ -50,7 +58,9 @@ const ClientRegistration = () => {
 
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const [branches, setBranches] = useState<Branch[]>([]);
+    const [clients, setClients] = useState<Client[]>([]);
     const [clientbranch, setClientBranch] = useState('');
+    const [clientsName, setClientsName] = useState('')
     const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
 
@@ -83,6 +93,8 @@ const ClientRegistration = () => {
                 formData.append('client_addharcard', data.client_addharcard[0]);
                 formData.append('client_postaladdress', data.client_postaladdress);
                 formData.append('client_landmark', data.client_landmark);
+                formData.append('sip_refered_by_clientId', (clientsName == undefined || clientsName == null)?'null':clientsName);
+                formData.append('sip_reference_level',(data.client_sip_refrence_level)?data.client_sip_refrence_level.toString():'0')
                 formData.append('client_status', data.client_status.toString());
                 formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
 
@@ -136,6 +148,34 @@ const ClientRegistration = () => {
     });
 
     useEffect(() => {
+
+        const fetchClients = async () => {
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/all/client/${userData.staff_branch}`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
+                const data = await response.json();
+
+                
+                if (response.ok) {
+                    setClients(data.client || []);
+
+                } else {
+                    console.error('Error fetching branches:', data);
+                }
+            } catch (error) {
+                console.error('Error during API call:', error);
+            }
+        };
+
+        fetchClients();
+        
         // Fetch branches from the backend
         const fetchBranches = async () => {
             try {
@@ -163,6 +203,12 @@ const ClientRegistration = () => {
 
         fetchBranches();
     }, []);
+
+    const handleClientChange = (e:any)=>{
+        // var clientname = clients.filter((item)=> item._id == e.target.value)
+        
+        setClientsName(e.target.value);
+    }
 
     const handleBranchChange = (e:any)=>{
         setClientBranch(e.target.value)
@@ -301,6 +347,24 @@ const ClientRegistration = () => {
                                     {errors.client_status?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
+
+                            {(userData.user_role_type == '0') && (
+                                <>
+                                 <Form.Group className="mb-3">
+                                 <Form.Label>Branch Name</Form.Label>
+                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" onChange={(e)=>{handleBranchChange(e)}} >
+                                         <option value="">-- Select --</option>
+ 
+                                         {branches.map((branch) => (
+                                             <option key={branch._id} value={branch._id}>
+                                                 {branch.branch_name}
+                                             </option>
+                                             ))}
+                                 </select>
+                                 {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
+                             </Form.Group>
+                             </>
+                            )}
                         </Col>
 
                         <Col md={6}>
@@ -365,23 +429,39 @@ const ClientRegistration = () => {
                                     {errors.client_pancard?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
-                            {(userData.user_role_type == '0') && (
-                                <>
-                                 <Form.Group className="mb-3">
-                                 <Form.Label>Branch Name</Form.Label>
-                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" onChange={(e)=>{handleBranchChange(e)}} >
-                                         <option value="">-- Select --</option>
- 
-                                         {branches.map((branch) => (
-                                             <option key={branch._id} value={branch._id}>
-                                                 {branch.branch_name}
-                                             </option>
-                                             ))}
-                                 </select>
-                                 {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
-                             </Form.Group>
-                             </>
-                            )}
+                            <Form.Group className="mb-3">
+                                <Form.Label>SIP Refrence Level</Form.Label>
+                                <Controller
+                                    name="client_sip_refrence_level"
+                                    control={control}
+                                    defaultValue={0}
+                                    render={({ field }) => (
+                                        <Form.Control
+                                            type="number"
+                                            placeholder="0"
+                                            {...field}
+                                            disabled = {true}
+                                            isInvalid={!!errors.client_sip_refrence_level}
+                                        />
+                                    )}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.client_sip_refrence_level?.message}
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                 <Form.Label>Refered By</Form.Label>
+                                    <select className="form-control" id="client_refered_by" onChange={(e)=>{handleClientChange(e)}}>
+                                                            <option value="">-- Select --</option>
+                    
+                                        {clients.map((client) => (
+                                        <option key={client._id} value={client._id}>
+                                        {`${client.client_id}-${client.client_name}`}
+                                            </option>
+                                        ))}
+                                    </select>
+                            </Form.Group>
+
                            
                         </Col>
                     </Row>

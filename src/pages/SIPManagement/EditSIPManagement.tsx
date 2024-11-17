@@ -50,7 +50,7 @@ const schema = yup.object().shape({
     sipmember_doj: yup.string().required('Date of Joining is required'),
     // sipmember_maturity_date: yup.string().required('Maturity Date is required'),
     sipmember_nominee_name: yup.string().required('Nominee Name is required'),
-    sipmember_nominee_age: yup.mixed().required('Nominee Age is required'),
+    sipmember_nominee_age: yup.string().required('Nominee Age is required'),
     sipmember_nominee_relation: yup.string().required('Nominee Relation is required'),
     sipmember_nominee_mobile: yup.string().required('Nominee Mobile Number is required'),
     sipmember_status: yup.string().required('Block Status is required'),

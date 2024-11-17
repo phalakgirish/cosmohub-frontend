@@ -118,6 +118,28 @@ const MENU_ITEMS: MenuItemTypes[] = [
         ],
     },
 
+    {
+        key: 'referencelevel',
+        label: 'Reference Level',
+        isTitle: false,
+        icon: 'mdi mdi-ballot',
+        usershow:["0"],
+        children: [
+            {
+                key: 'allreferencelevel',
+                label: 'All Level',
+                url: '/all-referencelevel',
+                parentKey: 'referencelevel',
+            },
+            {
+                key: 'addreferencelevel',
+                label: 'Add Level',
+                url: '/add-referencelevel',
+                parentKey: 'referencelevel',
+            },
+        ],
+    },
+
     { key: 'client', label: 'Client Management', isTitle: true, usershow:["0","1","2"] },
     {
         key: 'registration',
@@ -134,6 +156,27 @@ const MENU_ITEMS: MenuItemTypes[] = [
         icon: 'dripicons-view-list',
         url: '/clients',
         usershow:["0","1","2"],
+    },
+    {
+        key: 'reference_scheme_payment',
+        label: 'Reference Scheme Payment',
+        isTitle: false,
+        icon: 'mdi mdi-ballot',
+        usershow:["0","1","2"],
+        children: [
+            {
+                key: 'allreferenceschapayment',
+                label: 'All Ref. Scheme Payment',
+                url: '/all-refschpayment',
+                parentKey: 'reference_scheme_payment',
+            },
+            {
+                key: 'addrefschpayment',
+                label: 'Add Ref. Scheme Paymwnt',
+                url: '/add-refschpayment',
+                parentKey: 'reference_scheme_payment',
+            },
+        ],
     },
     { key: 'sip', label: 'SIP Management', isTitle: true, usershow:["0","1","2"], },
     {

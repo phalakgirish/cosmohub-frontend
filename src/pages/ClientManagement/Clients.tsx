@@ -223,6 +223,7 @@ const Clients = () => {
                                     isSortable={true}
                                     pagination={true}
                                     isSearchable={true}
+                                    isSelectable={true}
                                     />
                             {/* </tbody>
                         </Table> */}

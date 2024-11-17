@@ -21,6 +21,7 @@ type ClientRegistrationData = {
     client_addharcard: FileList;
     client_postaladdress: string;
     client_landmark: string;
+    client_sip_refrence_level: number;
     client_status: string;
 };
 
@@ -28,6 +29,13 @@ type ClientRegistrationData = {
 type Branch = {
     _id: string;
     branch_name: string;
+};
+
+// Define the type for Client data
+type Client = {
+    _id: string;
+    client_id: string;
+    client_name: string
 };
 
 // Validation schema
@@ -49,7 +57,9 @@ const ClientEdit = () => {
     const { id } = useParams();
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const [branches, setBranches] = useState<Branch[]>([]);
+    const [clients, setClients] = useState<Client[]>([]);
     const [clientbranch, setClientBranch] = useState('');
+    const [clientsName, setClientsName] = useState<string | undefined>('')
     const [branchErr,setBranchErr] = useState(false);
     const [errFile, setErrFile] = useState(false);
     const [fileName, setFileName] = useState('');
@@ -86,6 +96,8 @@ const ClientEdit = () => {
                 formData.append('client_addharcard', data.client_addharcard instanceof FileList ? data.client_addharcard[0]:'');
                 formData.append('client_postaladdress', data.client_postaladdress);
                 formData.append('client_landmark', data.client_landmark);
+                formData.append('sip_reference_level', data.client_sip_refrence_level.toString());
+                formData.append('sip_refered_by_clientId', (clientsName == undefined || clientsName == null)?'null':clientsName);
                 formData.append('client_status', data.client_status);
                 formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
 
@@ -138,6 +150,34 @@ const ClientEdit = () => {
     });
 
     useEffect(() => {
+
+        const fetchClients = async () => {
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/all/client/${userData.staff_branch}`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
+                const data = await response.json();
+
+                
+                if (response.ok) {
+                    setClients(data.client || []);
+
+                } else {
+                    console.error('Error fetching branches:', data);
+                }
+            } catch (error) {
+                console.error('Error during API call:', error);
+            }
+        };
+
+        fetchClients();
+
         const fetchBranches = async () => {
             try {
                 const bearerToken = secureLocalStorage.getItem('login');
@@ -187,8 +227,10 @@ const ClientEdit = () => {
                     setValue('client_gender', clientDetails.client_gender);
                     setValue('client_postaladdress', clientDetails.client_postaladdress);
                     setValue('client_landmark', clientDetails.client_landmark);
+                    setValue('client_sip_refrence_level', (clientDetails.sip_reference_level == undefined)?0:clientDetails.sip_reference_level);
                     setValue('client_status',clientDetails.client_status.toString())
                     setClientBranch(clientDetails.branch_id);
+                    setClientsName(clientDetails.sip_refered_by_clientId)
 
                 } else {
                     console.error('Error fetching client details:', data);
@@ -200,6 +242,12 @@ const ClientEdit = () => {
 
         fetchClientDetails();
     }, []);
+
+    const handleClientChange = (e:any)=>{
+        // var clientname = clients.filter((item)=> item._id == e.target.value)
+        
+        setClientsName(e.target.value);
+    }
 
     const handleBranchChange = (e:any)=>{
         setClientBranch(e.target.value)
@@ -327,6 +375,26 @@ const ClientEdit = () => {
                                     {errors.client_gender?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Status</Form.Label>
+                                <Controller
+                                    name="client_status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value || ''}
+                                            isInvalid={!!errors.client_status}>
+                                            <option value="">Select status</option>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </Form.Select>
+                                    )}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.client_status?.message}
+                                </Form.Control.Feedback>
+                            </Form.Group>
                             
                         </Col>
 
@@ -385,24 +453,36 @@ const ClientEdit = () => {
                                 />
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>Status</Form.Label>
+                                <Form.Label>SIP Refrence Level</Form.Label>
                                 <Controller
-                                    name="client_status"
+                                    name="client_sip_refrence_level"
                                     control={control}
+                                    defaultValue={0}
                                     render={({ field }) => (
-                                        <Form.Select
+                                        <Form.Control
+                                            type="number"
+                                            placeholder="0"
                                             {...field}
-                                            value={field.value || ''}
-                                            isInvalid={!!errors.client_status}>
-                                            <option value="">Select status</option>
-                                            <option value="true">Active</option>
-                                            <option value="false">Inactive</option>
-                                        </Form.Select>
+                                            disabled = {true}
+                                            isInvalid={!!errors.client_sip_refrence_level}
+                                        />
                                     )}
                                 />
                                 <Form.Control.Feedback type="invalid">
-                                    {errors.client_status?.message}
+                                    {errors.client_sip_refrence_level?.message}
                                 </Form.Control.Feedback>
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                 <Form.Label>Refered By</Form.Label>
+                                    <select className="form-control" id="client_refered_by" value={clientsName} onChange={(e)=>{handleClientChange(e)}} >
+                                                            <option value="">-- Select --</option>
+                    
+                                        {clients.map((client) => (
+                                        <option key={client._id} value={client._id}>
+                                        {`${client.client_id}-${client.client_name}`}
+                                            </option>
+                                        ))}
+                                    </select>
                             </Form.Group>
                             {(userData.user_role_type == '0') && (
                                 <>

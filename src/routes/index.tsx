@@ -31,10 +31,18 @@ const ClientRegistration = React.lazy(() => import('../pages/ClientManagement/Cl
 const AllClients = React.lazy(() => import('../pages/ClientManagement/Clients'));
 const EditClient = React.lazy(() => import('../pages/ClientManagement/EditClient'));
 
+const AddRefSchPayment = React.lazy(() => import('../pages/ClientManagement/AddRefSchPayment'));
+const AllRefSchPayment = React.lazy(() => import('../pages/ClientManagement/ReferenceSchPayment'));
+const EditRefSchPayment = React.lazy(() => import('../pages/ClientManagement/EditRefSchPayment'));
+
 
 const EditBranch = React.lazy(() => import('../pages/Master/EditBranch'));
 const EditDepartment = React.lazy(() => import('../pages/Master/EditDeprtment'));
 const EditDesignation = React.lazy(() => import('../pages/Master/EditDesignation'));
+
+const AddReferenceLevel= React.lazy(() => import('../pages/Master/AddReferenceLevel'));
+const AllReferenceLevel= React.lazy(() => import('../pages/Master/AllReferenceLevel'));
+const EditReferenceLevel = React.lazy(() => import('../pages/Master/EditReferenceLevel'));
 
 const AddStaff = React.lazy(() => import('../pages/StaffManagement/StaffRegistration'));
 const AllStaffs = React.lazy(() => import('../pages/StaffManagement/AllStaffs'));
@@ -58,6 +66,7 @@ const EditPayment= React.lazy(() => import('../pages/SIPManagement/EditSIPPaymen
 const AddLuckyDraw= React.lazy(() => import('../pages/SIPManagement/AddLuckyDraw'));
 const AllLuckyDraw= React.lazy(() => import('../pages/SIPManagement/LuckyDraw'));
 const EditLuckyDraw = React.lazy(() => import('../pages/SIPManagement/EditLuckyDraw'));
+
 
 const AddMaturity= React.lazy(() => import('../pages/SIPManagement/AddMaturity'));
 const AllMaturity= React.lazy(() => import('../pages/SIPManagement/Maturity'));
@@ -397,6 +406,30 @@ const AllRoutes = () => {
         {
           path: 'luckydraw-report',
           element: <LoadComponent component={LuvkyDrawDetails} />,
+        },
+        {
+          path: 'add-referencelevel',
+          element: <LoadComponent component={AddReferenceLevel} />,
+        },
+        {
+          path: 'all-referencelevel',
+          element: <LoadComponent component={AllReferenceLevel} />,
+        },
+        {
+          path: 'edit-referencelevel/:id',
+          element: <LoadComponent component={EditReferenceLevel} />,
+        },
+        {
+          path: 'add-refschpayment',
+          element: <LoadComponent component={AddRefSchPayment} />,
+        },
+        {
+          path: 'all-refschpayment',
+          element: <LoadComponent component={AllRefSchPayment} />,
+        },
+        {
+          path: 'edit-refschpayment/:id',
+          element: <LoadComponent component={EditRefSchPayment} />,
         },
         {
           path: 'apps',

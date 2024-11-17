@@ -8,21 +8,19 @@ import url from '../../env';
 // hooks
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import moment from 'moment';
 
 // Define types
 type PaymentData = {
-    spi_Id: string;
-    sipAmount: number;
-    sipmonth:string;
-    penaltyAmount: number;
-    penaltyMonth: string;
-    paymentMode: string;
-    paymentRefNo: string;
-    receivedBy: string;
-    receivedDate: string;
+    refschpayment_receiptno: string;
+    client_id: string;
+    reference_scheme_amount: number;
+    ref_payment_mode: string;
+    ref_payment_refno: string;
+    ref_payment_receivedBy: string;
+    ref_payment_receivedDate: string;
 };
 
 // Define the type for branch data
@@ -32,10 +30,10 @@ type Branch = {
 };
 
 // Define the type for Client data
-type SipMember = {
+type client = {
     _id: string;
-    sipmember_id: string;
-    sipmember_name: string
+    client_id: string;
+    client_name: string
 };
 type Staff = {
     _id: string;
@@ -45,26 +43,24 @@ type Staff = {
 
 // Validation schema
 const schema = yup.object().shape({
-    spi_Id: yup.string().required('Select SIP Member'),
-    sipAmount: yup.number().required('SIP Amount is required').min(1,'Amount Is Greater Then 0'),
-    sipmonth: yup.string().required('SIP Month is required'),
-    paymentMode: yup.string().required('Payment Mode is required'),
+    client_id: yup.string().required('Select client'),
+    reference_scheme_amount: yup.number().required(' Amount is required').min(1,'Amount Is Greater Then 0'),
+    ref_payment_mode: yup.string().required('Payment Mode is required'),
 });
 
-const PaymentForm = () => {
+const RefSchPaymentForm = () => {
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const userData:any = JSON.parse(StorageuserData);
+    const { id } = useParams<{ id: string }>();
     const [branches, setBranches] = useState<Branch[]>([]);
-    const [simembers, setSipMembers] = useState<SipMember[]>([]);
+    const [clients, setClients] = useState<client[]>([]);
     const [staff, setStaff] = useState<Staff[]>([]);
     const [clientbranch, setClientBranch] = useState('');
     const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
-    const [sipMemberName,setSipMemberName] = useState('');
-    const [sipmember_id,setSipmember_id] = useState('')
-    const [sipmember_month,setSipmember_month] = useState('')
-    const [walletBalance,setWalletBalance] = useState(0)
-
+    const [clientName,setClientName] = useState('');
+    const [receivedDate, setReceivedDate] = useState('')
+    // const [sipmember_month,setSipmember_month] = useState('')
     var today = new Date();
     var TodayDate = today.toISOString().split('T')[0];
     const { control, handleSubmit, reset,formState: { errors }, setValue } = useForm<PaymentData>({
@@ -230,7 +226,7 @@ const PaymentForm = () => {
         }
 
     const onSubmit = async(formData: PaymentData) => {
-        // console.log('Form data:', formData);
+        console.log('Form data:', formData);
 
         if(userData.staff_branch == '0' && clientbranch == '')
         {
@@ -239,16 +235,13 @@ const PaymentForm = () => {
         else
         {
             var dataToPost = {
-                sipmember_id: formData.spi_Id,
-                sipmember_name: sipMemberName,
-                sip_payment_month: formData.sipmonth,
-                sip_amount: formData.sipAmount,
-                sip_penalty_month: (formData.penaltyMonth)?formData.penaltyMonth:'',
-                sip_penalty_amount: (formData.penaltyAmount)?formData.penaltyAmount:0,
-                sip_payment_mode: formData.paymentMode,
-                sip_payment_refno: (formData.paymentRefNo)?formData.paymentRefNo:'',
-                sip_payment_receivedBy: formData.receivedBy,
-                sip_payment_receivedDate: formData.receivedDate,
+                client_id: formData.client_id,
+                client_name: clientName,
+                reference_scheme_amount: formData.reference_scheme_amount,
+                ref_payment_mode: formData.ref_payment_mode,
+                ref_payment_refno: (formData.ref_payment_refno)?formData.ref_payment_refno:'',
+                ref_payment_receivedBy: formData.ref_payment_receivedBy,
+                ref_payment_receivedDate: formData.ref_payment_receivedDate,
                 branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
             }
 
@@ -256,9 +249,9 @@ const PaymentForm = () => {
 
             try {
                 const bearerToken = secureLocalStorage.getItem('login');
-                const response = await fetch(`${url.nodeapipath}/sippayment`, {
+                const response = await fetch(`${url.nodeapipath}/referencesch/${id}`, {
                     body: JSON.stringify(dataToPost),
-                    method: 'POST',
+                    method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin':'*',
@@ -271,13 +264,13 @@ const PaymentForm = () => {
                 {   
                     
                     console.log('Payment successful:', result);
-                    generatePDF(result.sipPaymentReciept[0]);
-                    toast.success(result.message || 'Payment added Successfully.')
-                    navigate('/all-payement')
+                    // generatePDF(result.sipPaymentReciept[0]);
+                    toast.success(result.message || 'Payment Updated Successfully.')
+                    navigate('/all-refschpayment')
                 }
                 else
                 {
-                    toast.error(result.message || 'Failed To add SIP Payment.')
+                    toast.error(result.message || 'Failed To update Payment.')
                 }
                 
             } catch (error) {
@@ -317,9 +310,11 @@ const PaymentForm = () => {
         };
         fetchBranches();
 
-        const fetchSIPMember = async () => {
+        // Fetch branches from the backend
+        const fetchClients = async () => {
             try {
-                const response = await fetch(`${url.nodeapipath}/all/spimember/${userData.staff_branch}`,{
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/all/client/${userData.staff_branch}`,{
                     method:'GET',
                     headers: {
                         'Content-Type':'application/json',
@@ -328,9 +323,10 @@ const PaymentForm = () => {
                         }
                 });
                 const data = await response.json();
+
                 
                 if (response.ok) {
-                    setSipMembers(data.sipmember || []);
+                    setClients(data.client || []);
 
                 } else {
                     console.error('Error fetching branches:', data);
@@ -340,7 +336,7 @@ const PaymentForm = () => {
             }
         };
 
-        fetchSIPMember();
+        fetchClients();
 
         const fetchStaff = async () => {
             try {
@@ -366,57 +362,9 @@ const PaymentForm = () => {
         };
 
         fetchStaff();
-    },[])
 
-    const handleFetchPenaltyAmount = async (sip_id:any,sip_month:any)=>{
-        console.log('fetch Panalty');
-        console.log(sip_id,sip_month);
-        
-        
-        if(sip_id != '' && sip_month != '')
-        {
-            console.log('Fetch Penalty amount');
-            
-            try{
-                const bearerToken = secureLocalStorage.getItem('login');
-                    var DataToPost = {
-                        sip_id:sip_id,
-                        month:sip_month,
-                        date:TodayDate,
-                    }
-                    const response = await fetch(`${url.nodeapipath}/sippayment/penaltyamt`,{
-                        body:JSON.stringify(DataToPost),
-                        method:'POST',
-                        headers: {
-                            'Content-Type':'application/json',
-                            'Access-Control-Allow-Origin':'*',
-                            'Authorization': `Bearer ${bearerToken}`
-                            }
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        // setStaff(data.staff || []);
-                        // console.log(data);
-                        setValue('penaltyAmount',data.penaltyAmount);
-                        
-        
-                    } else {
-                        console.error('Error fetching branches:', data);
-                    }
-                }
-                catch(error){
-                    console.log('Error while fetch data.', error); 
-                }
-        }
-        
-    }
-
-    const handelClientWallet = async (sipememberId:any)=>
-    {
-        const bearerToken = secureLocalStorage.getItem('login');
-        try {
-
-            const response = await fetch(`${url.nodeapipath}/sippayment/wallet/${sipememberId}`,{
+        const fetchPaymentData = async ()=>{
+            const response = await fetch(`${url.nodeapipath}/referencesch/${id}`,{
                 method:'GET',
                 headers: {
                     'Content-Type':'application/json',
@@ -425,25 +373,34 @@ const PaymentForm = () => {
                     }
             });
             const data = await response.json();
-            if (response.ok) {
-                console.log(data);
-                setWalletBalance(data.balance)
-                // setStaff(data.staff || []);
+            console.log(data);
 
+            if (data && data.refSchPayment && Array.isArray(data.refSchPayment) && data.refSchPayment.length > 0) {
+                const refSchPaymentData = data.refSchPayment[0]; // Access the first element in the branch array
+
+                // Set form values using branchData
+                for (const key in refSchPaymentData) {
+                    if (refSchPaymentData.hasOwnProperty(key)) {
+                        setValue(key as keyof PaymentData, refSchPaymentData[key]);
+                    }
+                }
+                setReceivedDate(refSchPaymentData.ref_payment_receivedDate.split('T')[0])
+                setClientBranch(refSchPaymentData.branch_id)
+                setClientName(refSchPaymentData.client_name)
             } else {
-                console.error('Error fetching branches:', data);
+                throw new Error('Branch data is empty or invalid');
             }
-        } catch (error) {
-            console.error('Error during API call:', error);
+            
         }
-    }
+        fetchPaymentData();
+    },[])
 
-    const handleSIPMemberChange = (e:any)=>{
-        var Membername = simembers.filter((item)=> item._id == e.target.value)
-        setSipmember_id(e.target.value);
-        setSipMemberName(Membername[0].sipmember_name);
-        handleFetchPenaltyAmount(e.target.value,sipmember_month);
-        handelClientWallet(e.target.value);
+
+
+    const handleClientChange = (e:any)=>{
+        var clientname = clients.filter((item)=> item._id == e.target.value)
+        
+        setClientName(clientname[0].client_name);
     }
 
     const handleBranchChange = (e:any)=>{
@@ -458,137 +415,96 @@ const PaymentForm = () => {
         }  
     }
 
-    const handleSIPMonthChnge = (e:any)=>{
-        setSipmember_month(e.target.value);
-        handleFetchPenaltyAmount(sipmember_id,e.target.value);
-    }
 
     
 
     return (
         <Card>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Payment Receipt</h4>
-                <p className="sub-header">Fill in the details to generate a payment receipt.</p>
+                <h4 className="header-title mt-0 mb-1">Reference Scheme Payment</h4>
+                <p className="sub-header">Fill in the details to generate a reference scheme payment.</p>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>SIP Member ID</Form.Label>
+                                <Form.Label> Reciept. No.</Form.Label>
                                 <Controller
-                                    name="spi_Id"
+                                    name="refschpayment_receiptno"
+                                    control={control}
+                                    render={({ field }) => <Form.Control {...field} placeholder="Enter Payment Ref. No." disabled={true}/>}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group className="mb-2">
+                                <Form.Label>Client ID</Form.Label>
+                                <Controller
+                                    name="client_id"
                                     control={control}
                                     render={({ field }) => (<Form.Select
                                     {...field}
-                                    isInvalid={!!errors.spi_Id}
-                                    onChange={(e)=>{field.onChange(e.target.value); handleSIPMemberChange(e)}}
+                                    isInvalid={!!errors.client_id}
+                                    onChange={(e)=>{field.onChange(e.target.value); handleClientChange(e)}}
                                     >
-                                        <option>Select SIP Member</option>
-                                        {simembers.map((member) => (
-                                             <option key={member._id} value={member._id}>
-                                                 {`${member.sipmember_id}, ${member.sipmember_name}`}
+                                        <option>Select Client</option>
+                                        {clients.map((client) => (
+                                             <option key={client._id} value={client._id}>
+                                                 {`${client.client_id}, ${client.client_name}`}
                                              </option>
                                              ))}
                                     </Form.Select>
                                     )}
                                 />
                                 <Form.Control.Feedback type="invalid">
-                                    {errors.spi_Id?.message}
+                                    {errors.client_id?.message}
                                 </Form.Control.Feedback>
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>SIP Member Name</Form.Label>
-                                <Form.Control placeholder="Enter Name" value={sipMemberName} disabled={true}/>
                             </Form.Group>
                         </Col>
                     </Row>
                      <Row>
+                     <Col md={6}>
+                            <Form.Group className="mb-2">
+                                <Form.Label>Client Name</Form.Label>
+                                <Form.Control placeholder="Enter Name" value={clientName} disabled={true}/>
+                            </Form.Group>
+                        </Col>
                         <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>SIP Amount</Form.Label>
+                                <Form.Label>Reference Scheme Amount</Form.Label>
                                 <Controller
-                                    name="sipAmount"
+                                    name="reference_scheme_amount"
                                     control={control}
-                                    defaultValue={1250}
+                                    defaultValue={0}
                                     rules={{
                                         min: { value: 1, message: "Amount must be greater than 0" } // Additional validation rule
                                     }}
-                                    render={({ field }) => <Form.Control type="number" {...field} value={field.value || ''} onChange={(e)=>{field.onChange(e.target.value)}} isInvalid={!!errors.sipAmount} placeholder="Enter SIP Amount" />}
+                                    render={({ field }) => <Form.Control type="number" {...field} value={field.value || ''} onChange={(e)=>{field.onChange(e.target.value)}} isInvalid={!!errors.reference_scheme_amount} placeholder="Enter Scheme Amount" />}
                                 />
                                 <Form.Control.Feedback type="invalid">
-                                    {errors.sipAmount?.message}
+                                    {errors.reference_scheme_amount?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>SIP Month</Form.Label>
-                                <Controller
-                                    name="sipmonth"
-                                    control={control}
-                                    render={({ field }) => <Form.Control type="month" {...field} isInvalid={!!errors.sipmonth} placeholder="Select Month" onChange={(e)=>{field.onChange(e.target.value); handleSIPMonthChnge(e)}}/>}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.sipmonth?.message}
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </Col>
-                    </Row>
-                   <Row>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Penalty Amount</Form.Label>
-                                <Controller
-                                    name="penaltyAmount"
-                                    control={control}
-                                    render={({ field }) => <Form.Control {...field} value={field.value || ''} placeholder="Enter Penalty Amount" />}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Penalty Recovery Month</Form.Label>
-                                {/* <Controller
-                                    name="penaltyMonth"
-                                    control={control}
-                                    render={({ field }) => (<Form.Select
-                                    {...field} value={field.value || ""}>
-                                        <option>Select Month</option>
-                                        {Months.map((months)=>
-                                        <option value={months.value}>{months.lable}</option>
-                                        )}
-                                    </Form.Select>)}
-                                /> */}
-                                <Controller
-                                    name="penaltyMonth"
-                                    control={control}
-                                    render={({ field }) => <Form.Control type="month" {...field} placeholder="Select Month" />}
-                                />
-                            </Form.Group>
-                        </Col>
+                        
                     </Row>
                     <Row>
-                        <Col md={6}>
+                    <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Payment Mode</Form.Label>
                                 <Controller
-                                    name="paymentMode"
+                                    name="ref_payment_mode"
                                     control={control}
                                     render={({ field }) => <Form.Select
                                     {...field}
-                                    isInvalid={!!errors.paymentMode}>
+                                    isInvalid={!!errors.ref_payment_mode}>
                                         <option>Select Payment mode</option>
                                         <option value="Cash">Cash</option>
                                         <option value="UPI">UPI</option>
                                         <option value="Net banking">Net Banking</option>
-                                        <option value="Wallet">CH Wallet - Bal. {walletBalance}</option>
-
                                     </Form.Select>}
                                 />
                                 <Form.Control.Feedback type="invalid">
-                                    {errors.paymentMode?.message}
+                                    {errors.ref_payment_mode?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
@@ -596,19 +512,22 @@ const PaymentForm = () => {
                             <Form.Group className="mb-2">
                                 <Form.Label>Payment Ref. No.</Form.Label>
                                 <Controller
-                                    name="paymentRefNo"
+                                    name="ref_payment_refno"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter Payment Ref. No." />}
+                                    render={({ field }) => <Form.Control {...field} 
+                                    onChange={(e)=>{field.onChange(e.target.value)}}
+                                    placeholder="Enter Payment Ref. No." />}
                                 />
                             </Form.Group>
                         </Col>
+                        
                     </Row>
                    <Row>
-                        <Col md={6}>
+                   <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Received By</Form.Label>
                                 <Controller
-                                    name="receivedBy"
+                                    name="ref_payment_receivedBy"
                                     control={control}
                                     defaultValue={userData.staff_id}
                                     render={({ field }) => <Form.Select
@@ -627,13 +546,13 @@ const PaymentForm = () => {
                             <Form.Group className="mb-2">
                                 <Form.Label>Received Date</Form.Label>
                                 <Controller
-                                    name="receivedDate"
+                                    name="ref_payment_receivedDate"
                                     control={control}
-                                    defaultValue={TodayDate}
-                                    render={({ field }) => <Form.Control type="date" {...field} onChange={(e)=>{field.onChange(e.target.value)}} disabled={true}/>}
+                                    // defaultValue={TodayDate}
+                                    render={({ field }) => <Form.Control type="date" {...field} onChange={(e)=>{field.onChange(e.target.value)}} disabled={true} value={receivedDate}/>}
                                 />
                             </Form.Group>
-                        </Col>
+                        </Col>  
                     </Row>
                     <Row>
                     {(userData.user_role_type == '0') && (
@@ -641,7 +560,7 @@ const PaymentForm = () => {
                                 <Col md={6}>
                                  <Form.Group className="mb-3">
                                  <Form.Label>Branch Name</Form.Label>
-                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" onChange={(e)=>{handleBranchChange(e)}} >
+                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" value={clientbranch} onChange={(e)=>{handleBranchChange(e)}} >
                                          <option value="">-- Select --</option>
  
                                          {branches.map((branch) => (
@@ -671,9 +590,9 @@ const PaymentForm = () => {
     );
 };
 
-const AddSIPPayment = () => {
+const EditRefSchPayment = () => {
     usePageTitle({
-        title: 'SIP Payment',
+        title: 'Reference Scheme Payment',
         breadCrumbItems: [
             {
                 path: '/forms/payment-receipt',
@@ -691,11 +610,11 @@ const AddSIPPayment = () => {
         <>
             <Row style={{ marginTop: '25px' }}>
                 <Col lg={12}>
-                    <PaymentForm />
+                    <RefSchPaymentForm />
                 </Col>
             </Row>
         </>
     );
 };
 
-export default AddSIPPayment;
+export default EditRefSchPayment;
