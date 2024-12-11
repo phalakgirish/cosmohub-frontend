@@ -30,6 +30,8 @@ const AddDesignation = React.lazy(() => import('../pages/Master/AddDesignation')
 const ClientRegistration = React.lazy(() => import('../pages/ClientManagement/ClientRegistration'));
 const AllClients = React.lazy(() => import('../pages/ClientManagement/Clients'));
 const EditClient = React.lazy(() => import('../pages/ClientManagement/EditClient'));
+const ImportClient = React.lazy(() => import('../pages/ClientManagement/ImportClient'));
+
 
 const AddRefSchPayment = React.lazy(() => import('../pages/ClientManagement/AddRefSchPayment'));
 const AllRefSchPayment = React.lazy(() => import('../pages/ClientManagement/ReferenceSchPayment'));
@@ -54,9 +56,15 @@ const AllSlab= React.lazy(() => import('../pages/Master/SIPSlab'));
 const AddSlab= React.lazy(() => import('../pages/Master/AddSIPSlab'));
 const EditSlab= React.lazy(() => import('../pages/Master/EditSIPSlab'));
 
+const AllSipCategory= React.lazy(() => import('../pages/Master/AllSipCategory'));
+const AddSipCategory= React.lazy(() => import('../pages/Master/AddSipCategory'));
+const EditSipCategory= React.lazy(() => import('../pages/Master/EditSipCategory'));
+
 const AddMember = React.lazy(() => import('../pages/SIPManagement/Registration'));
 const EditMember= React.lazy(() => import('../pages/SIPManagement/EditSIPManagement'));
 const AllMember= React.lazy(() => import('../pages/SIPManagement/AllSIPManagements'));
+const ImportMember= React.lazy(() => import('../pages/SIPManagement/ImportSIPMember'));
+
 
 const AddPayment= React.lazy(() => import('../pages/SIPManagement/AddSIPPayment'));
 const AllPayment= React.lazy(() => import('../pages/SIPManagement/PaymentReciept'));
@@ -296,6 +304,10 @@ const AllRoutes = () => {
           element: <LoadComponent component={AllClients} />,
         },
         {
+          path: 'importclient',
+          element: <LoadComponent component={ImportClient} />,
+        },
+        {
           path: 'edit-client/:id',
           element: <LoadComponent component={EditClient} />,
         },
@@ -336,6 +348,18 @@ const AllRoutes = () => {
           element: <LoadComponent component={EditSlab} />,
         },
         {
+          path: 'sipcategory',
+          element: <LoadComponent component={AllSipCategory} />,
+        },
+        {
+          path: 'add-sipcategory',
+          element: <LoadComponent component={AddSipCategory} />,
+        },
+        {
+          path: 'edit-sipcategory/:id',
+          element: <LoadComponent component={EditSipCategory} />,
+        },
+        {
           path: 'add-sipmember',
           element: <LoadComponent component={AddMember} />,
         },
@@ -346,6 +370,10 @@ const AllRoutes = () => {
         {
           path: 'edit-sipmember/:id',
           element: <LoadComponent component={EditMember} />,
+        },
+        {
+          path: 'importmember',
+          element: <LoadComponent component={ImportMember} />,
         },
         {
           path: 'add-payment',

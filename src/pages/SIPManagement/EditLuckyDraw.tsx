@@ -201,8 +201,18 @@ const EditLuckyDrawForm = () => {
     return (
         <Card>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Lucky Draw Entry</h4>
-                <p className="sub-header">Fill in the details to enter the lucky draw.</p>
+                
+                <div className='d-flex'>
+                    <div>
+                    <h4 className="header-title mt-0 mb-1">Edit Lucky Draw Entry</h4>
+                    <p className="sub-header">Fill in the details to enter the lucky draw.</p>
+                    </div>
+                    <div className="text-md-end mb-0" style={{width:'79%'}}>
+                        <Button variant="dark" type="reset" onClick={()=>{navigate('/all-luckydraw')}}>
+                            Back
+                        </Button>
+                    </div>
+                </div>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Row>
                         <Col md={6}>

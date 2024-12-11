@@ -9,6 +9,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Controller, useForm } from 'react-hook-form';
 import * as XLSX from 'xlsx';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 interface Payment {
     sippayment_receiptno:string;
@@ -27,8 +28,11 @@ interface Payment {
 type Client = {
     _id: string;
     client_id: string;
-    client_name: string
+    client_name: string;
+    client_mobile_number: string;
 };
+
+type Option = string | Record<string, any>;
 
 // Define the type for branch data
 type Branch = {
@@ -59,6 +63,9 @@ const SIPMemberPaymentReport = () => {
     const [month,setMonth] = useState('');
     const [clientsName, setClientsName] = useState('')
     const [sipMemberId, setSIPMemberId] = useState('')
+    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
+    const [singleSIPSelections, setSingleSIPSelections] = useState<Option[]>([]);
+
 
 
     usePageTitle({
@@ -152,10 +159,28 @@ const SIPMemberPaymentReport = () => {
         fetchClients();   
     },[])
 
+    // const handleClientChange = (e:any)=>{
+    //     handleFetchSIPMember(e.target.value);
+    //     var clientname = clients.filter((item)=> item._id == e.target.value)
+    //     setClientsName((clientname.length>0)?clientname[0].client_name:'');
+    // }
+
     const handleClientChange = (e:any)=>{
-        handleFetchSIPMember(e.target.value);
-        var clientname = clients.filter((item)=> item._id == e.target.value)
-        setClientsName((clientname.length>0)?clientname[0].client_name:'');
+        // console.log(e);
+        setSingleSelections(e)
+        if(e.length>0)
+        {
+            handleFetchSIPMember(e[0].value);
+            var clientname = clients.filter((item)=> item._id == e[0].value)
+            setClientsName(clientname[0].client_name);
+
+        }
+        else
+        {
+            setClientsName('');
+
+        }
+        
     }
 
     const handleFetchSIPMember = async(id:any)=>{
@@ -170,9 +195,11 @@ const SIPMemberPaymentReport = () => {
                     }
             });
             const data = await response.json();
-
+            // console.log(data);
+            
             
             if (response.ok) {
+
                 setSipMembers(data.sipmember || []);
 
             } else {
@@ -186,6 +213,8 @@ const SIPMemberPaymentReport = () => {
 
     
         const fetchPayments = async () => {
+            if(sipMemberId == '')
+                return;
             try {
                 const bearerToken = secureLocalStorage.getItem('login');
                 const response = await fetch(`${url.nodeapipath}/report/member-payment?sip_id=${sipMemberId}`, {
@@ -197,6 +226,7 @@ const SIPMemberPaymentReport = () => {
                     },
                 });
                 const data: DataResponse = await response.json();
+                console.log(data);
                 
                 
                 if (response.ok) {
@@ -235,7 +265,23 @@ const SIPMemberPaymentReport = () => {
         }
 
         const handleSIPMember = (e:any)=>{
-            setSIPMemberId(e.target.value);
+            // console.log(e);
+            
+            setSingleSIPSelections(e)
+            if(e.length>0)
+            {
+                setSIPMemberId(e[0].value);
+        
+            }
+            else
+            {
+                setClientsName('');
+                setSIPMemberId('');
+                // setSipMembers([])
+                setData([])
+            }
+            
+            
         }
 
     const sizePerPageList = [
@@ -245,7 +291,7 @@ const SIPMemberPaymentReport = () => {
         { text: 'All', value: data.length },
     ];
 
-    const Excelcolumns = ['Sr. No','Reciept No.','SIP Id','Member Name','Amount','Month','Penalty Amount','Penalty Recovery Month','Payment Mode','Received By','Received Date'];
+    const Excelcolumns = ['Sr. No','Reciept No.','SIP Id','Member Name','Amount','Month','Penalty Amount','Penalty Recovery Month','Payment Mode','Payment Ref. No','Received By','Received Date'];
 
     const columns = [
         {
@@ -291,6 +337,11 @@ const SIPMemberPaymentReport = () => {
         {
             Header: 'Payment Mode',
             accessor: 'sip_payment_mode',
+            sort: true,
+        },
+        {
+            Header: 'Payment Ref. No',
+            accessor: 'sip_payment_refno',
             sort: true,
         },
         {
@@ -347,7 +398,7 @@ const SIPMemberPaymentReport = () => {
                                     <Col md={6}>
                                         <Form.Group className="mb-2 d-flex">
                                                 <Form.Label style={{width:'15%'}}>Client Id</Form.Label>
-                                                <select
+                                                {/* <select
                                                 className='form-control'
                                                 onChange={(e)=>{handleClientChange(e)}}
                                                 >
@@ -357,13 +408,26 @@ const SIPMemberPaymentReport = () => {
                                                             {`${member.client_id}, ${member.client_name}`}
                                                         </option>
                                                         ))}
-                                                </select>
+                                                </select> */}
+
+                                                <Typeahead
+                                                id="select2"
+                                                labelKey={'label'}
+                                                multiple={false}
+                                                onChange={(e)=>{handleClientChange(e)}}
+                                                options={clients.map((client:any) => (
+                                                    {value:`${client._id}`,label:`${client.client_id}-${client.client_name}`}
+                                                ))}
+                                                placeholder="select Client"
+                                                selected={singleSelections}
+                                                style={{width:'85%'}}
+                                            />
                                         </Form.Group>
                                     </Col>
                                     <Col md={6}>
                                     <Form.Group className="mb-2 d-flex">
                                         <Form.Label style={{width:'25%'}}>SIP Member Id</Form.Label>
-                                        <select className='form-control'
+                                        {/* <select className='form-control'
                                         onChange={(e)=>{handleSIPMember(e)}}
                                         >
                                             <option>Select SIP Member</option>
@@ -372,7 +436,20 @@ const SIPMemberPaymentReport = () => {
                                                     {`${member.sipmember_id}, ${member.sipmember_name}`}
                                                 </option>
                                                 ))}
-                                        </select>
+                                        </select> */}
+
+                                        <Typeahead
+                                            id="select2"
+                                            labelKey={'label'}
+                                            multiple={false}
+                                            onChange={(e)=>{handleSIPMember(e)}}
+                                            options={simembers.map((member:any) => (
+                                                {value:`${member._id}`,label:`${member.sipmember_id}, ${member.sipmember_name}`}
+                                            ))}
+                                            placeholder="select Member"
+                                            selected={singleSIPSelections}
+                                            style={{width:'75%'}}
+                                        />
                                     </Form.Group>
                                     </Col>
                                 </Row>

@@ -13,11 +13,16 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import '@react-pdf-viewer/core/lib/styles/index.css';
+import Spinner from '../../components/Spinner';
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.82/pdf.worker.min.js`;
 
 interface Payment {
     Sip_id:string;
     sipmember_name:string;
+    client_city:string;
+    Sip_previous_rank:string;
+    sip_member_category:string;
+    sip_payment_month:string;
     sip_amount: number;
     sip_payment_mode: string;
     totalSIPAmount: number
@@ -42,6 +47,7 @@ const SIPLuckyDrawDetailsReport = () => {
     const userData:any = JSON.parse(StorageuserData);
     const [month,setMonth] = useState('');
     const [pdfData, setPdfData] = useState<string | null>(null);
+    const [isSpinner,setIsSpinner] = useState(false)
     let pdfurl:string |null = null
 
     usePageTitle({
@@ -114,40 +120,45 @@ const SIPLuckyDrawDetailsReport = () => {
         // Add your content here
         // doc.text("Hello World!", 20, 20);
         let y = yStart;
+        let record_count = 0;
         doc.setFont("helvetica", "bold");
         data.forEach((record:any, index:any) => {
-            const x = xStart + (index % 2) * (partWidth);
-             y = yStart + Math.floor(index / 2) * (partHeight);
+            const x = xStart + (record_count % 2) * (partWidth);
+             y = yStart + Math.floor(record_count / 2) * (partHeight);
 
             // if (y + partHeight > height) { // Check if space left on page is enough for the box
             //     doc.addPage();
             //     // y = yStart+ Math.floor(index / 2) * (partHeight); // Reset y to start position
             //   }
-
+            
             if (y > height) { // Check if space left on page is enough for the box
                 doc.addPage();
-
                 y = yStart; // Reset y to start position
+                record_count = 0;
               }
-      
-            doc.setFontSize(14);
+              record_count = record_count +1 
+            doc.setFontSize(12);
 
             // Calculate text width and position for centering
             const nameStatusText = `${record.Sip_id}, ${record.sipmember_name}`;
             const nameStatusTextWidth = doc.getTextWidth(nameStatusText);
             const nameStatusX = x + (partWidth - nameStatusTextWidth) / 2;
-            
-            const branchText = record.branch;
+            doc.text(nameStatusText, nameStatusX-70, y-10);
+            const branchText = `${record.sip_member_category}    ${record.sip_payment_month}`;
             const branchTextWidth = doc.getTextWidth(branchText);
             const branchX = x + (partWidth - branchTextWidth) / 2;
+            doc.text(branchText, branchX-70, y + 10);
+            const cityText = record.client_city;
+            const cityTextWidth = doc.getTextWidth(cityText);
+            const cityX = x + (partWidth - cityTextWidth) / 2;
+            doc.text(cityText, cityX-70, y + 30);
+            const previousrank = `Previous Rank : ${record.Sip_previous_rank}`;
+            const previousrankTextWidth = doc.getTextWidth(previousrank);
+            const previousrankX = x + (partWidth - previousrankTextWidth) / 2;
+            doc.text(previousrank, previousrankX-70, y + 50);
             
-            const amountText = `${record.sip_amount}  &  ${record.sip_payment_mode}`;
-            const amountTextWidth = doc.getTextWidth(amountText);
-            const amountX = x + (partWidth - amountTextWidth) / 2;
             
-            doc.text(nameStatusText, nameStatusX-70, y);
-            doc.text(branchText, branchX-70, y + 20);
-            doc.text(amountText, amountX-70, y + 40);
+            // doc.setLineWidth(0.1);
             doc.rect(x-70, y-90, partWidth, partHeight);
       
             // if ((index + 1) % 8 === 0) {
@@ -165,6 +176,7 @@ const SIPLuckyDrawDetailsReport = () => {
       };
     
         const fetchPayments = async () => {
+            setIsSpinner(true);
             try {
                 const bearerToken = secureLocalStorage.getItem('login');
                 const response = await fetch(`${url.nodeapipath}/report/sip_luckydraw?month=${month}`, {
@@ -183,6 +195,10 @@ const SIPLuckyDrawDetailsReport = () => {
                         srNo: index + 1,
                         Sip_id:payment.Sip_id,
                         sipmember_name:payment.sipmember_name,
+                        client_city:payment.client_city,
+                        Sip_previous_rank:payment.Sip_previous_rank,
+                        sip_member_category:payment.sip_member_category,
+                        sip_payment_month:payment.sip_payment_month,
                         sip_amount: payment.sip_amount,
                         sip_payment_mode: payment.sip_payment_mode,
                         totalSIPAmount:payment.totalSIPAmount,
@@ -192,9 +208,11 @@ const SIPLuckyDrawDetailsReport = () => {
                     if(data.sipPayment.length == 0)
                     {
                         setPdfData(null)
+                        setIsSpinner(false);
                         return;
                     } 
                     generatePDF(formattedData)
+                    setIsSpinner(false);
                     
                 } else {
                     console.error('Error fetching payments:', data);
@@ -295,7 +313,7 @@ const SIPLuckyDrawDetailsReport = () => {
             }, {})
         );
 
-        console.log();
+
         
     
         // Convert the data to a worksheet
@@ -311,7 +329,7 @@ const SIPLuckyDrawDetailsReport = () => {
     return (
         <Row style={{ marginTop: '25px' }}>
             <Col>
-                <Card>
+                <Card style={{marginLeft:"0%"}}>
                     <Card.Body>
                         <div className="d-flex justify-content-between">
                             <div>
@@ -345,19 +363,30 @@ const SIPLuckyDrawDetailsReport = () => {
                             pagination={true}
                             // isSearchable={true}
                         /> */}
+                        {(isSpinner)?
+                            <div className="d-flex justify-content-center">
+                            <Spinner key={'1'} className="m-2" color={'danger'} type="bordered" size="lg"/>
+                            </div>:
+                                (pdfData)? (
+                                
 
-                    {(pdfData)? (
-                            
-
-                        //  <Worker workerUrl={pdfjs.GlobalWorkerOptions.workerSrc}>
-                        //     <Viewer fileUrl='http://localhost:3000/ed85d4ed-7ebc-4248-ab01-df90dc592587' />
-                        // </Worker>
-                        <iframe
-                            src={pdfData}
-                            style={{ width: '100%', height: '100vh' }}
-                            frameBorder="0"
-                            ></iframe>
-                 ):'No Data Found'} 
+                                    //  <Worker workerUrl={pdfjs.GlobalWorkerOptions.workerSrc}>
+                                    //     <Viewer fileUrl='http://localhost:3000/ed85d4ed-7ebc-4248-ab01-df90dc592587' />
+                                    // </Worker>
+                                    <iframe
+                                        src={pdfData}
+                                        style={{ width: '100%', height: '100vh' }}
+                                        frameBorder="0"
+                                        ></iframe>
+                            ):
+                            <div className="d-flex justify-content-center">
+                                No Data Found
+                            </div> 
+                            }
+                        
+                    
+                    {/* <Spinner className="text-primary m-2" color="primary" size='lg' />; */}
+                    
                     </Card.Body>
                 </Card>
             </Col>

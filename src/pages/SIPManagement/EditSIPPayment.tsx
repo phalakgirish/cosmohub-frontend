@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Row, Col, Card, Button, Form, FormText } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, FormText, Modal } from 'react-bootstrap';
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -10,6 +10,7 @@ import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 // Define types
 type PaymentData = {
@@ -24,6 +25,9 @@ type PaymentData = {
     sip_payment_receivedBy: string;
     sip_payment_receivedDate: Date;
 };
+
+type Option = string | Record<string, any>;
+
 
 // Define the type for branch data
 type Branch = {
@@ -61,6 +65,12 @@ const EditPaymentForm = () => {
     const [clientbranch, setClientBranch] = useState('');
     const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
+    const[errmsg,setErrmsg] = useState(" ");
+    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
+    const [paymentModes,setPaymentModes] = useState('')
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+
 
 
     const [sipMemberName,setSipMemberName] = useState('');
@@ -94,6 +104,51 @@ const EditPaymentForm = () => {
         doc.save('payment_receipt.pdf'); 
     };
 
+    const handelPAddPaymentPreEvent = async (sipMember_id:any,sip_month:any)=>{
+        try{
+            const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/sippayment/paymentprev?sipmember_id=${sipMember_id}&sip_month=${sip_month}`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    // setStaff(data.staff || []);
+                    // console.log(data);
+                    // setValue('penaltyAmount',data.penaltyAmount);
+
+                    return data.sipPaymentDetails;
+                    
+    
+                } else {
+                    console.error('Error fetching branches:', data);
+                }
+            }
+            catch(error){
+                console.log('Error while fetch data.', error); 
+            }
+    }
+
+    const formatMonthDate = (dateString:any)=> {
+        if(!dateString)
+            return '';
+
+        const [year, month] = dateString.split('-');
+        
+        // Create a date object using the year and month
+        const date = new Date(`${year}-${month}-01`);
+        
+        // Format the month to get the full month name
+        const options = { month: "long" };
+        const monthName = new Intl.DateTimeFormat('en-US',{ month: 'long' }).format(date);
+        
+        return `${monthName}-${year}`;
+    }
+
     const onSubmit = async(formData: PaymentData) => {
         // console.log('Form data:', formData);
 
@@ -103,48 +158,61 @@ const EditPaymentForm = () => {
         }
         else
         {
-            var dataToPost = {
-                sippayment_receiptno:formData.sippayment_receiptno,
-                sipmember_id: formData.sipmember_id,
-                sipmember_name: sipMemberName,
-                sip_payment_month: formData.sip_payment_month,
-                sip_amount: formData.sip_amount,
-                sip_penalty_month: (formData.sip_penalty_month)?formData.sip_penalty_month:'',
-                sip_penalty_amount: (formData.sip_penalty_amount)?formData.sip_penalty_amount:0,
-                sip_payment_mode: formData.sip_payment_mode,
-                sip_payment_refno: (formData.sip_payment_refno)?formData.sip_payment_refno:'',
-                sip_payment_receivedBy: formData.sip_payment_receivedBy,
-                sip_payment_receivedDate: formData.sip_payment_receivedDate,
-                branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
-            }
-            // console.log(dataToPost);
+            var sippaymentdetails:any = handelPAddPaymentPreEvent(formData.sipmember_id,formData.sip_payment_month)
 
-            try {
-                const bearerToken = secureLocalStorage.getItem('login');
-                const response = await fetch(`${url.nodeapipath}/sippayment/${id}`, {
-                    body: JSON.stringify(dataToPost),
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin':'*',
-                        'Authorization': `Bearer ${bearerToken}`
-                    },
-                    
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    toast.success(result.message || 'SIP Payment Updated successfully');
-                    navigate('/all-payement')
-                } else {
-                    // console.error('Error adding Payment', result);
-                    toast.error(result.message || 'Failed to Update SIP Payment');
+            if(sippaymentdetails.length == 0)
+            {
+                var dataToPost = {
+                    sippayment_receiptno:formData.sippayment_receiptno,
+                    sipmember_id: formData.sipmember_id,
+                    sipmember_name: sipMemberName,
+                    sip_payment_month: formData.sip_payment_month,
+                    sip_amount: formData.sip_amount,
+                    sip_penalty_month: (formData.sip_penalty_month)?formData.sip_penalty_month:'',
+                    sip_penalty_amount: (formData.sip_penalty_amount)?formData.sip_penalty_amount:0,
+                    sip_payment_mode: formData.sip_payment_mode,
+                    sip_payment_refno: (formData.sip_payment_refno)?formData.sip_payment_refno:'',
+                    sip_payment_receivedBy: formData.sip_payment_receivedBy,
+                    sip_payment_receivedDate: formData.sip_payment_receivedDate,
+                    branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
                 }
-                // console.log('Payment update  successful:', result);
-                
-            } catch (error) {
-                // console.error('Error during Payment:', error);
-                toast.error('An error occurred during adding. Please try again.');
+                // console.log(dataToPost);
+    
+                try {
+                    const bearerToken = secureLocalStorage.getItem('login');
+                    const response = await fetch(`${url.nodeapipath}/sippayment/${id}`, {
+                        body: JSON.stringify(dataToPost),
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin':'*',
+                            'Authorization': `Bearer ${bearerToken}`
+                        },
+                        
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        toast.success(result.message || 'SIP Payment Updated successfully');
+                        navigate('/all-payement')
+                    } else {
+                        // console.error('Error adding Payment', result);
+                        toast.error(result.message || 'Failed to Update SIP Payment');
+                    }
+                    // console.log('Payment update  successful:', result);
+                    
+                } catch (error) {
+                    // console.error('Error during Payment:', error);
+                    toast.error('An error occurred during adding. Please try again.');
+                }
             }
+            else
+            {
+                var sipMemberDetails = simembers.filter((item:any)=> item._id == formData.sipmember_id);
+                setErrmsg(`${formatMonthDate(formData.sip_payment_month)} payment for ${sipMemberDetails[0].sipmember_id} is already paid.`)
+                handleOpenDeleteModal();
+            }
+
+            
         }
             
         // generatePDF(formData);
@@ -153,6 +221,7 @@ const EditPaymentForm = () => {
     };
 
     useEffect(()=>{
+        var SipMemberData:any
         const bearerToken = secureLocalStorage.getItem('login');
         const fetchBranches = async () => {
             try {
@@ -189,7 +258,7 @@ const EditPaymentForm = () => {
                         }
                 });
                 const data = await response.json();
-                
+                SipMemberData = data.sipmember
                 if (response.ok) {
                     setSipMembers(data.sipmember || []);
 
@@ -249,6 +318,9 @@ const EditPaymentForm = () => {
                         setValue(key as keyof PaymentData, sipPaymentData[key]);
                     }
                 }
+
+                var sipMemberdetails = await SipMemberData.filter((item:any)=> item._id == sipPaymentData.sipmember_id)
+                setSingleSelections([{value:sipPaymentData.sipmember_id,label:`${sipMemberdetails[0].sipmember_id}-${sipMemberdetails[0].sipmember_name}`}])
                 setReceivedDate(sipPaymentData.sip_payment_receivedDate.split('T')[0])
                 setClientBranch(sipPaymentData.branch_id)
                 setSipMemberName(sipPaymentData.sipmember_name)
@@ -260,10 +332,49 @@ const EditPaymentForm = () => {
         fetchPaymentData();
     },[])
 
-    const handleSIPMemberChange = (e:any)=>{
-        var Membername = simembers.filter((item)=> item._id == e.target.value)
+    // const handleSIPMemberChange = (e:any)=>{
+    //     var Membername = simembers.filter((item)=> item._id == e.target.value)
         
-        setSipMemberName(Membername[0].sipmember_name);
+    //     setSipMemberName(Membername[0].sipmember_name);
+    // }
+
+    const handleOpenDeleteModal = () => {
+
+        setShowDeleteModal(true);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setShowDeleteModal(false);
+    };
+
+    const handleSIPMemberChange = (e:any)=>{
+        setSingleSelections(e)
+        if(e.length>0)
+        {
+            var Membername = simembers.filter((item)=> item._id == e[0].value)
+            // setSipmember_id(e[0].value);
+            setSipMemberName(Membername[0].sipmember_name);
+            // handleFetchPenaltyAmount(e[0].value,sipmember_month);
+            // handelClientWallet(e[0].value);
+            setValue('sipmember_id',e[0].value)
+        }
+        else
+        {
+            // setSipmember_id('');
+            setSipMemberName('');
+            // handleFetchPenaltyAmount('',sipmember_month);
+            // handelClientWallet('');
+            setValue('sipmember_id','')
+            // setWalletBalance(0)
+        }
+        
+    }
+
+    const handelChangePaymentMode = (e:any)=>{
+        // console.log(e.target.value);
+
+        setPaymentModes(e.target.value)
+        
     }
 
     const handleBranchChange = (e:any)=>{
@@ -281,8 +392,17 @@ const EditPaymentForm = () => {
     return (
         <Card>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Payment Receipt</h4>
-                <p className="sub-header">Fill in the details to generate a payment receipt.</p>
+                <div className='d-flex'>
+                    <div>
+                        <h4 className="header-title mt-0 mb-1">Edit Payment</h4>
+                        <p className="sub-header">Fill in the details to edit payment.</p>
+                    </div>
+                    <div className="text-md-end mb-0" style={{width:'82.7%'}}>
+                        <Button variant="dark" type="reset" onClick={()=>{navigate('/all-payement')}}>
+                            Back
+                        </Button>
+                    </div>
+                </div>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Row>
                     <Col md={6}>
@@ -301,23 +421,46 @@ const EditPaymentForm = () => {
                                 <Controller
                                     name="sipmember_id"
                                     control={control}
-                                    render={({ field }) => (<Form.Select
-                                    {...field}
-                                    isInvalid={!!errors.sipmember_id}
-                                    onChange={(e)=>{field.onChange(e.target.value); handleSIPMemberChange(e)}}
-                                    >
-                                        <option>Select SIP Member</option>
-                                        {simembers.map((member) => (
-                                             <option key={member._id} value={member._id}>
-                                                 {`${member.sipmember_id}, ${member.sipmember_name}`}
-                                             </option>
-                                             ))}
-                                    </Form.Select>
+                                    render={({ field }) => (
+                                //     <Form.Select
+                                //     {...field}
+                                //     isInvalid={!!errors.sipmember_id}
+                                //     onChange={(e)=>{field.onChange(e.target.value); handleSIPMemberChange(e)}}
+                                //     >
+                                //         <option>Select SIP Member</option>
+                                //         {simembers.map((member) => (
+                                //              <option key={member._id} value={member._id}>
+                                //                  {`${member.sipmember_id}, ${member.sipmember_name}`}
+                                //              </option>
+                                //              ))}
+                                //     </Form.Select>
+                                //     )}
+                                // />
+                                // <Form.Control.Feedback type="invalid">
+                                //     {errors.sipmember_id?.message}
+                                // </Form.Control.Feedback>
+
+                                <Typeahead
+                                        id="select2"
+                                        labelKey={'label'}
+                                        {...field}
+                                        isInvalid={!!errors.sipmember_id}
+                                        multiple={false}
+                                        
+                                        onChange={(e)=>{handleSIPMemberChange(e)}}
+                                        options={simembers.map((member:any) => (
+                                            {value:`${member._id}`,label:`${member.sipmember_id}, ${member.sipmember_name}`}
+                                        ))}
+                                        placeholder="select Client"
+                                        selected={singleSelections}
+                                    />
                                     )}
                                 />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.sipmember_id?.message}
-                                </Form.Control.Feedback>
+                                {/* <Form.Control.Feedback type="invalid">
+                                    {errors.sipmember_id?.message} */}
+
+                                    {errors.sipmember_id && <div className="invalid-feedback d-block">{errors.sipmember_id.message}</div>}
+                                {/* </Form.Control.Feedback> */}
                             </Form.Group>
                         </Col>
                         
@@ -416,6 +559,7 @@ const EditPaymentForm = () => {
                                     control={control}
                                     render={({ field }) => <Form.Select
                                     {...field}
+                                    onChange={(e)=>{field.onChange(e.target.value);handelChangePaymentMode(e)}}
                                     isInvalid={!!errors.sip_payment_mode}>
                                         <option>Select Payment mode</option>
                                         <option value="Cash">Cash</option>
@@ -437,7 +581,7 @@ const EditPaymentForm = () => {
                                 <Controller
                                     name="sip_payment_refno"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter Payment Ref. No." />}
+                                    render={({ field }) => <Form.Control {...field} placeholder="Enter Payment Ref. No." disabled={(paymentModes == 'Cash' || paymentModes == 'Wallet')?true:false}/>}
                                 />
                             </Form.Group>
                         </Col>
@@ -504,7 +648,22 @@ const EditPaymentForm = () => {
                         </Button>
                     </div>
                 </form>
+
             </Card.Body>
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={handleCloseDeleteModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Alert</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {errmsg}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseDeleteModal}>
+                        Ok
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Card>
     );
 };

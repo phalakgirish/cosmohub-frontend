@@ -215,7 +215,8 @@ const AppMenu = ({ menuItems }: AppMenuProps) => {
                                     )}
                                 </>
                             )}
-                        </React.Fragment>:''
+                        </React.Fragment>
+                        :''
                     );
                 })}
             </ul>

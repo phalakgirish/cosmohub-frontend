@@ -140,6 +140,28 @@ const MENU_ITEMS: MenuItemTypes[] = [
         ],
     },
 
+    {
+        key: 'sipcategory',
+        label: 'SIP category',
+        isTitle: false,
+        icon: 'mdi mdi-ballot',
+        usershow:["0"],
+        children: [
+            {
+                key: 'allsipcategory',
+                label: 'All SIP Category',
+                url: '/sipcategory',
+                parentKey: 'sipcategory',
+            },
+            {
+                key: 'addsipcategory',
+                label: 'Add SIP Category',
+                url: '/add-sipcategory',
+                parentKey: 'sipcategory',
+            },
+        ],
+    },
+
     { key: 'client', label: 'Client Management', isTitle: true, usershow:["0","1","2"] },
     {
         key: 'registration',
@@ -155,6 +177,14 @@ const MENU_ITEMS: MenuItemTypes[] = [
         isTitle: false,
         icon: 'dripicons-view-list',
         url: '/clients',
+        usershow:["0","1","2"],
+    },
+    {
+        key: 'clients',
+        label: 'Import Clients',
+        isTitle: false,
+        icon: 'dripicons-view-list',
+        url: '/importclient',
         usershow:["0","1","2"],
     },
     {
@@ -196,6 +226,12 @@ const MENU_ITEMS: MenuItemTypes[] = [
                 key: 'addsipmember',
                 label: 'Add Member',
                 url: '/add-sipmember',
+                parentKey: 'sipMember',
+            },
+            {
+                key: 'importmember',
+                label: 'Import Member',
+                url: '/importmember',
                 parentKey: 'sipMember',
             },
         ],
@@ -291,7 +327,7 @@ const MENU_ITEMS: MenuItemTypes[] = [
     { key: 'Reports', label: 'Reports', isTitle: true, usershow:["0","1","2"], },
     {
         key: 'paymentReport',
-        label: 'Monthly Payment Report',
+        label: 'SIP Payment Report',
         isTitle: false,
         icon: 'mdi mdi-account',
         url: '/payment-report',

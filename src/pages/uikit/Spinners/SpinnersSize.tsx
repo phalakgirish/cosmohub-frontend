@@ -18,7 +18,7 @@ const SpinnersSizes = () => {
                         return (
                             <div key={index.toString()} className="col-lg-6">
                                 <Spinner className="text-primary m-2" color="primary" size={size} />
-                                <Spinner className="text-secondary m-2" type="grow" size={size} />
+                                <Spinner className="text-secondary m-2" type="grow" size={size} />;
                             </div>
                         );
                     })}

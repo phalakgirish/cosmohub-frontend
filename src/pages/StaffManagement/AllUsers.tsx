@@ -44,10 +44,20 @@ const UserManagement = () => {
         setShowToggleStatusModal(false);
     };
 
-    const handleOpenChangePasswordModal = (userId: string) => {
-        setSelectedUserId(userId);
-        setActionType('changePassword');
-        setShowChangePasswordModal(true);
+    const handleOpenChangePasswordModal = (userId: string,verifiedStatus:boolean) => {
+        console.log(verifiedStatus);
+        
+        if(verifiedStatus)
+        {
+            setSelectedUserId(userId);
+            setActionType('changePassword');
+            setShowChangePasswordModal(true);
+        }
+        else
+        {
+            toast.error('User Email Id is unverified!. Please Verify email!');
+        }
+        
     };
 
     const handleOpenToggleStatusModal = (userId: string, userStatus: boolean) => {
@@ -168,6 +178,7 @@ const UserManagement = () => {
             })
                 .then((response) => response.json())
                 .then((data: DataResponse) => {
+                    // console.log(data);
                     
                     const formattedData = data.users.map((user, index) => ({
                         srNo: index + 1,
@@ -247,7 +258,7 @@ const UserManagement = () => {
                             alignItems: 'center',
                             cursor: 'pointer',
                         }}
-                        onClick={() => handleOpenChangePasswordModal(row.original._id)}
+                        onClick={() => handleOpenChangePasswordModal(row.original._id,row.original.staff_isemailVerified)}
                     >
                         <i className="mdi mdi-key" style={{ color: '#fff' }}></i>
                     </div>

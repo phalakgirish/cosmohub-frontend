@@ -11,6 +11,7 @@ import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import moment from 'moment';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 // Define types
 type PaymentData = {
@@ -27,6 +28,8 @@ type Branch = {
     _id: string;
     branch_name: string;
 };
+
+type Option = string | Record<string, any>;
 
 // Define the type for Client data
 type client = {
@@ -58,6 +61,7 @@ const RefSchPaymentForm = () => {
     const navigate = useNavigate();
     const [clientName,setClientName] = useState('');
     const [client_id,setClient_id] = useState('')
+    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
     // const [sipmember_month,setSipmember_month] = useState('')
     var today = new Date();
     var TodayDate = today.toISOString().split('T')[0];
@@ -224,7 +228,7 @@ const RefSchPaymentForm = () => {
         }
 
     const onSubmit = async(formData: PaymentData) => {
-        console.log('Form data:', formData);
+        // console.log('Form data:', formData);
 
         if(userData.staff_branch == '0' && clientbranch == '')
         {
@@ -365,9 +369,19 @@ const RefSchPaymentForm = () => {
 
 
     const handleClientChange = (e:any)=>{
-        var clientname = clients.filter((item)=> item._id == e.target.value)
-        
-        setClientName(clientname[0].client_name);
+        setSingleSelections(e)
+        if(e.length>0)
+        {
+            var clientname = clients.filter((item)=> item._id == e[0].value)
+            setClientName(clientname[0].client_name);
+            setValue('client_id',e[0].value);
+        }
+        else
+        {
+            setClientName('');
+            setValue('client_id','');
+
+        }
     }
 
     const handleBranchChange = (e:any)=>{
@@ -388,8 +402,17 @@ const RefSchPaymentForm = () => {
     return (
         <Card>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Reference Scheme Payment</h4>
-                <p className="sub-header">Fill in the details to generate a reference scheme payment.</p>
+                <div className='d-flex'>
+                    <div>
+                        <h4 className="header-title mt-0 mb-1">Reference Scheme Payment</h4>
+                        <p className="sub-header">Fill in the details to generate a reference scheme payment.</p>
+                    </div>
+                    <div className="text-md-end mb-0" style={{width:'69.4%'}}>
+                        <Button variant="dark" type="reset" onClick={()=>{navigate('/all-refschpayment')}}>
+                            Back
+                        </Button>
+                    </div>
+                </div>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Row>
                         <Col md={6}>
@@ -398,23 +421,39 @@ const RefSchPaymentForm = () => {
                                 <Controller
                                     name="client_id"
                                     control={control}
-                                    render={({ field }) => (<Form.Select
+                                    render={({ field }) => (
+                                    // <Form.Select
+                                    // {...field}
+                                    // isInvalid={!!errors.client_id}
+                                    // onChange={(e)=>{field.onChange(e.target.value); handleClientChange(e)}}
+                                    // >
+                                    //     <option>Select Client</option>
+                                    //     {clients.map((client) => (
+                                    //          <option key={client._id} value={client._id}>
+                                    //              {`${client.client_id}, ${client.client_name}`}
+                                    //          </option>
+                                    //          ))}
+                                    // </Form.Select>
+                                    <Typeahead
+                                    id="select2"
+                                    labelKey={'label'}
                                     {...field}
+                                    multiple={false}
                                     isInvalid={!!errors.client_id}
-                                    onChange={(e)=>{field.onChange(e.target.value); handleClientChange(e)}}
-                                    >
-                                        <option>Select Client</option>
-                                        {clients.map((client) => (
-                                             <option key={client._id} value={client._id}>
-                                                 {`${client.client_id}, ${client.client_name}`}
-                                             </option>
-                                             ))}
-                                    </Form.Select>
+                                    // {...register('client_id')}
+                                    onChange={(e)=>{handleClientChange(e)}}
+                                    options={clients.map((client:any) => (
+                                        {value:`${client._id}`,label:`${client.client_id}-${client.client_name}`}
+                                    ))}
+                                    placeholder="select Client"
+                                    selected={singleSelections}
+                                />
                                     )}
                                 />
-                                <Form.Control.Feedback type="invalid">
+                                {errors.client_id && <div className="invalid-feedback d-block">{errors.client_id.message}</div>}
+                                {/* <Form.Control.Feedback type="invalid">
                                     {errors.client_id?.message}
-                                </Form.Control.Feedback>
+                                </Form.Control.Feedback> */}
                             </Form.Group>
                         </Col>
                         <Col md={6}>

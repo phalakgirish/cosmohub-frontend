@@ -174,7 +174,7 @@ const AllMaturities = () => {
             sort: true,
         },
         {
-            Header: 'Paid By',
+            Header: 'Initiated By',
             accessor: 'sip_payment_paidBy',
             sort: true,
         },
