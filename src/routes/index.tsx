@@ -84,6 +84,8 @@ const PaymentReport = React.lazy(() => import('../pages/report/SIPPaymentMonthly
 const MemberPaymentReport = React.lazy(() => import('../pages/report/SIPMemberPaymentReport'));
 const MemberDetailsReport = React.lazy(() => import('../pages/report/SIPMemberDetailsReport'));
 const LuvkyDrawDetails = React.lazy(() => import('../pages/report/SIPLuckyDrawDetailsReport'));
+const commissionReport = React.lazy(() => import('../pages/report/ClientwiseReferenceComission'));
+
 
 const ChangePassword = React.lazy(() => import('../pages/StaffManagement/ChangePassword'));
 
@@ -434,6 +436,10 @@ const AllRoutes = () => {
         {
           path: 'luckydraw-report',
           element: <LoadComponent component={LuvkyDrawDetails} />,
+        },
+        {
+          path: 'comission-report',
+          element: <LoadComponent component={commissionReport} />,
         },
         {
           path: 'add-referencelevel',

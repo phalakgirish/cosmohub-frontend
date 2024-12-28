@@ -357,6 +357,14 @@ const MENU_ITEMS: MenuItemTypes[] = [
         url: '/luckydraw-report',
         usershow:["0","1"],
     },
+    {
+        key: 'comissionreport',
+        label: 'Clientwise Reference Comission Report',
+        isTitle: false,
+        icon: 'mdi mdi-account',
+        url: '/comission-report',
+        usershow:["0","1","2"],
+    },
     // { key: 'apps', label: 'Apps', isTitle: true },
     // {
     //     key: 'apps-calendar',

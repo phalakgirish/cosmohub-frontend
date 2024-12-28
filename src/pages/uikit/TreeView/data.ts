@@ -12,6 +12,7 @@ const basicNodes: Tnode[] = [
                     {
                         id: 3,
                         text: 'Css',
+                        children:[]
                     },
                     {
                         id: 4,
