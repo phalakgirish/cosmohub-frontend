@@ -92,7 +92,7 @@ const EditMaturityForm = () => {
             formData.append('sip_payment_mode',data.sip_payment_mode);
             formData.append('sip_payment_paidBy',data.sip_payment_paidBy);
             formData.append('sip_payment_paidDate',data.sip_payment_paidDate);
-            formData.append('sip_maturity_doc',data.sip_maturity_doc);
+            formData.append('sip_maturity_doc', data.sip_maturity_doc instanceof File ? data.sip_maturity_doc:'');
             formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
 
             try {
@@ -180,7 +180,7 @@ const EditMaturityForm = () => {
                 console.error('Error during API call:', error);
             }
         };
-        fetchBranches();
+        // fetchBranches();
 
         const fetchClients = async () => {
             try {
@@ -207,7 +207,7 @@ const EditMaturityForm = () => {
             }
         };
 
-        fetchClients();
+        // fetchClients();
 
         const fetchStaff = async () => {
             try {
@@ -232,7 +232,7 @@ const EditMaturityForm = () => {
             }
         };
 
-        fetchStaff();
+        // fetchStaff();
 
         const fetchMaturityDetails = async () => {
             try {
@@ -250,6 +250,9 @@ const EditMaturityForm = () => {
                 
                 if (response.ok && data.sipMPayment.length > 0) {
                     const sipMPaymentDetails = data.sipMPayment[0];
+                    await fetchClients();
+                    await fetchBranches();
+                    await fetchStaff();
                     setValue('sipmaturity_receiptno',sipMPaymentDetails.sipmaturity_receiptno)
                     setValue('client_id', sipMPaymentDetails.client_id);
                     await handleClientChange({target:{value:sipMPaymentDetails.client_id}})
@@ -314,8 +317,17 @@ const EditMaturityForm = () => {
     return (
         <Card>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Add Maturity Details</h4>
-                <p className="sub-header">Fill in the details for maturity processing.</p>
+                <div className='d-flex'>
+                    <div>
+                        <h4 className="header-title mt-0 mb-1">Edit Maturity Details</h4>
+                        <p className="sub-header">Fill in the details for maturity processing.</p>
+                    </div>
+                    <div className="text-md-end mb-0" style={{width:'78.6%'}}>
+                        <Button variant="dark" type="reset" onClick={()=>{navigate('/all-maturity')}}>
+                            Back
+                        </Button>
+                    </div>
+                </div>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Row>
                         <Col md={6}>
@@ -454,7 +466,7 @@ const EditMaturityForm = () => {
                         </Col>
                         <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>Paid By</Form.Label>
+                                <Form.Label>Initiated By</Form.Label>
                                 <Controller
                                     name="sip_payment_paidBy"
                                     control={control}

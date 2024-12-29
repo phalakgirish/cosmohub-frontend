@@ -50,7 +50,7 @@ const schema = yup.object().shape({
     sipmember_id: yup.string().required('SIP Member Id is required'),
     sip_maturity_amount: yup.number().required('Paid Amount is required').positive('Amount must be positive'),
     sip_payment_mode: yup.string().required('Payment Mode is required'),
-    sip_maturity_doc: yup.mixed().required('Document upload is required'),
+    // sip_maturity_doc: yup.mixed().required('Document upload is required'),
 });
 
 const MaturityForm = () => {
@@ -91,6 +91,7 @@ const MaturityForm = () => {
             formData.append('sip_payment_paidBy',data.sip_payment_paidBy);
             formData.append('sip_payment_paidDate',data.sip_payment_paidDate);
             formData.append('sip_maturity_doc',data.sip_maturity_doc);
+            formData.append('sip_maturity_doc', data.sip_maturity_doc instanceof File ? data.sip_maturity_doc:'');
             formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
 
             try {
@@ -278,8 +279,17 @@ const MaturityForm = () => {
     return (
         <Card>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Add Maturity Details</h4>
-                <p className="sub-header">Fill in the details for maturity processing.</p>
+                <div className='d-flex'>
+                    <div>
+                    <h4 className="header-title mt-0 mb-1">Add Maturity Details</h4>
+                    <p className="sub-header">Fill in the details for maturity processing.</p>
+                    </div>
+                    <div className="text-md-end mb-0" style={{width:'78.6%'}}>
+                        <Button variant="dark" type="reset" onClick={()=>{navigate('/all-maturity')}}>
+                            Back
+                        </Button>
+                    </div>
+                </div>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Row>
                         <Col md={6}>
@@ -396,7 +406,7 @@ const MaturityForm = () => {
                                             const target = e.target as HTMLInputElement;
                                             field.onChange(target.files ? target.files[0] : null); 
                                         }}
-                                        isInvalid={!!errors.sip_maturity_doc}
+                                        
                                     />
                                     
                                     )}
@@ -411,7 +421,7 @@ const MaturityForm = () => {
                     <Row>
                     <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>Paid By</Form.Label>
+                                <Form.Label>Initiated By</Form.Label>
                                 <Controller
                                     name="sip_payment_paidBy"
                                     control={control}

@@ -83,7 +83,7 @@ type TableProps = {
         value: number;
     }[];
     columns: {
-        Header: string;
+        Header: any;
         accessor: string;
         sort?: boolean;
         Cell?: any;

@@ -16,6 +16,7 @@ interface Payment {
     sipmember_name: string,
     sipmember_doj: string,
     sipmember_maturity_date: string,
+    Sip_month:string;
     totalSIPAmount: number,
     totalSIPPenaltyAmount: number
 }
@@ -55,6 +56,8 @@ const SIPMemberDetailsReport = () => {
         });
     }
     const formatMonthDate = (dateString:any)=> {
+        // console.log(dateString);
+        
         if(dateString == '')
             return '';
         const [year, month] = dateString.split('-');
@@ -97,6 +100,7 @@ const SIPMemberDetailsReport = () => {
                         sipmember_name: payment.sipmember_name,
                         sipmember_doj: formatDate(new Date(payment.sipmember_doj)),
                         sipmember_maturity_date: formatDate(new Date(payment.sipmember_maturity_date)),
+                        Sip_month:formatMonthDate(payment.sipmember_doj),
                         totalSIPAmount: payment.totalSIPAmount,
                         totalSIPPenaltyAmount: payment.totalSIPPenaltyAmount,
                     }));
@@ -126,7 +130,7 @@ const SIPMemberDetailsReport = () => {
         { text: 'All', value: data.length },
     ];
 
-    const Excelcolumns = ['Sr. No','SIP Id','Client Id','Member Name','Joining Date','Maturity Date','Total SIP Amount','Total Penalty Amount'];
+    const Excelcolumns = ['Sr. No','SIP Id','Client Id','Member Name','Joining Date','Maturity Date','SIP Start Month','Total SIP Invested Amount','Total Penalty Amount'];
 
     const columns = [
         {
@@ -160,7 +164,13 @@ const SIPMemberDetailsReport = () => {
             sort: true,
         },
         {
-            Header: 'Total SIP Amount',
+            Header: 'SIP Start Month',
+            accessor: 'Sip_month',
+            sort: true,
+        },
+        
+        {
+            Header: 'Total SIP Invested Amount',
             accessor: 'totalSIPAmount',
             sort: true,
         },

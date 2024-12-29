@@ -210,6 +210,12 @@ const AllSIPManagement = () => {
         navigate('/add-sipmember');
     };
 
+    const handleAddSIPPayment = () => {
+        navigate('/add-payment');
+    };
+
+    
+
     const columns = [
         {
             Header: 'Sr. No',
@@ -335,9 +341,15 @@ const AllSIPManagement = () => {
                                 <h4 className="header-title">All Member</h4>
                                 <p className="text-muted font-14 mb-4">A table showing all SIP Members</p>
                             </div>
+                            <div>
                             <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddSIP}>
                                 Add Member
                             </Button>
+                            &nbsp;
+                            <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddSIPPayment}>
+                                Add SIP Payment
+                            </Button>
+                            </div>
                         </div>
 
                         <Table

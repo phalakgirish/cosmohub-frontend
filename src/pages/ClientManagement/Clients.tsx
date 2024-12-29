@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Button, Modal } from 'react-bootstrap';
+import { Card, Row, Col, Button, Modal, Form } from 'react-bootstrap';
 import url from '../../env';  // Adjust the import path as necessary
 import secureLocalStorage from 'react-secure-storage';
 import Table from '../../components/Table';
@@ -30,8 +30,11 @@ interface DataResponse {
 const Clients = () => {
     const [clients, setClients] = useState<Client[]>([]);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showSelectDeleteModal, setShowSelectDeleteModal] = useState(false);
     const [clientToDelete, setClientToDelete] = useState<string | null>(null);
     const [isRefreshed,setIsRefreshed] = useState(false)
+    const [isSelectedRec,setIsSelectedRec] = useState<Array<string>>([])
+
     const navigate = useNavigate();
     useEffect(() => {
         const bearerToken = secureLocalStorage.getItem('login');
@@ -47,7 +50,7 @@ const Clients = () => {
             .then((response) => response.json())
             .then((data: DataResponse) => {
                 // You can format data if needed
-                console.log(data);
+                // console.log(data);
                 
                 const formattedData = data.client.map((client:any, index:any) => ({
                     srNo: index + 1,
@@ -72,11 +75,21 @@ const Clients = () => {
         setClientToDelete(null);
     };
 
+    
+    const handleOpenSelectDeleteModal = () => {
+        setShowSelectDeleteModal(true);
+    };
+
+    const handleCloseSelectDeleteModal = () => {
+        setShowSelectDeleteModal(false);
+    };
+
     const handleDelete = ()=>{
         if (!clientToDelete) return;
         
-            const bearerToken = secureLocalStorage.getItem('login');
-            try{
+        const bearerToken = secureLocalStorage.getItem('login');
+        try{
+            
             fetch(`${url.nodeapipath}/client/${clientToDelete}`, {
                 method: 'DELETE',
                 headers: {
@@ -91,6 +104,7 @@ const Clients = () => {
                 if (data.status) {
                     toast.success('Client deleted successfully');
                     // setIsRefreshed(prev => !prev);
+                    handleCloseDeleteModal()
                     setIsRefreshed(true)
 
                 } else {
@@ -100,6 +114,48 @@ const Clients = () => {
             .catch((error) => {
                 // console.error('Error deleting SIP data:', error);
                 toast.error('An error occurred while deleting the client');
+            });
+        }
+        catch(error)
+        {
+
+        }finally{
+
+        }
+    }
+
+    const handleSelectDelete = ()=>{
+        // if (!clientToDelete) return;
+        
+            const bearerToken = secureLocalStorage.getItem('login');
+            try{
+                fetch(`${url.nodeapipath}/client/selected`, {
+                    method: 'POST',
+                    body:JSON.stringify(isSelectedRec),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                    }
+                })
+            .then((response) => response.json())
+            .then((data) => {
+
+                if (data.status) {
+                    toast.success(data.msg);
+                    // setIsRefreshed(prev => !prev);
+                    
+                    setIsRefreshed(true)
+                    handleCloseSelectDeleteModal()
+                    setIsSelectedRec([])
+
+                } else {
+                    toast.error(`Failed to delete client:${data.error}`);
+                }
+            })
+            .catch((error) => {
+                // console.error('Error deleting SIP data:', error);
+                toast.error('An error occurred while deleting the client',error);
             });
         }
         catch(error)
@@ -129,7 +185,59 @@ const Clients = () => {
         },
     ];
 
+    const handelClientIdCheck = (e:any,id:any)=>{
+        // console.log(e.target.checked);
+
+        if(e.target.checked)
+        {
+            var selectedId = [...isSelectedRec];
+
+            selectedId.push(id);
+
+            setIsSelectedRec(selectedId);
+        }
+        else
+        {
+            var selectedId = [...isSelectedRec];
+
+            selectedId = selectedId.filter(value => value !== id);
+
+            setIsSelectedRec(selectedId)
+        }
+        
+    }
+
+    const handelAllClientIdCheck = (e:any)=>{
+        
+        if(e.target.checked)
+            {
+                var selectedId:any = [];
+                
+                clients.map((client:any)=>{
+                    selectedId.push(client._id);
+                })
+                
+                setIsSelectedRec(selectedId);
+            }
+            else
+            {
+                setIsSelectedRec([])
+            }
+    }
+
     const columns = [
+        {
+            Header: <>
+            <Form.Check type="checkbox" id="default-checkbox1" checked={(isSelectedRec.length == clients.length)?true:false} onChange={(e)=>{handelAllClientIdCheck(e)}}/>
+        </>,
+            accessor: ' ',
+            sort: false, 
+            Cell: ({ row }: { row: any }) => (
+                 <>
+                    <Form.Check type="checkbox" id="default-checkbox1" checked={(isSelectedRec.indexOf(row.original._id) == -1)?false:true} onChange={(e)=>{handelClientIdCheck(e,row.original._id)}}/>
+                </>
+            ),
+        },
         { Header: 'Sr. No', accessor: 'srNo',sort: true, },
         { Header: 'Client Id', accessor: 'client_id',sort: true, },
         { Header: 'Name', accessor: 'client_name', sort: true,},
@@ -191,6 +299,16 @@ const Clients = () => {
                                 Add Client
                             </Button>
                         </div>
+                        { (isSelectedRec.length >0) &&
+                        <Button
+                            variant="danger"
+                            onClick={() => handleOpenSelectDeleteModal()}
+                            style={{borderRadius: '35px',
+                                width: '38px',
+                                padding: '7px 7px',position:'absolute',right:'6.6%'}}
+                            >
+                            <i className='fe-trash-2'/> 
+                        </Button>}
                         {/* <Table striped bordered hover>
                             <thead>
                                 <tr>
@@ -223,6 +341,7 @@ const Clients = () => {
                                     isSortable={true}
                                     pagination={true}
                                     isSearchable={true}
+                                    // isSelectable={true}
                                     />
                             {/* </tbody>
                         </Table> */}
@@ -244,6 +363,24 @@ const Clients = () => {
                         Cancel
                     </Button>
                     <Button variant="danger" onClick={handleDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal show={showSelectDeleteModal} onHide={handleCloseSelectDeleteModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Delete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete this selected clients?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseSelectDeleteModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleSelectDelete}>
                         Delete
                     </Button>
                 </Modal.Footer>

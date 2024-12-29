@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Row, Col, Card, Button, Form, FormText, Modal } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, FormText } from 'react-bootstrap';
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -15,15 +15,12 @@ import { Typeahead } from 'react-bootstrap-typeahead';
 
 // Define types
 type PaymentData = {
-    spi_Id: string;
-    sipAmount: number;
-    sipmonth:string;
-    penaltyAmount: number;
-    penaltyMonth: string;
-    paymentMode: string;
-    paymentRefNo: string;
-    receivedBy: string;
-    receivedDate: string;
+    client_id: string;
+    reference_scheme_amount: number;
+    ref_payment_mode: string;
+    ref_payment_refno: string;
+    ref_payment_receivedBy: string;
+    ref_payment_receivedDate: string;
 };
 
 // Define the type for branch data
@@ -32,15 +29,14 @@ type Branch = {
     branch_name: string;
 };
 
-// Define the type for Client data
-type SipMember = {
-    _id: string;
-    sipmember_id: string;
-    sipmember_name: string
-};
-
 type Option = string | Record<string, any>;
 
+// Define the type for Client data
+type client = {
+    _id: string;
+    client_id: string;
+    client_name: string
+};
 type Staff = {
     _id: string;
     staff_id: string;
@@ -49,34 +45,24 @@ type Staff = {
 
 // Validation schema
 const schema = yup.object().shape({
-    spi_Id: yup.string().required('Select SIP Member'),
-    sipAmount: yup.number().required('SIP Amount is required').min(1,'Amount Is Greater Then 0'),
-    sipmonth: yup.string().required('SIP Month is required'),
-    paymentMode: yup.string().required('Payment Mode is required'),
-    // penaltyMonth: yup.string().required('Penalty Month is required'),
-
+    client_id: yup.string().required('Select client'),
+    reference_scheme_amount: yup.number().required(' Amount is required').min(1,'Amount Is Greater Then 0'),
+    ref_payment_mode: yup.string().required('Payment Mode is required'),
 });
 
-const PaymentForm = () => {
+const RefSchPaymentForm = () => {
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const userData:any = JSON.parse(StorageuserData);
     const [branches, setBranches] = useState<Branch[]>([]);
-    const [simembers, setSipMembers] = useState<SipMember[]>([]);
+    const [clients, setClients] = useState<client[]>([]);
     const [staff, setStaff] = useState<Staff[]>([]);
     const [clientbranch, setClientBranch] = useState('');
     const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
-    const[errmsg,setErrmsg] = useState(" ");
-    const [sipMemberName,setSipMemberName] = useState('');
-    const [sipmember_id,setSipmember_id] = useState('')
-    const [sipmember_month,setSipmember_month] = useState('')
-    const [walletBalance,setWalletBalance] = useState(0)
+    const [clientName,setClientName] = useState('');
+    const [client_id,setClient_id] = useState('')
     const [singleSelections, setSingleSelections] = useState<Option[]>([]);
-    const [paymentModes,setPaymentModes] = useState('')
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [penaltyAmt, setPenaltyAmt] = useState(0)
-
-
+    // const [sipmember_month,setSipmember_month] = useState('')
     var today = new Date();
     var TodayDate = today.toISOString().split('T')[0];
     const { control, handleSubmit, reset,formState: { errors }, setValue } = useForm<PaymentData>({
@@ -96,29 +82,13 @@ const PaymentForm = () => {
         {value:'December',lable:'December'}
     ]
     
-    const formatMonthDate = (dateString:any)=> {
-        if(!dateString)
-            return '';
-
-        const [year, month] = dateString.split('-');
-        
-        // Create a date object using the year and month
-        const date = new Date(`${year}-${month}-01`);
-        
-        // Format the month to get the full month name
-        const options = { month: "long" };
-        const monthName = new Intl.DateTimeFormat('en-US',{ month: 'long' }).format(date);
-        
-        return `${monthName}-${year}`;
-    }
-
     const generatePDF = (data:any) => {
 
         
         const doc = new jsPDF({
-            orientation: 'portrait', // Set to landscape
+            orientation: 'landscape', // Set to landscape
             unit: 'mm',
-            format: [148, 210], // A6 size in landscape
+            format: [105, 148], // A6 size in landscape
         });
 
         // Assuming you've imported the images, use the image variables directly
@@ -182,179 +152,36 @@ const PaymentForm = () => {
         doc.text('Amount (INR):', 10, 57);
         doc.setFont('helvetica', 'normal');
         doc.text(`${data.sip_amount}`, 33, 57);
-
-        // SIP Month:
-        doc.setFont('helvetica', 'bold');
-        doc.text('SIP Month:', 83, 57);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${formatMonthDate(data.sip_payment_month)}`, 100, 57);
         
         // Amount in Words:
         doc.setFont('helvetica', 'bold');
         doc.text('Amount in Words:', 10, 66);
         doc.setFont('helvetica', 'normal');
         doc.text(`${convertNumberToWords(data.sip_amount)}`, 40, 66);
-
-        // Penalty Amount (INR):
-        doc.setFont('helvetica', 'bold');
-        doc.text('Penalty Amt (INR):', 10, 75);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${data.sip_penalty_amount}`, 40, 75);
-
-        // Penalty Recovery Month:
-        doc.setFont('helvetica', 'bold');
-        doc.text('Penalty Reco. Month:', 83, 75);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${formatMonthDate(data.sip_penalty_month)}`, 117, 75);
         
         // Received By:
         doc.setFont('helvetica', 'bold');
-        doc.text('Received By:', 10, 84);
+        doc.text('Received By:', 10, 75);
         doc.setFont('helvetica', 'normal');
-        doc.text(`${data.sip_payment_receivedBy}`, 30, 84);
-
-        // Received By:
-        if (data.sip_payment_mode === 'UPI' || data.sip_payment_mode === 'NetBanking') 
-        {
-            doc.setFont('helvetica', 'bold');
-            doc.text('Payment mode :', 56, 84);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`${data.sip_payment_mode}`, 81, 84);
-        }
+        doc.text(`${(data.sip_payment_mode === 'UPI'|| data.sip_payment_mode === 'NetBanking')?data.sip_payment_mode:data.sip_payment_receivedBy}`, 33, 75);
         
         // Payment Mode/Transaction ID:
         if (data.sip_payment_mode === 'UPI' || data.sip_payment_mode === 'NetBanking') {
             doc.setFont('helvetica', 'bold');
-            doc.text('Transaction ID:', 94, 84); // Right-aligned on the same line
+            doc.text('Transaction ID:', 83, 75); // Right-aligned on the same line
             doc.setFont('helvetica', 'normal');
-            doc.text(`${data.sip_payment_refno}`, 119, 84);
-        } else if (data.sip_payment_mode === 'Cash' || data.sip_payment_mode == 'Wallet') {
+            doc.text(`${data.sip_payment_refno}`, 108, 75);
+        } else if (data.sip_payment_mode === 'Cash') {
             doc.setFont('helvetica', 'bold');
-            doc.text('Payment Mode:', 83, 84); 
+            doc.text('Payment Mode:', 83, 75); 
             doc.setFont('helvetica', 'normal');
-            doc.text(`${data.sip_payment_mode}`, 108, 84);
+            doc.text('Cash (Yes)', 108, 75);
         }
         
         // Space for Signatures
         doc.setFont('helvetica', 'bold');
         doc.text('Depositor Signature', 10, 100);  // Y-coordinate incremented by 9
         doc.text('Authorized Signature', 108, 100);
-
-        doc.line(0, 105, 148, 105);
-
-        doc.addImage(logoImage, 'PNG', 8, 110, 25, 15); // Adjust size and position of the logo, less space from top
-        doc.setFontSize(15);
-        doc.setTextColor(255, 0, 0);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Cosmohub Solutions Private Limited', 35, 115);
-        
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.setFont('helvetica', 'normal');
-        doc.text('A-222, Kasturi Plaza, Manpada Rd, Dombivali(East),Pin: 421202', 35, 122);
-
-        doc.setFontSize(8);
-        doc.setTextColor(0, 0, 0);
-        doc.setFont('helvetica', 'normal');
-        doc.text('( CIN : U96906MH2024PTC430524, GSTIN : )', 35, 127);
-
-        // Draw a line after the header with minimal spacing
-        doc.line(10, 130, 138, 130); // Adjusted y-coordinates for a straight line with minimal space
-        
-        // Background image with adjusted size and extra space above
-        doc.addImage(backgroundImage, 'PNG', 0, 130, 148, 81, '', 'FAST'); // Slightly increased height
-        
-        // Body
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Acknowledgement Copy', 10, 135);
-        
-        // Receipt Details
-        // const date = new Date().toLocaleDateString();
-
-
-        doc.setFontSize(9);
-        
-        // Receipt No:
-        doc.setFont('helvetica', 'bold');
-        doc.text('Receipt No:', 10, 144);  // Y-coordinate incremented by 9
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${data.sippayment_receiptno}`, 30, 144); // Slightly reduced space between label and value
-        
-        // Date:
-        doc.setFont('helvetica', 'bold');
-        doc.text('Date:', 108, 144);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${date}`, 118, 144);
-        
-        // Received with thanks from:
-        doc.setFont('helvetica', 'bold');
-        doc.text('Received with thanks from:', 10, 153);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${data.Sip_id}, ${data.sipmember_name}`, 53, 153); // Slightly reduced space between label and value
-        
-        // Amount (INR):
-        doc.setFont('helvetica', 'bold');
-        doc.text('Amount (INR):', 10, 162);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${data.sip_amount}`, 33, 162);
-
-        // SIP Month:
-        doc.setFont('helvetica', 'bold');
-        doc.text('SIP Month:', 83, 162);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${formatMonthDate(data.sip_payment_month)}`, 100, 162);
-        
-        // Amount in Words:
-        doc.setFont('helvetica', 'bold');
-        doc.text('Amount in Words:', 10, 171);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${convertNumberToWords(data.sip_amount)}`, 40, 171);
-
-        // Penalty Amount (INR):
-        doc.setFont('helvetica', 'bold');
-        doc.text('Penalty Amt (INR):', 10, 180);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${data.sip_penalty_amount}`, 40, 180);
-
-        // Penalty Recovery Month:
-        doc.setFont('helvetica', 'bold');
-        doc.text('Penalty Reco. Month:', 83, 180);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${formatMonthDate(data.sip_penalty_month)}`, 117, 180);
-        
-        // Received By:
-        doc.setFont('helvetica', 'bold');
-        doc.text('Received By:', 10, 189);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${data.sip_payment_receivedBy}`, 30, 189);
-
-        // Received By:
-        if (data.sip_payment_mode === 'UPI' || data.sip_payment_mode === 'NetBanking') 
-        {
-            doc.setFont('helvetica', 'bold');
-            doc.text('Payment mode :', 56, 189);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`${data.sip_payment_mode}`, 81, 189);
-        }
-        
-        // Payment Mode/Transaction ID:
-        if (data.sip_payment_mode === 'UPI' || data.sip_payment_mode === 'NetBanking') {
-            doc.setFont('helvetica', 'bold');
-            doc.text('Transaction ID:', 94, 189); // Right-aligned on the same line
-            doc.setFont('helvetica', 'normal');
-            doc.text(`${data.sip_payment_refno}`, 119, 189);
-        } else if (data.sip_payment_mode === 'Cash' || data.sip_payment_mode == 'Wallet') {
-            doc.setFont('helvetica', 'bold');
-            doc.text('Payment Mode:', 83, 189); 
-            doc.setFont('helvetica', 'normal');
-            doc.text(`${data.sip_payment_mode}`, 108, 189);
-        }
-        
-        // Space for Signatures
-        doc.setFont('helvetica', 'bold');
-        doc.text('Depositor Signature', 10, 205);  // Y-coordinate incremented by 9
-        doc.text('Authorized Signature', 108, 205);
         
         // Save the PDF
         doc.save('payment_receipt.pdf');
@@ -402,8 +229,6 @@ const PaymentForm = () => {
 
     const onSubmit = async(formData: PaymentData) => {
         // console.log('Form data:', formData);
-        // console.log('Form data:', errors);
-
 
         if(userData.staff_branch == '0' && clientbranch == '')
         {
@@ -411,71 +236,55 @@ const PaymentForm = () => {
         }
         else
         {
-            var sippaymentdetails:any = await handelPAddPaymentPreEvent(formData.spi_Id,formData.sipmonth)
-            // console.log(sippaymentdetails);
-            
-            if(sippaymentdetails.length == 0)
-            {
-                var dataToPost = {
-                    sipmember_id: formData.spi_Id,
-                    sipmember_name: sipMemberName,
-                    sip_payment_month: formData.sipmonth,
-                    sip_amount: formData.sipAmount,
-                    sip_penalty_month: (formData.penaltyMonth)?formData.penaltyMonth:'',
-                    sip_penalty_amount: (formData.penaltyAmount)?formData.penaltyAmount:0,
-                    sip_payment_mode: formData.paymentMode,
-                    sip_payment_refno: (formData.paymentRefNo)?formData.paymentRefNo:'',
-                    sip_payment_receivedBy: formData.receivedBy,
-                    sip_payment_receivedDate: formData.receivedDate,
-                    branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
-                }
-    
-                // console.log(dataToPost);
-                
-    
-                try {
-                    const bearerToken = secureLocalStorage.getItem('login');
-                    console.log(bearerToken);
-                    
-                    const response = await fetch(`${url.nodeapipath}/sippayment/`, {
-                        body: JSON.stringify(dataToPost),
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Access-Control-Allow-Origin':'*',
-                            'Authorization': `Bearer ${bearerToken}`
-                        },
-                        
-                    });
-                    const result = await response.json();
-                    if(response.ok)
-                    {   
-                        
-                        console.log('Payment successful:', result);
-                        generatePDF(result.sipPaymentReciept[0]);
-                        toast.success(result.message || 'Payment added Successfully.')
-                        navigate('/all-payement')
-                    }
-                    else
-                    {
-                        toast.error(result.message || 'Failed To add SIP Payment.')
-                    }
-                    
-                } catch (error) {
-                    // console.error('Error during Payment:', error);
-                    toast.error('Error adding payment');
-                }
+            var dataToPost = {
+                client_id: formData.client_id,
+                client_name: clientName,
+                reference_scheme_amount: formData.reference_scheme_amount,
+                ref_payment_mode: formData.ref_payment_mode,
+                ref_payment_refno: (formData.ref_payment_refno)?formData.ref_payment_refno:'',
+                ref_payment_receivedBy: formData.ref_payment_receivedBy,
+                ref_payment_receivedDate: formData.ref_payment_receivedDate,
+                branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
             }
-            else
-            {
-                var sipMemberDetails = simembers.filter((item:any)=> item._id == formData.spi_Id);
-                setErrmsg(`${formatMonthDate(formData.sipmonth)} payment for ${sipMemberDetails[0].sipmember_id} is already paid.`)
-                handleOpenDeleteModal();
-            }   
-        }  
-    };
 
-    
+            
+
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/referencesch`, {
+                    body: JSON.stringify(dataToPost),
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                    },
+                    
+                });
+                const result = await response.json();
+                if(response.ok)
+                {   
+                    
+                    console.log('Payment successful:', result);
+                    // generatePDF(result.sipPaymentReciept[0]);
+                    toast.success(result.message || 'Payment added Successfully.')
+                    navigate('/all-refschpayment')
+                }
+                else
+                {
+                    toast.error(result.message || 'Failed To add SIP Payment.')
+                }
+                
+            } catch (error) {
+                // console.error('Error during Payment:', error);
+                toast.error('Error adding payment');
+            }
+        }
+            
+        
+        
+        
+    };
 
     useEffect(()=>{
         const bearerToken = secureLocalStorage.getItem('login');
@@ -503,9 +312,11 @@ const PaymentForm = () => {
         };
         fetchBranches();
 
-        const fetchSIPMember = async () => {
+        // Fetch branches from the backend
+        const fetchClients = async () => {
             try {
-                const response = await fetch(`${url.nodeapipath}/all/spimember/${userData.staff_branch}`,{
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/all/client/${userData.staff_branch}`,{
                     method:'GET',
                     headers: {
                         'Content-Type':'application/json',
@@ -514,9 +325,10 @@ const PaymentForm = () => {
                         }
                 });
                 const data = await response.json();
+
                 
                 if (response.ok) {
-                    setSipMembers(data.sipmember || []);
+                    setClients(data.client || []);
 
                 } else {
                     console.error('Error fetching branches:', data);
@@ -526,7 +338,7 @@ const PaymentForm = () => {
             }
         };
 
-        fetchSIPMember();
+        fetchClients();
 
         const fetchStaff = async () => {
             try {
@@ -553,140 +365,23 @@ const PaymentForm = () => {
 
         fetchStaff();
     },[])
-    const handleFetchPenaltyAmount = async (sip_id:any,sip_month:any)=>{
-        // console.log('fetch Panalty');
-        // console.log(sip_id,sip_month);
-        // setPenaltyAmt(0)
-        
-        
-        if(sip_id != '' && sip_month != '')
-        {
-            // console.log('Fetch Penalty amount');
-            
-            try{
-                const bearerToken = secureLocalStorage.getItem('login');
-                    var DataToPost = {
-                        sip_id:sip_id,
-                        month:sip_month,
-                        date:TodayDate,
-                    }
-                    const response = await fetch(`${url.nodeapipath}/sippayment/penaltyamt`,{
-                        body:JSON.stringify(DataToPost),
-                        method:'POST',
-                        headers: {
-                            'Content-Type':'application/json',
-                            'Access-Control-Allow-Origin':'*',
-                            'Authorization': `Bearer ${bearerToken}`
-                            }
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        // setStaff(data.staff || []);
-                        // console.log(data);
-                        setPenaltyAmt(data.penaltyAmount)
-                        setValue('penaltyAmount',data.penaltyAmount);
-                        // console.log(errors);
-                        
-                        
-                        
-        
-                    } else {
-                        console.error('Error fetching branches:', data);
-                    }
-                }
-                catch(error){
-                    console.log('Error while fetch data.', error); 
-                }
-        }
-        
-    }
 
-    const handelPAddPaymentPreEvent = async (sipMember_id:any,sip_month:any)=>{
-        
-        try{
-            const bearerToken = secureLocalStorage.getItem('login');
-                const response = await fetch(`${url.nodeapipath}/sippayment/pre/paymentprev?sipmember_id=${sipMember_id}&sip_month=${sip_month}`,
-                    {
-                    method:'GET',
-                    headers: {
-                        'Content-Type':'application/json',
-                        'Access-Control-Allow-Origin':'*',
-                        'Authorization': `Bearer ${bearerToken}`
-                        }
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    // setStaff(data.staff || []);
-                    console.log(data);
-                    // setValue('penaltyAmount',data.penaltyAmount);
 
-                    return data.sipPaymentDetails;
-                    
-    
-                } else {
-                    console.error('Error fetching branches:', data);
-                }
-            }
-            catch(error){
-                console.log('Error while fetch data.', error); 
-            }
-    }
 
-    const handelClientWallet = async (sipememberId:any)=>
-    {
-        const bearerToken = secureLocalStorage.getItem('login');
-        try {
-
-            const response = await fetch(`${url.nodeapipath}/sippayment/wallet/${sipememberId}`,{
-                method:'GET',
-                headers: {
-                    'Content-Type':'application/json',
-                    'Access-Control-Allow-Origin':'*',
-                    'Authorization': `Bearer ${bearerToken}`
-                    }
-            });
-            const data = await response.json();
-            if (response.ok) {
-                // console.log(data);
-                setWalletBalance(data.balance)
-                // setStaff(data.staff || []);
-
-            } else {
-                console.error('Error fetching branches:', data);
-            }
-        } catch (error) {
-            console.error('Error during API call:', error);
-        }
-    }
-
-    const handleSIPMemberChange = (e:any)=>{
+    const handleClientChange = (e:any)=>{
         setSingleSelections(e)
         if(e.length>0)
         {
-            var Membername = simembers.filter((item)=> item._id == e[0].value)
-            setSipmember_id(e[0].value);
-            setSipMemberName(Membername[0].sipmember_name);
-            handleFetchPenaltyAmount(e[0].value,sipmember_month);
-            handelClientWallet(e[0].value);
-            setValue('spi_Id',e[0].value)
+            var clientname = clients.filter((item)=> item._id == e[0].value)
+            setClientName(clientname[0].client_name);
+            setValue('client_id',e[0].value);
         }
         else
         {
-            setSipmember_id('');
-            setSipMemberName('');
-            handleFetchPenaltyAmount('',sipmember_month);
-            handelClientWallet('');
-            setValue('spi_Id','')
-            setWalletBalance(0)
+            setClientName('');
+            setValue('client_id','');
+
         }
-        
-    }
-
-    const handelChangePaymentMode = (e:any)=>{
-        // console.log(e.target.value);
-
-        setPaymentModes(e.target.value)
-        
     }
 
     const handleBranchChange = (e:any)=>{
@@ -701,19 +396,6 @@ const PaymentForm = () => {
         }  
     }
 
-    const handleSIPMonthChnge = (e:any)=>{
-        setSipmember_month(e.target.value);
-        handleFetchPenaltyAmount(sipmember_id,e.target.value);
-    }
-
-    const handleOpenDeleteModal = () => {
-
-        setShowDeleteModal(true);
-    };
-
-    const handleCloseDeleteModal = () => {
-        setShowDeleteModal(false);
-    };
 
     
 
@@ -722,11 +404,11 @@ const PaymentForm = () => {
             <Card.Body>
                 <div className='d-flex'>
                     <div>
-                        <h4 className="header-title mt-0 mb-1">Add Payment</h4>
-                        <p className="sub-header">Fill in the details to generate a payment receipt.</p>
+                        <h4 className="header-title mt-0 mb-1">Reference Scheme Payment</h4>
+                        <p className="sub-header">Fill in the details to generate a reference scheme payment.</p>
                     </div>
-                    <div className="text-md-end mb-0" style={{width:'75%'}}>
-                        <Button variant="dark" type="reset" onClick={()=>{navigate('/all-payement')}}>
+                    <div className="text-md-end mb-0" style={{width:'69.4%'}}>
+                        <Button variant="dark" type="reset" onClick={()=>{navigate('/all-refschpayment')}}>
                             Back
                         </Button>
                     </div>
@@ -735,164 +417,109 @@ const PaymentForm = () => {
                     <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>SIP Member ID</Form.Label>
+                                <Form.Label>Client ID</Form.Label>
                                 <Controller
-                                    name="spi_Id"
+                                    name="client_id"
                                     control={control}
                                     render={({ field }) => (
                                     // <Form.Select
                                     // {...field}
-                                    // isInvalid={!!errors.spi_Id}
-                                    // onChange={(e)=>{field.onChange(e.target.value); handleSIPMemberChange(e)}}
+                                    // isInvalid={!!errors.client_id}
+                                    // onChange={(e)=>{field.onChange(e.target.value); handleClientChange(e)}}
                                     // >
-                                    //     <option>Select SIP Member</option>
-                                    //     {simembers.map((member) => (
-                                    //          <option key={member._id} value={member._id}>
-                                    //              {`${member.sipmember_id}, ${member.sipmember_name}`}
+                                    //     <option>Select Client</option>
+                                    //     {clients.map((client) => (
+                                    //          <option key={client._id} value={client._id}>
+                                    //              {`${client.client_id}, ${client.client_name}`}
                                     //          </option>
                                     //          ))}
                                     // </Form.Select>
-
                                     <Typeahead
-                                        id="select2"
-                                        labelKey={'label'}
-                                        {...field}
-                                        isInvalid={!!errors.spi_Id}
-                                        multiple={false}
-                                        // {...register('client_id')}
-                                        
-                                        onChange={(e)=>{handleSIPMemberChange(e)}}
-                                        options={simembers.map((member:any) => (
-                                            {value:`${member._id}`,label:`${member.sipmember_id}, ${member.sipmember_name}`}
-                                        ))}
-                                        placeholder="select Client"
-                                        selected={singleSelections}
-                                    />
+                                    id="select2"
+                                    labelKey={'label'}
+                                    {...field}
+                                    multiple={false}
+                                    isInvalid={!!errors.client_id}
+                                    // {...register('client_id')}
+                                    onChange={(e)=>{handleClientChange(e)}}
+                                    options={clients.map((client:any) => (
+                                        {value:`${client._id}`,label:`${client.client_id}-${client.client_name}`}
+                                    ))}
+                                    placeholder="select Client"
+                                    selected={singleSelections}
+                                />
                                     )}
                                 />
+                                {errors.client_id && <div className="invalid-feedback d-block">{errors.client_id.message}</div>}
                                 {/* <Form.Control.Feedback type="invalid">
-                                    {errors.spi_Id?.message} */}
-
-                                    {errors.spi_Id && <div className="invalid-feedback d-block">{errors.spi_Id.message}</div>}
-                                {/* </Form.Control.Feedback> */}
+                                    {errors.client_id?.message}
+                                </Form.Control.Feedback> */}
                             </Form.Group>
                         </Col>
                         <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>SIP Member Name</Form.Label>
-                                <Form.Control placeholder="Enter Name" value={sipMemberName} disabled={true}/>
+                                <Form.Label>Client Name</Form.Label>
+                                <Form.Control placeholder="Enter Name" value={clientName} disabled={true}/>
                             </Form.Group>
                         </Col>
                     </Row>
                      <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>SIP Amount</Form.Label>
+                                <Form.Label>Reference Scheme Amount</Form.Label>
                                 <Controller
-                                    name="sipAmount"
+                                    name="reference_scheme_amount"
                                     control={control}
-                                    defaultValue={1250}
+                                    defaultValue={0}
                                     rules={{
                                         min: { value: 1, message: "Amount must be greater than 0" } // Additional validation rule
                                     }}
-                                    render={({ field }) => <Form.Control type="number" {...field} value={field.value || ''} onChange={(e)=>{field.onChange(e.target.value)}} isInvalid={!!errors.sipAmount} placeholder="Enter SIP Amount" />}
+                                    render={({ field }) => <Form.Control type="number" {...field} value={field.value || ''} onChange={(e)=>{field.onChange(e.target.value)}} isInvalid={!!errors.reference_scheme_amount} placeholder="Enter Scheme Amount" />}
                                 />
                                 <Form.Control.Feedback type="invalid">
-                                    {errors.sipAmount?.message}
+                                    {errors.reference_scheme_amount?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
                         <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>SIP Month</Form.Label>
+                                <Form.Label>Payment Mode</Form.Label>
                                 <Controller
-                                    name="sipmonth"
+                                    name="ref_payment_mode"
                                     control={control}
-                                    render={({ field }) => <Form.Control type="month" {...field} isInvalid={!!errors.sipmonth} placeholder="Select Month" onChange={(e)=>{field.onChange(e.target.value); handleSIPMonthChnge(e)}}/>}
+                                    render={({ field }) => <Form.Select
+                                    {...field}
+                                    isInvalid={!!errors.ref_payment_mode}>
+                                        <option>Select Payment mode</option>
+                                        <option value="Cash">Cash</option>
+                                        <option value="UPI">UPI</option>
+                                        <option value="Net banking">Net Banking</option>
+                                    </Form.Select>}
                                 />
                                 <Form.Control.Feedback type="invalid">
-                                    {errors.sipmonth?.message}
+                                    {errors.ref_payment_mode?.message}
                                 </Form.Control.Feedback>
-                            </Form.Group>
-                        </Col>
-                    </Row>
-                   <Row>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Penalty Amount</Form.Label>
-                                <Controller
-                                    name="penaltyAmount"
-                                    control={control}
-                                    render={({ field }) => <Form.Control {...field} value={field.value || ''}  placeholder="Enter Penalty Amount" />}
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
-                                <Form.Label>Penalty Recovery Month</Form.Label>
-                                {/* <Controller
-                                    name="penaltyMonth"
-                                    control={control}
-                                    render={({ field }) => (<Form.Select
-                                    {...field} value={field.value || ""}>
-                                        <option>Select Month</option>
-                                        {Months.map((months)=>
-                                        <option value={months.value}>{months.lable}</option>
-                                        )}
-                                    </Form.Select>)}
-                                /> */}
-                                <Controller
-                                    name="penaltyMonth"
-                                    control={control}
-                                    render={({ field }) => <Form.Control type="month" {...field}  placeholder="Select Month" />}
-                                />
-                                {/* <Form.Control.Feedback type="invalid">
-                                    {errors.penaltyMonth?.message}
-                                </Form.Control.Feedback> */}
                             </Form.Group>
                         </Col>
                     </Row>
                     <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
-                                <Form.Label>Payment Mode</Form.Label>
-                                <Controller
-                                    name="paymentMode"
-                                    control={control}
-                                    render={({ field }) => <Form.Select
-                                    {...field}
-                                    onChange={(e)=>{ field.onChange(e.target.value);handelChangePaymentMode(e)}}
-                                    isInvalid={!!errors.paymentMode}>
-                                        <option>Select Payment mode</option>
-                                        <option value="Cash">Cash</option>
-                                        <option value="UPI">UPI</option>
-                                        <option value="Net banking">Net Banking</option>
-                                        <option value="Wallet">CH Wallet - Bal. {walletBalance}</option>
-
-                                    </Form.Select>}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.paymentMode?.message}
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                            <Form.Group className="mb-2">
                                 <Form.Label>Payment Ref. No.</Form.Label>
                                 <Controller
-                                    name="paymentRefNo"
+                                    name="ref_payment_refno"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter Payment Ref. No." disabled={(paymentModes == 'Cash' || paymentModes == 'Wallet')?true:false}/>}
+                                    render={({ field }) => <Form.Control {...field} 
+                                    onChange={(e)=>{field.onChange(e.target.value)}}
+                                    placeholder="Enter Payment Ref. No." />}
                                 />
                             </Form.Group>
                         </Col>
-                    </Row>
-                   <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Received By</Form.Label>
                                 <Controller
-                                    name="receivedBy"
+                                    name="ref_payment_receivedBy"
                                     control={control}
                                     defaultValue={userData.staff_id}
                                     render={({ field }) => <Form.Select
@@ -907,20 +534,20 @@ const PaymentForm = () => {
                                 />
                             </Form.Group>
                         </Col>
+                    </Row>
+                   <Row>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Received Date</Form.Label>
                                 <Controller
-                                    name="receivedDate"
+                                    name="ref_payment_receivedDate"
                                     control={control}
                                     defaultValue={TodayDate}
                                     render={({ field }) => <Form.Control type="date" {...field} onChange={(e)=>{field.onChange(e.target.value)}} disabled={true}/>}
                                 />
                             </Form.Group>
                         </Col>
-                    </Row>
-                    <Row>
-                    {(userData.user_role_type == '0') && (
+                        {(userData.user_role_type == '0') && (
                                 <>
                                 <Col md={6}>
                                  <Form.Group className="mb-3">
@@ -951,27 +578,11 @@ const PaymentForm = () => {
                     </div>
                 </form>
             </Card.Body>
-            {/* Delete Confirmation Modal */}
-                <Modal show={showDeleteModal} onHide={handleCloseDeleteModal} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Alert</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {errmsg}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseDeleteModal}>
-                        Ok
-                    </Button>
-                </Modal.Footer>
-            </Modal>
         </Card>
-
-        
     );
 };
 
-const AddSIPPayment = () => {
+const AddRefSchPayment = () => {
     usePageTitle({
         title: 'SIP Payment',
         breadCrumbItems: [
@@ -991,11 +602,11 @@ const AddSIPPayment = () => {
         <>
             <Row style={{ marginTop: '25px' }}>
                 <Col lg={12}>
-                    <PaymentForm />
+                    <RefSchPaymentForm />
                 </Col>
             </Row>
         </>
     );
 };
 
-export default AddSIPPayment;
+export default AddRefSchPayment;

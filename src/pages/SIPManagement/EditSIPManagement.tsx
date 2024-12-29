@@ -8,6 +8,7 @@ import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import url from '../../env';
 import secureLocalStorage from 'react-secure-storage';
 import { toast } from 'react-toastify';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 interface ISIPFormInput {
     sipmember_id: string;
@@ -22,9 +23,13 @@ interface ISIPFormInput {
     sipmember_nominee_name: string;
     sipmember_nominee_age: string;
     sipmember_nominee_relation: string;
+    sipmember_nominee_mobcode: string;
     sipmember_nominee_mobile: string;
-    sipmember_nominee_pancard: FileList;
+    sipmember_nominee_otherdocs: FileList;
     sipmember_nominee_addharcard: FileList;
+    sipmember_nominee_aadhaarno:string;
+    sipmember_sip_category:string;
+    sipmember_remarks:string;
     sipmember_status: string;
 }
 
@@ -34,11 +39,20 @@ type Branch = {
     branch_name: string;
 };
 
+type Option = string | Record<string, any>;
+
 // Define the type for Client data
 type Client = {
     _id: string;
     client_id: string;
-    client_name: string
+    client_name: string;
+    client_mobile_number: string;
+};
+
+type SIPCategory = {
+    _id: string;
+    sipcategory_name: string;
+    sipcategory_status: string
 };
 
 const schema = yup.object().shape({
@@ -50,9 +64,22 @@ const schema = yup.object().shape({
     sipmember_doj: yup.string().required('Date of Joining is required'),
     // sipmember_maturity_date: yup.string().required('Maturity Date is required'),
     sipmember_nominee_name: yup.string().required('Nominee Name is required'),
-    sipmember_nominee_age: yup.mixed().required('Nominee Age is required'),
+    sipmember_nominee_age: yup.string().required('Nominee Age is required')
+    .test('is-at-18-years-old', 'Nominee must be at least 18 year old.', (value) => {
+        if (!value) return false;
+
+        if(parseInt(value) < 18)
+        return false;
+        else
+        return true
+    }),
     sipmember_nominee_relation: yup.string().required('Nominee Relation is required'),
     sipmember_nominee_mobile: yup.string().required('Nominee Mobile Number is required'),
+    sipmember_nominee_aadhaarno: yup.string().required('Nominee Aadhaar Number is required')
+    .matches(/^\d+$/, "Nominee Aadhaar Number should contain only digits")
+    .min(12, "Nominee Aadhaar Number must be at least 12 digit long")  // Minimum length
+    .max(12, "Nominee Aadhaar Number must be at most 12 digit long"),
+    sipmember_sip_category: yup.string().required('SIP Category required'),
     sipmember_status: yup.string().required('Block Status is required'),
 });
 
@@ -60,12 +87,14 @@ const SIPEdit = () => {
     const { id } = useParams<{ id: string }>();
     const [branches, setBranches] = useState<Branch[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
+    const [category, setCategory] = useState<SIPCategory[]>([]);
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const userData:any = JSON.parse(StorageuserData);
     const [clientbranch, setClientBranch] = useState('');
     const [clientsName, setClientsName] = useState('')
     const [sipmaturitydate,setSipMaturityDate] = useState('')
     const [branchErr,setBranchErr] = useState(false);
+    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
     const navigate = useNavigate();
 
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<ISIPFormInput>({
@@ -75,6 +104,7 @@ const SIPEdit = () => {
 
 
     useEffect(()=>{
+        var clientsData:any
         const bearerToken = secureLocalStorage.getItem('login');
             // Fetch branches from the backend
             const fetchClients = async () => {
@@ -89,9 +119,9 @@ const SIPEdit = () => {
                             }
                     });
                     const data = await response.json();
-                    console.log(data);
+                    // console.log(data);
                     
-                    
+                    clientsData = data.client
                     if (response.ok) {
                         setClients(data.client || []);
 
@@ -103,7 +133,35 @@ const SIPEdit = () => {
                 }
             };
 
-            fetchClients();
+            // fetchClients();
+            
+
+            const fetchSIPCategory = async () => {
+                try {
+                    const bearerToken = secureLocalStorage.getItem('login');
+                    const response = await fetch(`${url.nodeapipath}/sipcategory`,{
+                        method:'GET',
+                        headers: {
+                            'Content-Type':'application/json',
+                            'Access-Control-Allow-Origin':'*',
+                            'Authorization': `Bearer ${bearerToken}`
+                            }
+                    });
+                    const data = await response.json();
+
+                    console.log(data);
+                    
+                    if (response.ok) {
+                        setCategory(data.sip_category || []);
+
+                    } else {
+                        console.error('Error fetching branches:', data);
+                    }
+                } catch (error) {
+                    console.error('Error during API call:', error);
+                }
+            };
+            // fetchSIPCategory();
             
         // Fetch branches from the backend
         const fetchBranches = async () => {
@@ -128,7 +186,7 @@ const SIPEdit = () => {
             }
         };
 
-        fetchBranches();
+        // fetchBranches();
  
         const fetchData = async () => {
             try {
@@ -147,9 +205,15 @@ const SIPEdit = () => {
                 // Pre-fill form with fetched data
 
                 if (response.ok && data.sip_member) {
+
+                    await fetchClients();
+                    await fetchSIPCategory();
+                    await fetchBranches();
                     var sipMemberdetails = data.sip_member[0]
                     setValue("sipmember_id", sipMemberdetails.sipmember_id)
                     setValue("client_id", sipMemberdetails.client_id) 
+                    var clientname = await clientsData.filter((item:any)=> item._id == sipMemberdetails.client_id)
+                    setSingleSelections([{value:sipMemberdetails.client_id,label:`${clientname[0].client_id}-${clientname[0].client_name}`}])
                     setValue("sipmember_name",sipMemberdetails.sipmember_name)
                     setValue("sipmember_bank_name", sipMemberdetails.sipmember_bank_name)
                     setValue("sipmember_account_number", sipMemberdetails.sipmember_account_number)
@@ -162,7 +226,12 @@ const SIPEdit = () => {
                     setValue("sipmember_nominee_name", sipMemberdetails.sipmember_nominee_name)
                     setValue("sipmember_nominee_age", sipMemberdetails.sipmember_nominee_age)
                     setValue("sipmember_nominee_relation", sipMemberdetails.sipmember_nominee_relation)
-                    setValue("sipmember_nominee_mobile", sipMemberdetails.sipmember_nominee_mobile)
+                    var phonecode = sipMemberdetails.sipmember_nominee_mobile.split('-');
+                    setValue("sipmember_nominee_mobcode", phonecode[0])
+                    setValue("sipmember_nominee_mobile", phonecode[1])
+                    setValue("sipmember_nominee_aadhaarno", sipMemberdetails.sipmember_nominee_aadhaarno)
+                    setValue("sipmember_sip_category", sipMemberdetails.sipmember_sip_category)
+                    setValue("sipmember_remarks", sipMemberdetails.sipmember_remarks)
                     setValue("sipmember_status", sipMemberdetails.sipmember_status)
                     setClientBranch(sipMemberdetails.branch_id)
                 }
@@ -174,7 +243,9 @@ const SIPEdit = () => {
             }
         };
         
+        // setTimeout(()=>{fetchData();},3000)
         fetchData();
+        
         
     },[])
 
@@ -211,11 +282,20 @@ const SIPEdit = () => {
     }
 
     const handleClientChange = (e:any)=>{
-        // console.log(clients);
-        
-        var clientname = clients.filter((item)=> item._id == e.target.value)
-
-        setValue('sipmember_name',clientname[0].client_name)
+        console.log(e);
+        setSingleSelections(e)
+        if(e.length>0)
+        {
+            var clientname = clients.filter((item)=> item._id == e[0].value)
+            setValue('sipmember_name',clientname[0].client_name);
+            setValue('client_id',e[0].value);
+        }
+        else
+        {
+            setClientsName('');
+            setValue('sipmember_name','');
+            setValue('client_id','');
+        } 
     }
 
     // Handle form submission
@@ -241,9 +321,12 @@ const SIPEdit = () => {
             formData.append('sipmember_nominee_name', data.sipmember_nominee_name);
             formData.append('sipmember_nominee_age', data.sipmember_nominee_age);
             formData.append('sipmember_nominee_relation', data.sipmember_nominee_relation);
-            formData.append('sipmember_nominee_mobile', data.sipmember_nominee_mobile);
-            formData.append('sipmember_nominee_pancard', data.sipmember_nominee_pancard instanceof FileList ? data.sipmember_nominee_pancard[0]:'');
+            formData.append('sipmember_nominee_mobile', `${data.sipmember_nominee_mobcode}-${data.sipmember_nominee_mobile}`);
+            formData.append('sipmember_nominee_otherdocs', data.sipmember_nominee_otherdocs instanceof FileList ? data.sipmember_nominee_otherdocs[0]:'');
             formData.append('sipmember_nominee_addharcard', data.sipmember_nominee_addharcard instanceof FileList ? data.sipmember_nominee_addharcard[0]:'');
+            formData.append('sipmember_nominee_aadhaarno', (data.sipmember_nominee_aadhaarno == null)?"":data.sipmember_nominee_aadhaarno);
+            formData.append('sipmember_sip_category', data.sipmember_sip_category);
+            formData.append('sipmember_remarks', data.sipmember_remarks);
             formData.append('sipmember_status', data.sipmember_status);
             formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
             try 
@@ -277,13 +360,22 @@ const SIPEdit = () => {
 
 
     return (
-        <Container>
+        <Container style={{marginLeft:"0%"}}>
             <Row className="justify-content-center" style={{marginTop:'35px'}}>
                 <Col>
                     <Card>
                         <Card.Body>
-                        <h4 className="header-title mt-0 mb-1">Edit Member</h4>
-                        <p className="sub-header">Modify the member details.</p>
+                            <div className='d-flex'>
+                                <div>
+                                    <h4 className="header-title mt-0 mb-1">Edit Member</h4>
+                                    <p className="sub-header">Modify the member details.</p>
+                                </div>
+                                <div className="text-md-end mb-0" style={{width:'85%'}}>
+                                    <Button variant="dark" type="reset" onClick={()=>{navigate('/all-sipmember')}}>
+                                        Back
+                                    </Button>
+                                </div>
+                            </div>
                             <form onSubmit={handleSubmit(onSubmit)}>
                                 <Row>
                                     <Col md={6}>
@@ -355,13 +447,25 @@ const SIPEdit = () => {
                                         </div>
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_nominee_mobile" className="form-label">Nominee Mobile Number</label>
-                                            <input
-                                                type="text"
-                                                id="sipmember_nominee_mobile"
-                                                className="form-control"
-                                                placeholder="Enter Nominee Mobile Number"
-                                                {...register('sipmember_nominee_mobile')}
-                                            />
+                                            <div className="d-flex">
+                                                <input
+                                                    type="text"
+                                                    id="sipmember_nominee_mobcode"
+                                                    placeholder="code"
+                                                    className="form-control"
+                                                    {...register('sipmember_nominee_mobcode')}
+                                                    disabled
+                                                    style={{width:'10%'}}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    id="sipmember_nominee_mobile"
+                                                    placeholder="Enter Nominee Mobile Number"
+                                                    className="form-control"
+                                                    {...register('sipmember_nominee_mobile')}
+                                                    style={{width:'90%'}}
+                                                />
+                                            </div>
                                             {errors.sipmember_nominee_mobile && <div className="invalid-feedback d-block">{errors.sipmember_nominee_mobile.message}</div>}
                                         </div>
                                         <div className="mb-3">
@@ -371,6 +475,19 @@ const SIPEdit = () => {
                                                 onChange={(event:any) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'sipmember_nominee_addharcard')}
                                                 isInvalid={!!errors.sipmember_nominee_addharcard}
                                             />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="sipmember_sip_category" className="form-label">SIP Category</label>
+                                            <select className="form-control" id="sipmember_sip_category" {...register('sipmember_sip_category')}>
+                                                    <option value="">-- Select --</option>
+            
+                                                    {category.map((category) => (
+                                                        <option key={category._id} value={category._id}>
+                                                            {category.sipcategory_name}
+                                                        </option>
+                                                        ))}
+                                            </select>
+                                            {errors.sipmember_sip_category && <div className="invalid-feedback d-block">{errors.sipmember_sip_category.message}</div>}
                                         </div>
                                         {(userData.user_role_type == '0') && (
                                         <>
@@ -394,7 +511,7 @@ const SIPEdit = () => {
                                     <Col md={6}>
                                         <div className="mb-3">
                                             <label htmlFor="client_id" className="form-label">Client ID</label>
-                                            <select className="form-control" id="client_id" {...register('client_id')} onChange={(e)=>{handleClientChange(e)}}>
+                                            {/* <select className="form-control" id="client_id" {...register('client_id')} onChange={(e)=>{handleClientChange(e)}}>
                                                     <option value="">-- Select --</option>
             
                                                     {clients.map((client) => (
@@ -402,7 +519,19 @@ const SIPEdit = () => {
                                                             {`${client.client_id}-${client.client_name}`}
                                                         </option>
                                                         ))}
-                                            </select>
+                                            </select> */}
+                                            <Typeahead
+                                                id="select2"
+                                                labelKey={'label'}
+                                                multiple={false}
+                                                {...register('client_id')}
+                                                onChange={(e)=>{handleClientChange(e)}}
+                                                options={clients.map((client:any) => (
+                                                    {value:`${client._id}`,label:`${client.client_id}-${client.client_name}`}
+                                                ))}
+                                                placeholder="select Client"
+                                                selected={singleSelections}
+                                            />
                                             {errors.client_id && <div className="invalid-feedback d-block">{errors.client_id.message}</div>}
                                         </div>
                                         <div className="mb-3">
@@ -461,15 +590,35 @@ const SIPEdit = () => {
                                             {errors.sipmember_nominee_relation && <div className="invalid-feedback d-block">{errors.sipmember_nominee_relation.message}</div>}
                                         </div>
                                         <div className="mb-3">
-                                            <label htmlFor="sipmember_nominee_pancard" className="form-label">Nominee PAN Card</label>
+                                            <label htmlFor="sipmember_nominee_aadhaarno" className="form-label">Nominee Aadhaar Number</label>
+                                            <input
+                                                type="text"
+                                                id="sipmember_nominee_aadhaarno"
+                                                className="form-control"
+                                                placeholder="Enter Nominee Mobile Number"
+                                                {...register('sipmember_nominee_aadhaarno')}
+                                            />
+                                            {errors.sipmember_nominee_aadhaarno && <div className="invalid-feedback d-block">{errors.sipmember_nominee_aadhaarno.message}</div>}
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="sipmember_nominee_otherdocs" className="form-label">Nominee Other Documents</label>
                                             <Form.Control
                                                 type="file"
-                                                onChange={(event:any) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'sipmember_nominee_pancard')}
-                                                isInvalid={!!errors.sipmember_nominee_pancard}
+                                                onChange={(event:any) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'sipmember_nominee_otherdocs')}
                                             />
                                             <Form.Control.Feedback type="invalid">
-                                                {errors.sipmember_nominee_pancard?.message}
+                                                {errors.sipmember_nominee_otherdocs?.message}
                                             </Form.Control.Feedback>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="sipmember_remarks" className="form-label">Remarks</label>
+                                            <input
+                                                type="text"
+                                                id="sipmember_remarks"
+                                                className="form-control"
+                                                placeholder="Enter Remarks"
+                                                {...register('sipmember_remarks')}
+                                            />
                                         </div>
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_status" className="form-label">Status</label>

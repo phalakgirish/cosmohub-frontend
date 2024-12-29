@@ -41,7 +41,7 @@ const TreeViewExample = () => {
                             </Dropdown.Menu>
                         </Dropdown>
                         <h4 className="header-title mt-0 mb-3">Basic Tree</h4>
-                        <DeniReactTreeView items={basicNodes} showRoot />
+                        <DeniReactTreeView items={basicNodes}  />
                     </Card.Body>
                 </Card>
             </Col>

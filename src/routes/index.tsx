@@ -30,11 +30,21 @@ const AddDesignation = React.lazy(() => import('../pages/Master/AddDesignation')
 const ClientRegistration = React.lazy(() => import('../pages/ClientManagement/ClientRegistration'));
 const AllClients = React.lazy(() => import('../pages/ClientManagement/Clients'));
 const EditClient = React.lazy(() => import('../pages/ClientManagement/EditClient'));
+const ImportClient = React.lazy(() => import('../pages/ClientManagement/ImportClient'));
+
+
+const AddRefSchPayment = React.lazy(() => import('../pages/ClientManagement/AddRefSchPayment'));
+const AllRefSchPayment = React.lazy(() => import('../pages/ClientManagement/ReferenceSchPayment'));
+const EditRefSchPayment = React.lazy(() => import('../pages/ClientManagement/EditRefSchPayment'));
 
 
 const EditBranch = React.lazy(() => import('../pages/Master/EditBranch'));
 const EditDepartment = React.lazy(() => import('../pages/Master/EditDeprtment'));
 const EditDesignation = React.lazy(() => import('../pages/Master/EditDesignation'));
+
+const AddReferenceLevel= React.lazy(() => import('../pages/Master/AddReferenceLevel'));
+const AllReferenceLevel= React.lazy(() => import('../pages/Master/AllReferenceLevel'));
+const EditReferenceLevel = React.lazy(() => import('../pages/Master/EditReferenceLevel'));
 
 const AddStaff = React.lazy(() => import('../pages/StaffManagement/StaffRegistration'));
 const AllStaffs = React.lazy(() => import('../pages/StaffManagement/AllStaffs'));
@@ -46,9 +56,15 @@ const AllSlab= React.lazy(() => import('../pages/Master/SIPSlab'));
 const AddSlab= React.lazy(() => import('../pages/Master/AddSIPSlab'));
 const EditSlab= React.lazy(() => import('../pages/Master/EditSIPSlab'));
 
+const AllSipCategory= React.lazy(() => import('../pages/Master/AllSipCategory'));
+const AddSipCategory= React.lazy(() => import('../pages/Master/AddSipCategory'));
+const EditSipCategory= React.lazy(() => import('../pages/Master/EditSipCategory'));
+
 const AddMember = React.lazy(() => import('../pages/SIPManagement/Registration'));
 const EditMember= React.lazy(() => import('../pages/SIPManagement/EditSIPManagement'));
 const AllMember= React.lazy(() => import('../pages/SIPManagement/AllSIPManagements'));
+const ImportMember= React.lazy(() => import('../pages/SIPManagement/ImportSIPMember'));
+
 
 const AddPayment= React.lazy(() => import('../pages/SIPManagement/AddSIPPayment'));
 const AllPayment= React.lazy(() => import('../pages/SIPManagement/PaymentReciept'));
@@ -59,6 +75,7 @@ const AddLuckyDraw= React.lazy(() => import('../pages/SIPManagement/AddLuckyDraw
 const AllLuckyDraw= React.lazy(() => import('../pages/SIPManagement/LuckyDraw'));
 const EditLuckyDraw = React.lazy(() => import('../pages/SIPManagement/EditLuckyDraw'));
 
+
 const AddMaturity= React.lazy(() => import('../pages/SIPManagement/AddMaturity'));
 const AllMaturity= React.lazy(() => import('../pages/SIPManagement/Maturity'));
 const EditMaturity = React.lazy(() => import('../pages/SIPManagement/EditMaturity'));
@@ -67,6 +84,8 @@ const PaymentReport = React.lazy(() => import('../pages/report/SIPPaymentMonthly
 const MemberPaymentReport = React.lazy(() => import('../pages/report/SIPMemberPaymentReport'));
 const MemberDetailsReport = React.lazy(() => import('../pages/report/SIPMemberDetailsReport'));
 const LuvkyDrawDetails = React.lazy(() => import('../pages/report/SIPLuckyDrawDetailsReport'));
+const commissionReport = React.lazy(() => import('../pages/report/ClientwiseReferenceComission'));
+
 
 const ChangePassword = React.lazy(() => import('../pages/StaffManagement/ChangePassword'));
 
@@ -287,6 +306,10 @@ const AllRoutes = () => {
           element: <LoadComponent component={AllClients} />,
         },
         {
+          path: 'importclient',
+          element: <LoadComponent component={ImportClient} />,
+        },
+        {
           path: 'edit-client/:id',
           element: <LoadComponent component={EditClient} />,
         },
@@ -327,6 +350,18 @@ const AllRoutes = () => {
           element: <LoadComponent component={EditSlab} />,
         },
         {
+          path: 'sipcategory',
+          element: <LoadComponent component={AllSipCategory} />,
+        },
+        {
+          path: 'add-sipcategory',
+          element: <LoadComponent component={AddSipCategory} />,
+        },
+        {
+          path: 'edit-sipcategory/:id',
+          element: <LoadComponent component={EditSipCategory} />,
+        },
+        {
           path: 'add-sipmember',
           element: <LoadComponent component={AddMember} />,
         },
@@ -337,6 +372,10 @@ const AllRoutes = () => {
         {
           path: 'edit-sipmember/:id',
           element: <LoadComponent component={EditMember} />,
+        },
+        {
+          path: 'importmember',
+          element: <LoadComponent component={ImportMember} />,
         },
         {
           path: 'add-payment',
@@ -397,6 +436,34 @@ const AllRoutes = () => {
         {
           path: 'luckydraw-report',
           element: <LoadComponent component={LuvkyDrawDetails} />,
+        },
+        {
+          path: 'comission-report',
+          element: <LoadComponent component={commissionReport} />,
+        },
+        {
+          path: 'add-referencelevel',
+          element: <LoadComponent component={AddReferenceLevel} />,
+        },
+        {
+          path: 'all-referencelevel',
+          element: <LoadComponent component={AllReferenceLevel} />,
+        },
+        {
+          path: 'edit-referencelevel/:id',
+          element: <LoadComponent component={EditReferenceLevel} />,
+        },
+        {
+          path: 'add-refschpayment',
+          element: <LoadComponent component={AddRefSchPayment} />,
+        },
+        {
+          path: 'all-refschpayment',
+          element: <LoadComponent component={AllRefSchPayment} />,
+        },
+        {
+          path: 'edit-refschpayment/:id',
+          element: <LoadComponent component={EditRefSchPayment} />,
         },
         {
           path: 'apps',

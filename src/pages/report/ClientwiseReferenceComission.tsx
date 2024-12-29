@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, Form, FormText } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, FormText, InputGroup, Tab, Nav } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../hooks';
 import url from '../../env';
@@ -9,20 +9,22 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Controller, useForm } from 'react-hook-form';
 import * as XLSX from 'xlsx';
+import DeniReactTreeView from 'deni-react-treeview';
 import { Typeahead } from 'react-bootstrap-typeahead';
+import { Link } from 'react-router-dom';
+import OrganizationalChart from './OrganizationalChart';
 
 interface Payment {
-    sippayment_receiptno:string;
-    Sip_id:string;
-    sipmember_name:string;
-    sip_payment_month: string;
-    sip_amount: number;
-    sip_penalty_month: string;
-    sip_penalty_amount: number;
-    sip_payment_mode: string;
-    sip_payment_refno: string;
-    sip_payment_receivedBy:string;
-    sip_payment_receivedDate:string;
+    generation:Number;
+    client_id:string;
+    client_name:string;
+    months: Number;
+    sipJoinDate: string;
+    total_invested_amount: number;
+    total_spot_commission: number;
+    total_recurring_commission: number;
+    referred_client_id: string;
+    referred_client_name:string;
 }
 // Define the type for Client data
 type Client = {
@@ -48,13 +50,18 @@ type SipMember = {
 };
 
 interface DataResponse {
-    sipPayment: Payment[];
+    CommissionDetails: Payment[];
+    treeView:any;
 }
 
-const SIPMemberPaymentReport = () => {
+const ClientwiseReferenceComission = () => {
     const [branches, setBranches] = useState<Branch[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [data, setData] = useState<Payment[]>([]);
+    const [commissionDts, setCommissionDts] = useState<any>([]);
+    const [commissionTreeDts, setCommissionTreeDts] = useState<any>([]);
+
+
     const [simembers, setSipMembers] = useState<SipMember[]>([]);
     const navigate = useNavigate();
     const [paymentDeleted, setPaymentDeleted] = useState(false);
@@ -65,11 +72,32 @@ const SIPMemberPaymentReport = () => {
     const [sipMemberId, setSIPMemberId] = useState('')
     const [singleSelections, setSingleSelections] = useState<Option[]>([]);
     const [singleSIPSelections, setSingleSIPSelections] = useState<Option[]>([]);
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
+    const [showPicker, setShowPicker] = useState<boolean>(false);
 
+    const togglePicker = () => setShowPicker(!showPicker);
 
+    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            setStartDate(e.target.value);
+            setData([]);
+        };
+    
+        const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            setEndDate(e.target.value);
+            // setShowPicker(false)
+            setData([]);
+        };
+    
+        const handleClear = () => {
+            setStartDate('');
+            setEndDate('');
+            setShowPicker(false);
+            setData([]);
+        };
 
     usePageTitle({
-        title: 'SIP Member Payment Report',
+        title: 'Clientwise Reference Comission Report',
         breadCrumbItems: [
             {
                 path: '/payments',
@@ -172,12 +200,13 @@ const SIPMemberPaymentReport = () => {
         {
             handleFetchSIPMember(e[0].value);
             var clientname = clients.filter((item)=> item._id == e[0].value)
-            setClientsName(clientname[0].client_name);
+            setClientsName(e[0].value);
 
         }
         else
         {
             setClientsName('');
+            setData([]);
 
         }
         
@@ -213,12 +242,23 @@ const SIPMemberPaymentReport = () => {
 
     
         const fetchPayments = async () => {
-            if(sipMemberId == '')
+            if(clientsName == '')
+            {
+                toast.error('Client Id is required');
                 return;
+            }
+                
             try {
+                
                 const bearerToken = secureLocalStorage.getItem('login');
-                const response = await fetch(`${url.nodeapipath}/report/member-payment?sip_id=${sipMemberId}`, {
-                    method: 'GET',
+                const dataToPost = {
+                    client_id:clientsName,
+                    startDate:startDate,
+                    endDate:endDate
+                }
+                const response = await fetch(`${url.nodeapipath}/report/commission`, {
+                    method: 'POST',
+                    body:JSON.stringify(dataToPost),
                     headers: {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*',
@@ -230,21 +270,22 @@ const SIPMemberPaymentReport = () => {
                 
                 
                 if (response.ok) {
-                    const formattedData = data.sipPayment.map((payment, index) => ({
+                    const formattedData = data.CommissionDetails.map((payment, index) => ({
                         srNo: index + 1,
-                        sippayment_receiptno:payment.sippayment_receiptno,
-                        Sip_id:payment.Sip_id,
-                        sipmember_name:payment.sipmember_name,
-                        sip_amount: payment.sip_amount,
-                        sip_payment_month: formatMonthDate(payment.sip_payment_month),
-                        sip_penalty_amount: payment.sip_penalty_amount,
-                        sip_penalty_month: formatMonthDate(payment.sip_penalty_month),
-                        sip_payment_mode: payment.sip_payment_mode,
-                        sip_payment_refno: payment.sip_payment_refno,
-                        sip_payment_receivedBy:payment.sip_payment_receivedBy,
-                        sip_payment_receivedDate:formatDate(new Date(payment.sip_payment_receivedDate)),
+                        generation:payment.generation,
+                        client_id:payment.client_id,
+                        client_name:payment.client_name,
+                        sipJoinDate: formatDate(new Date(payment.sipJoinDate)),
+                        months: payment.months,
+                        total_invested_amount: payment.total_invested_amount,
+                        total_spot_commission: payment.total_spot_commission,
+                        total_recurring_commission:payment.total_recurring_commission,
+                        referred_client_id: payment.referred_client_id,
+                        referred_client_name: payment.referred_client_name,
                     }));
                     setData(formattedData);
+                    setCommissionDts(data.CommissionDetails)
+                    setCommissionTreeDts([data.treeView])
                 } else {
                     console.error('Error fetching payments:', data);
                 }
@@ -260,8 +301,8 @@ const SIPMemberPaymentReport = () => {
             if(data.length == 0)
                 return;
 
-            var sipMembersfilesDetails = simembers.filter((item:any)=>item._id == sipMemberId)
-            exportToExcel(columns,Excelcolumns,data,`SIP Member Payment Report-${sipMembersfilesDetails[0].sipmember_id+'-'+sipMembersfilesDetails[0].sipmember_name}.xlsx`)
+            var sipMembersfilesDetails = clients.filter((item:any)=>item._id == clientsName)
+            exportToExcel(columns,Excelcolumns,data,`Clientwise Reference Commission Report-${sipMembersfilesDetails[0].client_id+'-'+sipMembersfilesDetails[0].client_name}.xlsx`)
         }
 
         const handleSIPMember = (e:any)=>{
@@ -291,7 +332,7 @@ const SIPMemberPaymentReport = () => {
         { text: 'All', value: data.length },
     ];
 
-    const Excelcolumns = ['Sr. No','Reciept No.','SIP Id','Member Name','Amount','Month','Penalty Amount','Penalty Recovery Month','Payment Mode','Payment Ref. No','Received By','Received Date'];
+    const Excelcolumns = ['Sr. No','Generation','Client Id','Client Name','Joined date','Months','Invested Amount','Spot Comission','Recurring Comission','Referred By Client Id','Referred By Client Name'];
 
     const columns = [
         {
@@ -300,58 +341,53 @@ const SIPMemberPaymentReport = () => {
             sort: true,
         },
         {
-            Header: 'Reciept No.',
-            accessor: 'sippayment_receiptno',
+            Header: 'Generation',
+            accessor: 'generation',
             sort: true,
         },
         {
-            Header: 'SIP Id',
-            accessor: 'Sip_id',
+            Header: 'Client Id',
+            accessor: 'client_id',
             sort: true,
         },
         {
-            Header: 'Member Name',
-            accessor: 'sipmember_name',
+            Header: 'Client Name',
+            accessor: 'client_name',
             sort: true,
         },
         {
-            Header: 'Amount',
-            accessor: 'sip_amount',
+            Header: 'Joined date',
+            accessor: 'sipJoinDate',
             sort: true,
         },
         {
-            Header: 'Month',
-            accessor: 'sip_payment_month',
+            Header: 'Months',
+            accessor: 'months',
             sort: true,
         },
         {
-            Header: 'Penalty Amount',
-            accessor: 'sip_penalty_amount',
+            Header: 'Invested Amount',
+            accessor: 'total_invested_amount',
             sort: true,
         },
         {
-            Header: 'Penalty Recovery Month',
-            accessor: 'sip_penalty_month',
+            Header: 'Spot Comission',
+            accessor: 'total_spot_commission',
             sort: true,
         },
         {
-            Header: 'Payment Mode',
-            accessor: 'sip_payment_mode',
+            Header: 'Recurring Comission',
+            accessor: 'total_recurring_commission',
             sort: true,
         },
         {
-            Header: 'Payment Ref. No',
-            accessor: 'sip_payment_refno',
+            Header: 'Referred By Client Id',
+            accessor: 'referred_client_id',
             sort: true,
         },
         {
-            Header: 'Received By',
-            accessor: 'sip_payment_receivedBy',
-            sort: true,
-        },
-        {
-            Header: 'Received Date',
-            accessor: 'sip_payment_receivedDate',
+            Header: 'Referred By Client Name',
+            accessor: 'referred_client_name',
             sort: true,
         },
     ];
@@ -388,8 +424,8 @@ const SIPMemberPaymentReport = () => {
                     <Card.Body>
                         <div className="d-flex justify-content-between">
                             <div>
-                                <h4 className="header-title">SIP Member Payment Report</h4>
-                                <p className="text-muted font-14">A table showing SIP member payment report</p>
+                                <h4 className="header-title">Clientwise Reference Comission Report</h4>
+                                <p className="text-muted font-14">A table showing cliest's commission report</p>
                             </div>
                         </div>
                         <hr />
@@ -398,18 +434,6 @@ const SIPMemberPaymentReport = () => {
                                     <Col md={6}>
                                         <Form.Group className="mb-2 d-flex">
                                                 <Form.Label style={{width:'15%'}}>Client Id</Form.Label>
-                                                {/* <select
-                                                className='form-control'
-                                                onChange={(e)=>{handleClientChange(e)}}
-                                                >
-                                                    <option>Select Client</option>
-                                                    {clients.map((member) => (
-                                                        <option key={member._id} value={member._id}>
-                                                            {`${member.client_id}, ${member.client_name}`}
-                                                        </option>
-                                                        ))}
-                                                </select> */}
-
                                                 <Typeahead
                                                 id="select2"
                                                 labelKey={'label'}
@@ -425,32 +449,56 @@ const SIPMemberPaymentReport = () => {
                                         </Form.Group>
                                     </Col>
                                     <Col md={6}>
-                                    <Form.Group className="mb-2 d-flex">
-                                        <Form.Label style={{width:'25%'}}>SIP Member Id</Form.Label>
-                                        {/* <select className='form-control'
-                                        onChange={(e)=>{handleSIPMember(e)}}
-                                        >
-                                            <option>Select SIP Member</option>
-                                            {simembers.map((member) => (
-                                                <option key={member._id} value={member._id}>
-                                                    {`${member.sipmember_id}, ${member.sipmember_name}`}
-                                                </option>
-                                                ))}
-                                        </select> */}
+                                        <Form.Group className="mb-2 d-flex">
+                                            <Form.Label style={{width:'10%'}}>Date</Form.Label>
+                                            <InputGroup style={{width:'90   %'}}>
+                                                <Form.Control
+                                                type="text"
+                                                placeholder="Select date range"
+                                                value={startDate && endDate ? `${startDate} to ${endDate}` : ''}
+                                                readOnly
+                                                onClick={togglePicker}
+                                                
+                                                />
+                                                <Button variant="outline-secondary" onClick={handleClear}>
+                                                Clear
+                                                </Button>
+                                            </InputGroup>
 
-                                        <Typeahead
-                                            id="select2"
-                                            labelKey={'label'}
-                                            multiple={false}
-                                            onChange={(e)=>{handleSIPMember(e)}}
-                                            options={simembers.map((member:any) => (
-                                                {value:`${member._id}`,label:`${member.sipmember_id}, ${member.sipmember_name}`}
-                                            ))}
-                                            placeholder="select Member"
-                                            selected={singleSIPSelections}
-                                            style={{width:'75%'}}
-                                        />
-                                    </Form.Group>
+                                            {showPicker && (
+                                                <div className="mt-2 border p-3" style={{position: 'absolute',
+                                                    width: '42.3%',
+                                                    right: '2   %',
+                                                    top: '36%',background:'#fff'}}>
+                                                <div className='d-flex'>
+                                                    <Form.Group style={{width:'50%'}}>
+                                                        <Form.Label>Start Date</Form.Label>
+                                                        <Form.Control
+                                                        type="date"
+                                                        value={startDate}
+                                                        onChange={handleStartDateChange}
+                                                        />
+                                                    </Form.Group>
+                                                    <Form.Group style={{width:'50%'}}>
+                                                        <Form.Label>End Date</Form.Label>
+                                                        <Form.Control
+                                                        type="date"
+                                                        value={endDate}
+                                                        onChange={handleEndDateChange}
+                                                        min={startDate} // Prevent selecting an end date before the start date
+                                                        />
+                                                    </Form.Group>
+                                                </div>
+                                                <Button
+                                                    className="mt-3"
+                                                    variant="primary"
+                                                    onClick={() => setShowPicker(false)}
+                                                >
+                                                    Done
+                                                </Button>
+                                                </div>
+                                            )}
+                                        </Form.Group>
                                     </Col>
                                 </Row>
                                 <Row>
@@ -468,15 +516,52 @@ const SIPMemberPaymentReport = () => {
                                 </Row>
                         </div>
                         <hr />
-                        <Table
-                            columns={columns}
-                            data={data}
-                            pageSize={5}
-                            sizePerPageList={sizePerPageList}
-                            isSortable={true}
-                            pagination={true}
-                            // isSearchable={true}
-                        />
+                                <Tab.Container defaultActiveKey="List">
+                                    <Nav as="ul" variant="tabs">
+                                        <Nav.Item as="li" key={'list'}>
+                                            <Nav.Link as={Link} to="#" eventKey={'List'} className="cursor-pointer">
+                                                List
+                                            </Nav.Link>
+                                        </Nav.Item>
+                                        <Nav.Item as="li" key={'tree'}>
+                                            <Nav.Link as={Link} to="#" eventKey={'Tree'} className="cursor-pointer">
+                                                Tree
+                                            </Nav.Link>
+                                        </Nav.Item>
+                                        <Nav.Item as="li" key={'chart'}>
+                                            <Nav.Link as={Link} to="#" eventKey={'Chart'} className="cursor-pointer">
+                                                Chart
+                                            </Nav.Link>
+                                        </Nav.Item>
+                                    </Nav>
+
+                                    <Tab.Content>
+                                        <Tab.Pane eventKey={'List'} id={String('list')} key={'list'}>
+                                            <Table
+                                                columns={columns}
+                                                data={data}
+                                                pageSize={5}
+                                                sizePerPageList={sizePerPageList}
+                                                isSortable={true}
+                                                pagination={true}
+                                                // isSearchable={true}
+                                            />
+                                        </Tab.Pane>
+                                        <Tab.Pane eventKey={'Tree'} id={String('tree')} key={'tree'}>
+                                            <div style={{padding:'3%',}}>
+                                                <DeniReactTreeView items={commissionTreeDts} />
+                                            </div>
+                                        </Tab.Pane>
+                                        <Tab.Pane eventKey={'Chart'} id={String('chart')} key={'chart'}>
+                                            {(commissionDts.length > 0)?
+                                                <div style={{ width: '100%', height: 'auto' }}>
+                                                    <OrganizationalChart data={commissionDts} />
+                                                </div>:''
+                                            }   
+                                        </Tab.Pane>
+                                    </Tab.Content>
+                                </Tab.Container>
+                        
                     </Card.Body>
                 </Card>
             </Col>
@@ -485,4 +570,4 @@ const SIPMemberPaymentReport = () => {
     );
 };
 
-export default SIPMemberPaymentReport;
+export default ClientwiseReferenceComission;

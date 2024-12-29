@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Row, Col, Container, Card, Button } from 'react-bootstrap';
+import { Row, Col, Container, Card, Button, Modal } from 'react-bootstrap';
 import url from '../../env';
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
@@ -13,7 +13,12 @@ import { ToastContainer, toast } from 'react-toastify';
 interface IFormInput {
     fullname: string;
     email: string;
+    staff_isemailVerified:string;
     dob: string;
+    country: string;
+    state: string;
+    // city: string;
+    phone_code: string;
     mobile_number: string;
     gender: string;
     pancard: FileList;
@@ -38,6 +43,20 @@ type Department = {
     department_name: string;
 };
 
+type Country = {
+    _id: string;
+    country_name: string;
+    country_code: string;
+    country_phonecode: string;
+};
+
+type State = {
+    _id: string;
+    state_name: string;
+    state_code: string;
+    state_country: string;
+};
+
 type Designation = {
     _id: string;
     designation_name: string;
@@ -49,8 +68,17 @@ const StaffRegistration = () => {
     const[aadharFileStatus,setAadharFileStatus] = useState(false);
     const[panFileStatus,setPanFileStatus] = useState(false);
     const [branches, setBranches] = useState<Branch[]>([]);
+    const [countries, setCountries] = useState<Country[]>([]);
+    const [states, setStates] = useState<State[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [designation, setDesignation] = useState<Designation[]>([]);
+    const [isEmailVerified, setIsEmailVerified] = useState(false)
+    const [otp,setOtp] = useState(0)
+    const [userOtp,setUserOtp] = useState(0)
+    const [showModal, setShowModal] = useState(false);
+    const [otpErr,setOtpErr] = useState('')
+    const [isOtpErr,setIsOtpErr] = useState(false)
+
     const navigate = useNavigate();
 
     const[errFile,setErrFile] = useState(false);
@@ -75,7 +103,15 @@ const StaffRegistration = () => {
         fullname: yup.string().required('Please enter Fullname'),
         email: yup.string().required('Please enter Email').email('Please enter a valid Email'),
         // password: yup.string().required('Please enter Password'),
-        dob: yup.string().required('Please enter Date of Birth'),
+        dob: yup.string().required('Please enter Date of Birth')
+        .test('is-at-least-one-year-back', 'Staff must be at least 18 year old.', (value) => {
+            if (!value) return false;
+
+            const dob = new Date(value);
+            const today = new Date();
+            const oneYearAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+            return dob <= oneYearAgo;
+        }),
         mobile_number: yup.string().required('Please enter Mobile Number'),
         gender: yup.string().required('Please select Gender'),
         pancard: yup.mixed().required('Please upload PAN Card'),
@@ -85,7 +121,10 @@ const StaffRegistration = () => {
         branch: yup.string().required('Please enter Branch'),
         doj: yup.string().required('Please enter Date of Joining'),
         checkboxsignup: yup.bool().oneOf([true], 'Must accept Terms and Conditions'),
-        role: yup.string().required('Please select staff role')
+        role: yup.string().required('Please select staff role'),
+        country: yup.string().required('Please select country'),
+        state: yup.string().required('Please select state'),
+        // city: yup.string().required('Please enter city/village')
     });
 
     useEffect(() => {
@@ -114,11 +153,115 @@ const StaffRegistration = () => {
         };
 
         fetchBranches();
+
+        const fetchCountries = async () => {
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/all/country`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
+                const data = await response.json();
+                // console.log(data);
+                
+                if (response.ok) {
+                    setCountries(data.country || []);
+                } else {
+                    console.error('Error fetching countries:', data);
+                }
+            } catch (error) {
+                console.error('Error during API call:', error);
+            }
+        };
+
+        fetchCountries();
     }, []);
 
-    const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>({
+    const { register, handleSubmit, formState: { errors },setValue } = useForm<IFormInput>({
         resolver: yupResolver(schema),
     });
+
+    const handleVerifyCancel = () => {
+        setShowModal(false);
+        // setSelectedStaffId(null);
+    };
+
+    const handleVerifyOpen = () => {
+        setShowModal(true);
+    };
+
+    const handelotpchange = (otpno:any)=>{
+        if(otpno == '')
+        {
+            setOtpErr('Please Enter OTP.');
+            setIsOtpErr(true);
+        }
+        else
+        {
+            setOtpErr('');
+            setIsOtpErr(false);
+            setUserOtp(parseInt(otpno))
+        }
+    }
+
+    const handleOTPConfirm = async () => {
+
+
+        if(userOtp != 0)
+        {
+            if(otp == userOtp)
+            {
+                setIsEmailVerified(true)
+                handleVerifyCancel();
+            }
+            else
+            {
+                setOtpErr('Please Enter valid OTP.');
+                setIsOtpErr(true);
+            }
+        }
+        else
+        {
+            setOtpErr('Please Enter OTP.');
+            setIsOtpErr(true);
+        }
+        
+    };
+
+    const handelVerifyEmail = async (emailId:any)=>{
+        // console.log(emailId);
+
+        try {
+            const bearerToken = secureLocalStorage.getItem('login');
+            const response = await fetch(`${url.nodeapipath}/staff/verify/${emailId}`,{
+                method:'GET',
+                headers: {
+                    'Content-Type':'application/json',
+                    'Access-Control-Allow-Origin':'*',
+                    'Authorization': `Bearer ${bearerToken}`
+                    }
+            });
+            const data = await response.json();
+            // console.log(data);
+            
+            if (response.ok) {
+                // setDesignation(data.designation || []);
+                // console.log(data);
+                
+                setOtp(data.otp);
+                handleVerifyOpen();
+            } else {
+                console.error('Error fetching otp:', data);
+            }
+        } catch (error) {
+            console.error('Error during API call:', error);
+        }
+        
+    }
 
     const handlepancardChange = (e:any)=>{
         // console.log(e.target.files);
@@ -154,7 +297,8 @@ const StaffRegistration = () => {
     }
 
     const onSubmit = async (data: IFormInput) => {
-
+        console.log(data);
+        
         if(!panFileStatus)
         {
             setErrFile(true);
@@ -174,8 +318,9 @@ const StaffRegistration = () => {
             const formData = new FormData();
             formData.append('staff_name', data.fullname);
             formData.append('staff_dob', data.dob);
-            formData.append('staff_mobile_number', data.mobile_number);
+            formData.append('staff_mobile_number', `${data.phone_code}-${data.mobile_number}`);
             formData.append('staff_emailId', data.email);
+            formData.append('staff_isemailVerified', isEmailVerified.toString());
             formData.append('staff_gender', data.gender);
             formData.append('staff_pancard', data.pancard[0]);
             formData.append('staff_addharcard', data.aadharcard[0]);
@@ -184,6 +329,9 @@ const StaffRegistration = () => {
             formData.append('staff_branch', data.branch);
             formData.append('staff_doj', data.doj);
             formData.append('staff_role_type', data.role);
+            formData.append('staff_country', data.country);
+            formData.append('staff_state', data.state);
+
 
             // console.log(formData);
             
@@ -221,6 +369,44 @@ const StaffRegistration = () => {
         }
         
     };
+
+    const handleCountryChange = async (country:any)=>{
+
+        if(country != '')
+        {
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/all/state/${country}`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
+                const data = await response.json();
+                // console.log(data);
+                
+                if (response.ok) {
+                    setStates(data.states || []);
+                } else {
+                    console.error('Error fetching states:', data);
+                }
+                var phoneCode = countries.filter((item:any)=> item.country_name === country);
+
+                setValue('phone_code',phoneCode[0].country_phonecode)
+            } catch (error) {
+                console.error('Error during API call:', error);
+            }
+        }
+        else
+        {
+            setValue('phone_code','');
+            setStates([]);
+
+        }
+        
+    }
 
     const handleBranchChange = async (e:any)=>{
         try {
@@ -276,8 +462,17 @@ const StaffRegistration = () => {
                 <Col>
                     <Card className="mt-4">
                         <Card.Body>
-                        <h4 className="header-title mt-0 mb-1">Add Staff</h4>
-                        <p className="sub-header">Fill the form to add a new Staff.</p>
+                            <div className='d-flex'>
+                                <div>
+                                <h4 className="header-title mt-0 mb-1">Add Staff</h4>
+                                <p className="sub-header">Fill the form to add a new Staff.</p>
+                                </div>
+                                <div className="text-md-end mb-0" style={{width:'83%'}}>
+                                    <Button variant="dark" type="reset" onClick={()=>{navigate('/staff')}}>
+                                        Back
+                                    </Button>
+                                </div>
+                            </div>
                             <form onSubmit={handleSubmit(onSubmit)}>
                                 <Row>
                                     <Col md={6}>
@@ -295,13 +490,18 @@ const StaffRegistration = () => {
 
                                         <div className="mb-3">
                                             <label htmlFor="email" className="form-label">Email</label>
+                                            <div className='d-flex'>
                                             <input
                                                 type="email"
                                                 id="email"
                                                 placeholder="Enter Email"
                                                 className="form-control"
                                                 {...register('email')}
-                                            />
+                                                disabled = {(isEmailVerified)?true:false}
+                                                onBlur={async(e)=>{await handelVerifyEmail(e.target.value)}}
+                                                style={{width:'87%'}}
+                                            />{(isEmailVerified)?<span className="badge badge-soft-success pt-2" style={{width:'13%',fontSize: '85%'}}>Verified</span>:<span className="badge badge-soft-danger pt-2" style={{width:'13%',fontSize: '85%'}}>Unverified</span>}
+                                            </div>
                                             {errors.email && <div className="invalid-feedback d-block">{errors.email.message}</div>}
                                         </div>
 
@@ -330,13 +530,25 @@ const StaffRegistration = () => {
 
                                         <div className="mb-3">
                                             <label htmlFor="mobile_number" className="form-label">Mobile Number</label>
-                                            <input
-                                                type="text"
-                                                id="mobile_number"
-                                                placeholder="Enter Mobile Number"
-                                                className="form-control"
-                                                {...register('mobile_number')}
-                                            />
+                                            <div className="d-flex">
+                                                <input
+                                                    type="text"
+                                                    id="phone_code"
+                                                    placeholder="phone code"
+                                                    className="form-control"
+                                                    {...register('phone_code')}
+                                                    disabled
+                                                    style={{width:'10%'}}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    id="mobile_number"
+                                                    placeholder="Enter Mobile Number"
+                                                    className="form-control"
+                                                    {...register('mobile_number')}
+                                                    style={{width:'90%'}}
+                                                />
+                                            </div>
                                             {errors.mobile_number && <div className="invalid-feedback d-block">{errors.mobile_number.message}</div>}
                                         </div>
 
@@ -367,6 +579,16 @@ const StaffRegistration = () => {
                                             </select>
                                             {errors.gender && <div className="invalid-feedback d-block">{errors.gender.message}</div>}
                                         </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="doj" className="form-label">Date of Joining</label>
+                                            <input
+                                                type="date"
+                                                id="doj"
+                                                className="form-control"
+                                                {...register('doj')}
+                                            />
+                                            {errors.doj && <div className="invalid-feedback d-block">{errors.doj.message}</div>}
+                                        </div>
                                     </Col>
 
                                     <Col md={6}>
@@ -396,6 +618,35 @@ const StaffRegistration = () => {
                                             />
                                             {/* {errors.aadharcard && <div className="invalid-feedback d-block">{errors.aadharcard.message}</div>} */}
                                             {(errFile && fileName == 'aadharcard')?(<div className="invalid-feedback d-block">Please upload Aadhar Card</div>):''}
+                                        </div>
+
+                                         <div className="mb-3">
+                                            <label htmlFor="country" className="form-label">Country</label>
+
+                                            <select {...register("country", {required:true})} className="form-control" id="country" onChange={(e)=>{handleCountryChange(e.target.value)}}>
+                                                    <option value="">-- Select --</option>
+
+                                                    {countries.map((country) => (
+                                                        <option key={country.country_name} value={country.country_name}>
+                                                           {country.country_name} - {country.country_code}
+                                                        </option>
+                                                        ))}
+                                                </select>
+                                            {errors.country && <div className="invalid-feedback d-block">{errors.country.message}</div>}
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="state" className="form-label">State</label>
+
+                                            <select {...register("state", {required:true})} className="form-control" id="state">
+                                                    <option value="">-- Select --</option>
+
+                                                    {states.map((state) => (
+                                                        <option key={state.state_name} value={state.state_name}>
+                                                           {state.state_name} - {state.state_code}
+                                                        </option>
+                                                        ))}
+                                                </select>
+                                            {errors.state && <div className="invalid-feedback d-block">{errors.state.message}</div>}
                                         </div>
 
                                         <div className="mb-3">
@@ -440,17 +691,6 @@ const StaffRegistration = () => {
                                             </select>
                                             {errors.designation && <div className="invalid-feedback d-block">{errors.designation.message}</div>}
                                         </div>
-
-                                        <div className="mb-3">
-                                            <label htmlFor="doj" className="form-label">Date of Joining</label>
-                                            <input
-                                                type="date"
-                                                id="doj"
-                                                className="form-control"
-                                                {...register('doj')}
-                                            />
-                                            {errors.doj && <div className="invalid-feedback d-block">{errors.doj.message}</div>}
-                                        </div>
                                     </Col>
                                 </Row>
 
@@ -466,6 +706,32 @@ const StaffRegistration = () => {
                         </Card.Body>
                     </Card>
                 </Col>
+
+            <Modal show={showModal} onHide={handleVerifyCancel} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Verify OTP</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="mb-3">
+                        <label htmlFor="OTP" className="form-label">Enter OTP For Verification</label>
+                            <input
+                                type="text"
+                                id="otp"
+                                placeholder="Enter OTP"
+                                className="form-control"
+                                onChange={(e)=>{handelotpchange(e.target.value)}}
+                            />
+                            {(isOtpErr) && <div className="invalid-feedback d-block">{otpErr}</div>}
+                    </div></Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleVerifyCancel}>
+                        Cancel
+                    </Button>
+                    <Button variant="success" onClick={handleOTPConfirm}>
+                        Verify
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             </Row>
         </Container>
     );
