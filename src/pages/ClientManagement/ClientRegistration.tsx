@@ -8,6 +8,7 @@ import secureLocalStorage from 'react-secure-storage';
 import url from '../../env';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 // Define the type for form data
 type ClientRegistrationData = {
@@ -23,10 +24,15 @@ type ClientRegistrationData = {
     client_postaladdress: string;
     client_landmark: string;
     client_sip_refrence_level: number;
+    client_refered_by:string;
     client_country: string;
     client_state: string;
     client_city: string;
     client_status: boolean;
+    client_bank_name : string;
+    client_bank_account_no : string;
+    client_bank_ifsc : string;
+    client_others:string;
 };
 
 type Country = {
@@ -55,6 +61,8 @@ type Client = {
     client_id: string;
     client_name: string
 };
+
+type Option = string | Record<string, any>;
 
 // Validation schema
 const schemaResolver = yupResolver(
@@ -93,10 +101,12 @@ const ClientRegistration = () => {
     const [states, setStates] = useState<State[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [clientbranch, setClientBranch] = useState('');
-    const [clientsName, setClientsName] = useState('')
+    const [clientsName, setClientsName] = useState('');
     const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
-
+    const [clientName,setClientName] = useState('');
+    const [client_id,setClient_id] = useState('')
+    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
     const userData:any = JSON.parse(StorageuserData);
     // console.log(userData);
     
@@ -127,13 +137,17 @@ const ClientRegistration = () => {
                 formData.append('client_aadhaar_number', data.client_aadhaar_number);
                 formData.append('client_postaladdress', data.client_postaladdress);
                 formData.append('client_landmark', data.client_landmark);
-                formData.append('sip_refered_by_clientId', (clientsName == undefined || clientsName == null)?'null':clientsName);
+                formData.append('sip_refered_by_clientId', (data.client_refered_by)?data.client_refered_by:'null');
                 formData.append('sip_reference_level',(data.client_sip_refrence_level)?data.client_sip_refrence_level.toString():'0')
                 formData.append('client_country',data.client_country)
                 formData.append('client_state',data.client_state)
                 formData.append('client_city',data.client_city)
                 formData.append('client_status', data.client_status.toString());
                 formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
+                formData.append('client_bank_name', data.client_bank_name == undefined ? '':data.client_bank_name);
+                formData.append('client_bank_account_no', data.client_bank_account_no == undefined ? '': data.client_bank_account_no);
+                formData.append('client_bank_ifsc', data.client_bank_ifsc == undefined ? '':data.client_bank_ifsc== undefined ? '' : data.client_others);
+                formData.append('client_others', data.client_others == undefined ?'':data.client_others);
 
                 try {
                     const bearerToken = secureLocalStorage.getItem('login');
@@ -269,8 +283,22 @@ const ClientRegistration = () => {
 
     const handleClientChange = (e:any)=>{
         // var clientname = clients.filter((item)=> item._id == e.target.value)
-        
-        setClientsName(e.target.value);
+        setSingleSelections(e)
+        // setClientsName(e.target.value);
+        if(e.length>0)
+            {
+                var clientname = clients.filter((item)=> item._id == e[0].value)
+                setClientName(clientname[0].client_name);
+                setValue('client_refered_by',e[0].value);
+            }
+            else
+            {
+                setClientName('');
+                setValue('client_refered_by','');
+    
+            }
+
+
     }
 
     const handleCountryChange = async (country:any)=>{
@@ -460,19 +488,60 @@ const ClientRegistration = () => {
                                     {errors.client_aadhaar_number?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
-                            {/* Other Upload */}
+                            {/* others dropdown */}
                             <Form.Group className="mb-3">
-                                <Form.Label>Other Docs Upload</Form.Label>
-                                <Form.Control
-                                    type="file"
-                                    onChange={(event) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'client_otherdocs')}
-                                    // isInvalid={!!errors.client_otherdocs}
+                                <Form.Label>Others Docs</Form.Label>
+                                <Controller
+                                    name="client_others"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value || ''}
+                                            onChange={(e) => {field.onChange(e); handleCountryChange(e.target.value)}} 
+                                            isInvalid={!!errors.client_country}>
+                                            <option value="">Select Others</option>
+                                            <option value="PAN">PAN</option>
+                                            <option value="VOTING_CARD">VOTING CARD</option>
+                                            <option value="RATION_CARD">RATION CARD</option>
+                                            <option value="ELECTRICITY_BILL">ELECTRICITY BILL</option>
+                                            <option value="PASSPORT">PASSPORT</option>
+                                            <option value="DRIVING_LICENSE">DRIVING LICENSE</option>
+                                        </Form.Select>
+                                    )}
                                 />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.client_otherdocs?.message}
-                                </Form.Control.Feedback>
                             </Form.Group>
-                            {/* Referred By */}
+                            {/* bank name */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Bank Name</Form.Label>
+                                    <Controller
+                                        name="client_bank_name"
+                                        control={control}
+                                        render={({ field }) => (
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Enter a Bank Name"
+                                            {...field}
+                                        />
+                                        )}
+                                    />
+                            </Form.Group>
+                            {/* bank ifsc */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Bank  IFSC</Form.Label>
+                                    <Controller
+                                        name="client_bank_ifsc"
+                                        control={control}
+                                        render={({ field }) => (
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Enter a Bank IFSC"
+                                            {...field}
+                                    />
+                                    )}
+                                />
+                            </Form.Group>
+                            {/* Referred By
                             <Form.Group className="mb-3">
                                  <Form.Label>Refered By</Form.Label>
                                     <select className="form-control" id="client_refered_by" onChange={(e)=>{handleClientChange(e)}}>
@@ -484,6 +553,28 @@ const ClientRegistration = () => {
                                             </option>
                                         ))}
                                     </select>
+                            </Form.Group> */}
+                            {/* Referred By */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Referred By</Form.Label>
+                                    <Controller
+                                        name="client_refered_by"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Typeahead
+                                            id="select-client"
+                                            labelKey={'label'}
+                                            {...field}
+                                            multiple={false}
+                                            onChange={(e) => { handleClientChange(e) }}
+                                            options={clients.map((client) => (
+                                            { value: `${client._id}`, label: `${client.client_id}-${client.client_name}` }
+                                        ))}
+                                        placeholder="-- Select --"
+                                        selected={singleSelections} 
+                                    />
+                                    )}
+                                />
                             </Form.Group>
                             {/* Branch Name */}
                             {(userData.user_role_type == '0') && (
@@ -635,6 +726,33 @@ const ClientRegistration = () => {
                                 <Form.Control.Feedback type="invalid">
                                     {errors.client_addharcard?.message}
                                 </Form.Control.Feedback>
+                            </Form.Group>
+                            {/* Other Upload */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Other Docs Upload</Form.Label>
+                                <Form.Control
+                                    type="file"
+                                    onChange={(event) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'client_otherdocs')}
+                                    // isInvalid={!!errors.client_otherdocs}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.client_otherdocs?.message}
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                            {/* bank account no */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Bank Account No</Form.Label>
+                                    <Controller
+                                        name="client_bank_account_no"
+                                        control={control}
+                                        render={({ field }) => (
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Enter a Bank Account No"
+                                            {...field}
+                                        />
+                                        )}
+                                    />
                             </Form.Group>
                             {/* Reference Level */}
                             <Form.Group className="mb-3">

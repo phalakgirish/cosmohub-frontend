@@ -5,7 +5,7 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Nouislider from 'nouislider-react';
 import 'nouislider/distribute/nouislider.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import secureLocalStorage from 'react-secure-storage';
 import url from '../../env';
 
@@ -16,10 +16,11 @@ import { toast } from 'react-toastify';
 
 // Define the type for form data
 type ReferenceLevelData = {
-    reference_level: number;
-    reference_bouns: number;
-    reference_effective:  string;
-    reference_status: boolean;
+    refScheme_name: string;
+    refScheme_category: string;
+    refScheme_amount: number;
+    refScheme_comission: string;
+    refScheme_status: boolean;
 
 };
 
@@ -29,29 +30,38 @@ type Branch = {
     branch_name: string;
 };
 
+type Category = {
+    _id: string;
+    category_name: string;
+    category_status:boolean;
+};
+
 // Validation schema
 const schemaResolver = yupResolver(
     yup.object().shape({
-        reference_level: yup.number().required('Please enter the reference level'),
-        reference_bouns: yup.number().required('Please enter the reference bouns'),
-        reference_effective: yup.string().required('Please select the effective date'),
-        reference_status: yup.boolean().required('Please select the level status'),
+        refScheme_name: yup.string().required('Please enter the scheme name'),
+        refScheme_category: yup.string().required('Please select category'),
+        refScheme_amount: yup.number().required('Please enter Scheme Amount'),
+        refScheme_comission: yup.string().required('Please select the commission'),
+        refScheme_status:yup.boolean().required('Please select status'),
     })
 );
 
-const AddReferenceLevel = () => {
+const EditReferenceScheme = () => {
+    const { id } = useParams<{ id: string }>();
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const [branches, setBranches] = useState<Branch[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [clientbranch, setClientBranch] = useState('');
     const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
 
     const userData:any = JSON.parse(StorageuserData);
 
-    const { handleSubmit, control, formState: { errors } } = useForm<ReferenceLevelData>({
+    const { handleSubmit, control,setValue, formState: { errors } } = useForm<ReferenceLevelData>({
         resolver: schemaResolver,
         defaultValues: {
-            reference_status: true, // Default value if needed
+            refScheme_status: true, // Default value if needed
         },
     });
 
@@ -84,10 +94,68 @@ const AddReferenceLevel = () => {
         };
 
         fetchBranches();
+
+        const fetchCategory = async () => {
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/category/`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
+                const data = await response.json();
+                // console.log(data);   
+                
+                if (response.ok) {
+                    setCategories(data.category || []);
+                } else {
+                    console.error('Error fetching branches:', data);
+                }
+            } catch (error) {
+                console.error('Error during API call:', error);
+            }
+        };
+
+        fetchCategory();
+
+        const fetchPaymentData = async ()=>{
+                    const bearerToken = secureLocalStorage.getItem('login');
+                    const response = await fetch(`${url.nodeapipath}/referencescheme/${id}`,{
+                        method:'GET',
+                        headers: {
+                            'Content-Type':'application/json',
+                            'Access-Control-Allow-Origin':'*',
+                            'Authorization': `Bearer ${bearerToken}`
+                            }
+                    });
+                    const data = await response.json();
+                    console.log(data);
+        
+                    if (data && data.reference_scheme) {
+                        const reference_scheme = data.reference_scheme; // Access the first element in the branch array
+                        
+                        // Set form values using branchData
+                        await fetchBranches();
+                        await fetchCategory();
+        
+                        for (const key in reference_scheme) {
+                            if (reference_scheme.hasOwnProperty(key)) {
+                                setValue(key as keyof ReferenceLevelData, reference_scheme[key]);
+                            }
+                        }
+                    } else {
+                        throw new Error('Branch data is empty or invalid');
+                    }
+                    
+                }
+                fetchPaymentData();
     }, []);
 
     const onSubmit = async (data: ReferenceLevelData) => {
-        console.log(data);
+        // console.log(data);
         
 
             // if(userData.staff_branch == '0' && clientbranch == '')
@@ -97,19 +165,20 @@ const AddReferenceLevel = () => {
             // else
             // {
                 var DataToPost = {
-                    reference_level: data.reference_level,
-                    reference_bouns: data.reference_bouns,
-                    reference_effective: data.reference_effective,
-                    reference_status: data.reference_status,
+                    refScheme_name: data.refScheme_name,
+                    refScheme_category: data.refScheme_category,
+                    refScheme_amount: data.refScheme_amount,
+                    refScheme_comission: data.refScheme_comission,
+                    refScheme_status: data.refScheme_status,
                     // branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
                     // branch_id:''
                 }
 
                 try {
                     const bearerToken = secureLocalStorage.getItem('login');
-                    const response = await fetch(`${url.nodeapipath}/referencelevel`, {
+                    const response = await fetch(`${url.nodeapipath}/referencescheme/${id}`, {
                         body: JSON.stringify(DataToPost),
-                        method: 'POST',
+                        method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
                             'Access-Control-Allow-Origin':'*',
@@ -120,12 +189,12 @@ const AddReferenceLevel = () => {
                     const result = await response.json();
                     if (response.ok) {
                     // console.log('SIP Slab Add successfully:');
-                        toast.success( result.message || 'Reference Level added successfully');
-                        navigate('/all-referencelevel')
+                        toast.success( result.message || 'Reference Scheme added successfully');
+                        navigate('/all-refscheme')
                     }
                     else
                     {
-                        toast.error(result.message || 'Failed to add reference level.');
+                        toast.error(result.message || 'Failed to add reference scheme.');
                     }
                 } catch (error) {
                     // console.error('Error during registration:', error);
@@ -151,34 +220,58 @@ const AddReferenceLevel = () => {
     return (
         <Card style={{marginTop:'25px'}}>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Add Reference Level</h4>
-                <p className="sub-header">Fill the form to add a new reference level.</p>
+                <h4 className="header-title mt-0 mb-1">Edit Reference Scheme</h4>
+                <p className="sub-header">Fill the form to edit reference scheme.</p>
                 <Form onSubmit={handleSubmit(onSubmit)}>
                      <Form.Group className="mb-2">
-                        <Form.Label> Reference Level</Form.Label>
+                        <Form.Label>Scheme Name</Form.Label>
                         <Controller
-                            name="reference_level"
+                            name="refScheme_name"
                             control={control}
                             render={({ field }) => (
                                 <Form.Control
-                                    type="number"
-                                    placeholder="Enter level"
+                                    type="text"
+                                    placeholder="Enter name"
                                     {...field}
                                     value={field.value ?? ""} // Fallback for undefined values
-                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                    isInvalid={!!errors.reference_level}
+                                    onChange={(e) => field.onChange(e.target.value ? e.target.value : undefined)}
+                                    isInvalid={!!errors.refScheme_name}
                                 />
                             )}
                         />
                         <Form.Control.Feedback type="invalid">
-                            {errors.reference_level?.message}
+                            {errors.refScheme_name?.message}
+                        </Form.Control.Feedback>
+                    </Form.Group>
+
+                    <Form.Group className="mb-2">
+                        <Form.Label>Scheme Category</Form.Label>
+                        <Controller
+                                    name="refScheme_category"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value}
+                                            onChange={(e) => field.onChange(e.target.value)} isInvalid={!!errors.refScheme_category}>
+                                            <option value="">Select Category</option>
+                                            {categories.map((category) => (
+                                                <option key={category.category_name} value={category.category_name}>
+                                                    {category.category_name}
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    )}
+                                />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.refScheme_category?.message}
                         </Form.Control.Feedback>
                     </Form.Group>
 
                      <Form.Group className="mb-2">
-                        <Form.Label>Reference Bouns (in %)</Form.Label>
+                        <Form.Label>Scheme Amount</Form.Label>
                         <Controller
-                            name="reference_bouns"
+                            name="refScheme_amount"
                             control={control}
                             render={({ field }) => (
                                 <Form.Control
@@ -187,47 +280,48 @@ const AddReferenceLevel = () => {
                                     {...field}
                                     value={field.value ?? ""} // Fallback for undefined values
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                    isInvalid={!!errors.reference_bouns}
+                                    isInvalid={!!errors.refScheme_amount}
                                 />
                             )}
                         />
                         <Form.Control.Feedback type="invalid">
-                            {errors.reference_bouns?.message}
+                            {errors.refScheme_amount?.message}
                         </Form.Control.Feedback>
                     </Form.Group>
 
                     <Form.Group className="mb-2">
-                        <Form.Label>Effective Date</Form.Label>
+                        <Form.Label>Scheme Commision Type</Form.Label>
                         <Controller
-                                    name="reference_effective"
+                                    name="refScheme_comission"
                                     control={control}
                                     render={({ field }) => (
-                                        <Form.Control
-                                            type="date"
-                                            placeholder="Select effective date"
+                                        <Form.Select
                                             {...field}
-                                            value={field.value || ""}
-                                            onChange={(e) => field.onChange(e.target.value)}
-                                            isInvalid={!!errors.reference_effective}
-                                        />
+                                            value={field.value}
+                                            onChange={(e) => field.onChange(e.target.value)} isInvalid={!!errors.refScheme_comission}>
+                                            <option value="">Select Type</option>
+                                            <option value="Spot">Spot</option>
+                                            <option value="Level">Level</option>
+                                            <option value="Direct">Direct</option>
+                                        </Form.Select>
                                     )}
                                 />
                         <Form.Control.Feedback type="invalid">
-                            {errors.reference_effective?.message}
+                            {errors.refScheme_comission?.message}
                         </Form.Control.Feedback>
                     </Form.Group>
 
                     <Form.Group className="mb-2">
-                        <Form.Label>Reference Level Status</Form.Label>
+                        <Form.Label>Scheme Status</Form.Label>
                         <Controller
-                                    name="reference_status"
+                                    name="refScheme_status"
                                     control={control}
                                     render={({ field }) => (
                                         <Form.Select
                                             {...field}
                                             value={field.value.toString()}
                                             onChange={(e) => field.onChange(e.target.value === 'true')} 
-                                            isInvalid={!!errors.reference_status}>
+                                            isInvalid={!!errors.refScheme_status}>
                                             <option value="">Select status</option>
                                             <option value="true">Active</option>
                                             <option value="false">Inactive</option>
@@ -235,7 +329,7 @@ const AddReferenceLevel = () => {
                                     )}
                                 />
                         <Form.Control.Feedback type="invalid">
-                            {errors.reference_status?.message}
+                            {errors.refScheme_status?.message}
                         </Form.Control.Feedback>
                     </Form.Group>
                     {/* {(userData.user_role_type == '0') && (
@@ -270,10 +364,10 @@ const AddReferenceLevel = () => {
     );
 };
 
-const ReferenceLevel = () => {
+const ReferenceScheme = () => {
 
     usePageTitle({
-        title: 'Add Reference Level',
+        title: 'Add Reference Scheme',
         breadCrumbItems: [
             {
                 path: '/forms/validation',
@@ -290,10 +384,10 @@ const ReferenceLevel = () => {
     return (
         <Row>
             <Col lg={12}>
-                <AddReferenceLevel />
+                <EditReferenceScheme />
             </Col>
         </Row>
     );
 };
 
-export default ReferenceLevel;
+export default ReferenceScheme;

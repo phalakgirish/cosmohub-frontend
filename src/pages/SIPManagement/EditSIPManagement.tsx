@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
-
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useForm } from 'react-hook-form';
+import { useForm , Controller} from 'react-hook-form';
 import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import url from '../../env';
 import secureLocalStorage from 'react-secure-storage';
@@ -31,6 +30,7 @@ interface ISIPFormInput {
     sipmember_sip_category:string;
     sipmember_remarks:string;
     sipmember_status: string;
+    sipmember_others: string
 }
 
 // Define the type for branch data
@@ -81,6 +81,7 @@ const schema = yup.object().shape({
     .max(12, "Nominee Aadhaar Number must be at most 12 digit long"),
     sipmember_sip_category: yup.string().required('SIP Category required'),
     sipmember_status: yup.string().required('Block Status is required'),
+    sipmember_others: yup.string()
 });
 
 const SIPEdit = () => {
@@ -97,7 +98,7 @@ const SIPEdit = () => {
     const [singleSelections, setSingleSelections] = useState<Option[]>([]);
     const navigate = useNavigate();
 
-    const { register, handleSubmit, setValue, formState: { errors } } = useForm<ISIPFormInput>({
+    const { register, handleSubmit, setValue,control, formState: { errors } } = useForm<ISIPFormInput>({
         resolver: yupResolver(schema),
     });
     const [loading, setLoading] = useState(true);
@@ -233,6 +234,7 @@ const SIPEdit = () => {
                     setValue("sipmember_sip_category", sipMemberdetails.sipmember_sip_category)
                     setValue("sipmember_remarks", sipMemberdetails.sipmember_remarks)
                     setValue("sipmember_status", sipMemberdetails.sipmember_status)
+                    setValue("sipmember_others", sipMemberdetails.sipmember_others == undefined ? '' : sipMemberdetails.sipmember_others)
                     setClientBranch(sipMemberdetails.branch_id)
                 }
 
@@ -328,6 +330,7 @@ const SIPEdit = () => {
             formData.append('sipmember_sip_category', data.sipmember_sip_category);
             formData.append('sipmember_remarks', data.sipmember_remarks);
             formData.append('sipmember_status', data.sipmember_status);
+            formData.append('sipmember_others', data.sipmember_others)
             formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
             try 
             {
@@ -476,36 +479,41 @@ const SIPEdit = () => {
                                                 isInvalid={!!errors.sipmember_nominee_addharcard}
                                             />
                                         </div>
+
                                         <div className="mb-3">
-                                            <label htmlFor="sipmember_sip_category" className="form-label">SIP Category</label>
-                                            <select className="form-control" id="sipmember_sip_category" {...register('sipmember_sip_category')}>
-                                                    <option value="">-- Select --</option>
-            
-                                                    {category.map((category) => (
-                                                        <option key={category._id} value={category._id}>
-                                                            {category.sipcategory_name}
-                                                        </option>
-                                                        ))}
-                                            </select>
-                                            {errors.sipmember_sip_category && <div className="invalid-feedback d-block">{errors.sipmember_sip_category.message}</div>}
+                                            <label htmlFor="sipmember_nominee_otherdocs" className="form-label">Nominee Other Documents</label>
+                                            <Form.Control
+                                                type="file"
+                                                onChange={(event:any) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'sipmember_nominee_otherdocs')}
+                                            />
+                                            <Form.Control.Feedback type="invalid">
+                                                {errors.sipmember_nominee_otherdocs?.message}
+                                            </Form.Control.Feedback>
                                         </div>
-                                        {(userData.user_role_type == '0') && (
-                                        <>
                                         <div className="mb-3">
-                                            <label htmlFor="branch_id" className="form-label">Branch ID</label>
-                                            <select className="form-control" id="branch" onChange={(e)=>{handleBranchChange(e)}} value={clientbranch} >
-                                                    <option value="">-- Select --</option>
-            
-                                                    {branches.map((branch) => (
-                                                        <option key={branch._id} value={branch._id}>
-                                                            {branch.branch_name}
-                                                        </option>
-                                                        ))}
-                                            </select>
-                                            {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
+                                            <label htmlFor="sipmember_remarks" className="form-label">Remarks</label>
+                                            <input
+                                                type="text"
+                                                id="sipmember_remarks"
+                                                className="form-control"
+                                                placeholder="Enter Remarks"
+                                                {...register('sipmember_remarks')}
+                                            />
                                         </div>
-                                        </>
-                                        )}
+                                        <div className="mb-3">
+                                            <label htmlFor="sipmember_status" className="form-label">Status</label>
+                                            <select className="form-control" id="sipmember_status" {...register('sipmember_status')} >
+                                            <option value="">-- Select --</option>
+                                            <option value="Continue">Continue</option>
+                                            <option value="Discontinue">Discontinue</option>
+
+                                            </select>
+                                            {errors.sipmember_status && <div className="invalid-feedback d-block">{errors.sipmember_status.message}</div>}
+                                        </div>
+
+
+                                        
+                                        
                                     </Col>
 
                                     <Col md={6}>
@@ -600,36 +608,61 @@ const SIPEdit = () => {
                                             />
                                             {errors.sipmember_nominee_aadhaarno && <div className="invalid-feedback d-block">{errors.sipmember_nominee_aadhaarno.message}</div>}
                                         </div>
-                                        <div className="mb-3">
-                                            <label htmlFor="sipmember_nominee_otherdocs" className="form-label">Nominee Other Documents</label>
-                                            <Form.Control
-                                                type="file"
-                                                onChange={(event:any) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'sipmember_nominee_otherdocs')}
-                                            />
-                                            <Form.Control.Feedback type="invalid">
-                                                {errors.sipmember_nominee_otherdocs?.message}
-                                            </Form.Control.Feedback>
-                                        </div>
-                                        <div className="mb-3">
-                                            <label htmlFor="sipmember_remarks" className="form-label">Remarks</label>
-                                            <input
-                                                type="text"
-                                                id="sipmember_remarks"
-                                                className="form-control"
-                                                placeholder="Enter Remarks"
-                                                {...register('sipmember_remarks')}
-                                            />
-                                        </div>
-                                        <div className="mb-3">
-                                            <label htmlFor="sipmember_status" className="form-label">Status</label>
-                                            <select className="form-control" id="sipmember_status" {...register('sipmember_status')} >
-                                            <option value="">-- Select --</option>
-                                            <option value="Continue">Continue</option>
-                                            <option value="Discontinue">Discontinue</option>
 
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Others Docs</Form.Label>
+                                                <Controller
+                                                    name="sipmember_others"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                    <Form.Select
+                                                        {...field}
+                                                        value={field.value || ''}
+                                                        onChange={(e) => {field.onChange(e);}} 
+                                                        >
+                                                        <option value="">Select Others</option>
+                                                        <option value="PAN">PAN</option>
+                                                        <option value="VOTING_CARD">VOTING CARD</option>
+                                                        <option value="RATION_CARD">RATION CARD</option>
+                                                        <option value="ELECTRICITY_BILL">ELECTRICITY BILL</option>
+                                                        <option value="PASSPORT">PASSPORT</option>
+                                                        <option value="DRIVING_LICENSE">DRIVING LICENSE</option>
+                                                    </Form.Select>
+                                                )}
+                                            />                                                              
+                                        </Form.Group>
+
+                                        <div className="mb-3">
+                                            <label htmlFor="sipmember_sip_category" className="form-label">SIP Category</label>
+                                            <select className="form-control" id="sipmember_sip_category" {...register('sipmember_sip_category')}>
+                                                    <option value="">-- Select --</option>
+            
+                                                    {category.map((category) => (
+                                                        <option key={category._id} value={category._id}>
+                                                            {category.sipcategory_name}
+                                                        </option>
+                                                        ))}
                                             </select>
-                                            {errors.sipmember_status && <div className="invalid-feedback d-block">{errors.sipmember_status.message}</div>}
+                                            {errors.sipmember_sip_category && <div className="invalid-feedback d-block">{errors.sipmember_sip_category.message}</div>}
                                         </div>
+
+                                        {(userData.user_role_type == '0') && (
+                                        <>
+                                        <div className="mb-3">
+                                            <label htmlFor="branch_id" className="form-label">Branch ID</label>
+                                            <select className="form-control" id="branch" onChange={(e)=>{handleBranchChange(e)}} value={clientbranch} >
+                                                    <option value="">-- Select --</option>
+            
+                                                    {branches.map((branch) => (
+                                                        <option key={branch._id} value={branch._id}>
+                                                            {branch.branch_name}
+                                                        </option>
+                                                        ))}
+                                            </select>
+                                            {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
+                                        </div>
+                                        </>
+                                        )}
                                     </Col>
                                 </Row>
                                 <div className="text-md-end mb-0">

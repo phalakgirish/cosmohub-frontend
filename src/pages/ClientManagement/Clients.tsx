@@ -6,6 +6,7 @@ import Table from '../../components/Table';
 import { useNavigate } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer , toast} from 'react-toastify';
+import * as XLSX from 'xlsx';
 
 // Define types
 interface Client {
@@ -29,6 +30,8 @@ interface DataResponse {
 
 const Clients = () => {
     const [clients, setClients] = useState<Client[]>([]);
+    const [clients1, setClients1] = useState<any[]>([]);
+
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showSelectDeleteModal, setShowSelectDeleteModal] = useState(false);
     const [clientToDelete, setClientToDelete] = useState<string | null>(null);
@@ -36,6 +39,13 @@ const Clients = () => {
     const [isSelectedRec,setIsSelectedRec] = useState<Array<string>>([])
 
     const navigate = useNavigate();
+    const formatDate = (date: Date): string => {
+        return date.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        });
+    }
     useEffect(() => {
         const bearerToken = secureLocalStorage.getItem('login');
 
@@ -48,7 +58,7 @@ const Clients = () => {
                 }
         })
             .then((response) => response.json())
-            .then((data: DataResponse) => {
+            .then((data: any) => {
                 // You can format data if needed
                 // console.log(data);
                 
@@ -57,6 +67,33 @@ const Clients = () => {
                     ...client,
                 }));
                 setClients(formattedData);
+
+                const formattedData1 = data.client1.map((client:any, index:any) => ({
+                    srNo: index + 1,
+                    client_id:client.client_id,
+                    client_name:client.client_name,
+                    client_dob:formatDate(new Date(client.client_dob)),
+                    client_mobile_number:client.client_mobile_number,
+                    client_emailId:(client.client_emailId == null)?"":client.client_emailId,
+                    client_gender:client.client_gender,
+                    client_aadhaar_number:client.client_aadhaar_number,
+                    client_postaladdress:client.client_postaladdress,
+                    client_landmark:client.client_landmark,
+                    client_country:client.client_country,
+                    client_state:client.client_state,
+                    client_city:client.client_city,
+                    client_bank_name:(client.client_bank_name== null)?"":client.client_bank_name,
+                    client_bank_account_no:(client.client_bank_account_no== null)?"":client.client_bank_account_no,
+                    client_bank_ifsc:(client.client_bank_ifsc== null)?"":client.client_bank_ifsc,
+                    sip_reference_level:client.sip_reference_level,
+                    referred_client_id:(client.sip_refered_by_clientId)?client.sip_refered_by_clientId.client_id:'',
+                    referred_client_name:(client.sip_refered_by_clientId)?client.sip_refered_by_clientId.client_name:'',
+                    status:(client.client_status)?'Active':'Inactive'   
+                }));
+                
+                // console.log(formattedData1);
+                
+                setClients1(formattedData1);
             })
             .catch((error) => console.error('Error fetching client data:', error));
     }, [isRefreshed]);
@@ -166,6 +203,14 @@ const Clients = () => {
         }
     }
 
+    const handleExportPayment = ()=>{
+        if(clients1.length == 0)
+            return;
+
+        // var sipMembersfilesDetails = clients.filter((item:any)=>item._id == clientsName)
+        exportToExcel(columns1,Excelcolumns,clients1,`Clients Data.xlsx`)
+    }
+
     const sizePerPageList = [
         {
             text: '5',
@@ -224,6 +269,135 @@ const Clients = () => {
                 setIsSelectedRec([])
             }
     }
+
+     const exportToExcel = (columns:any,columnHeader:any, data:any, fileName:any) => {
+            // console.log(data);
+            
+            // Create a new workbook
+            const workbook = XLSX.utils.book_new();
+        
+            // Map the data to an array of objects with the specified column names
+            const worksheetData = data.map((item:any) =>
+                columns.reduce((acc:any, column:any) => {
+                    acc[column.Header] = item[column.accessor];
+                    return acc;
+                }, {})
+            );
+        
+            // Convert the data to a worksheet
+            const worksheet = XLSX.utils.json_to_sheet(worksheetData, { header: columnHeader });
+        
+            // Add the worksheet to the workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        
+            // Generate Excel file and download it
+            XLSX.writeFile(workbook, fileName);
+        };
+
+    const Excelcolumns = ['Sr. No','Client Id','Name','Date Of Birth','Mobile No','Email Id','Gender','Aadhaar Number','Postal Address','Landmark','Country','State','City/Village','Bank Name','Account Number','IFSC Code','SIP Reference Level','Referred By Client Id','Referred By Client Name','Status'];
+
+    const columns1 = [
+        {
+            Header: 'Sr. No',
+            accessor: 'srNo',
+            sort: true,
+        },
+        {
+            Header: 'Client Id',
+            accessor: 'client_id',
+            sort: true,
+        },
+        {
+            Header: 'Name',
+            accessor: 'client_name',
+            sort: true,
+        },
+        {
+            Header: 'Date Of Birth',
+            accessor: 'client_dob',
+            sort: true,
+        },
+        {
+            Header: 'Mobile No',
+            accessor: 'client_mobile_number',
+            sort: true,
+        },
+        {
+            Header: 'Email Id',
+            accessor: 'client_emailId',
+            sort: true,
+        },
+        {
+            Header: 'Gender',
+            accessor: 'client_gender',
+            sort: true,
+        },
+        {
+            Header: 'Aadhaar Number',
+            accessor: 'client_aadhaar_number',
+            sort: true,
+        },
+        {
+            Header: 'Postal Address',
+            accessor: 'client_postaladdress',
+            sort: true,
+        },
+        {
+            Header: 'Landmark',
+            accessor: 'client_landmark',
+            sort: true,
+        },
+        {
+            Header: 'Country',
+            accessor: 'client_country',
+            sort: true,
+        },
+        {
+            Header: 'State',
+            accessor: 'client_state',
+            sort: true,
+        },
+        {
+            Header: 'City/Village',
+            accessor: 'client_city',
+            sort: true,
+        },
+        {
+            Header: 'Bank Name',
+            accessor: 'client_bank_name',
+            sort: true,
+        },
+        {
+            Header: 'Account Number',
+            accessor: 'client_bank_account_no',
+            sort: true,
+        },
+        {
+            Header: 'IFSC Code',
+            accessor: 'client_bank_ifsc',
+            sort: true,
+        },
+        {
+            Header: 'SIP Reference Level',
+            accessor: 'sip_reference_level',
+            sort: true,
+        },
+        {
+            Header: 'Referred By Client Id',
+            accessor: 'referred_client_id',
+            sort: true,
+        },
+        {
+            Header: 'Referred By Client Name',
+            accessor: 'referred_client_name',
+            sort: true,
+        },
+        {
+            Header: 'Status',
+            accessor: 'status',
+            sort: true,
+        },
+    ];
 
     const columns = [
         {
@@ -299,13 +473,23 @@ const Clients = () => {
                                 Add Client
                             </Button>
                         </div>
+
+                        <Button
+                            variant="success"
+                            onClick={() => handleExportPayment()}
+                            style={{
+                                width: '101px',
+                                padding: '7px 7px',position:'absolute',right:'1.6%'}}
+                            >
+                            Export
+                        </Button>
                         { (isSelectedRec.length >0) &&
                         <Button
                             variant="danger"
                             onClick={() => handleOpenSelectDeleteModal()}
                             style={{borderRadius: '35px',
                                 width: '38px',
-                                padding: '7px 7px',position:'absolute',right:'6.6%'}}
+                                padding: '7px 7px',position:'absolute',right:'10.6%'}}
                             >
                             <i className='fe-trash-2'/> 
                         </Button>}

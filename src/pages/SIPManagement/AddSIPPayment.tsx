@@ -570,6 +570,9 @@ const PaymentForm = () => {
                         month:sip_month,
                         date:TodayDate,
                     }
+
+                    console.log(DataToPost);
+                    
                     const response = await fetch(`${url.nodeapipath}/sippayment/penaltyamt`,{
                         body:JSON.stringify(DataToPost),
                         method:'POST',

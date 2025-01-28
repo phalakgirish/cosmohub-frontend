@@ -51,6 +51,7 @@ const SIPPaymentMonthlyReport = () => {
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
     const [showPicker, setShowPicker] = useState<boolean>(false);
+    const [sipTotalAmount , setSipTotalAmount] = useState(0)
 
     const togglePicker = () => setShowPicker(!showPicker);
 
@@ -152,6 +153,10 @@ const SIPPaymentMonthlyReport = () => {
                 });
                 const data: DataResponse = await response.json();
                 // console.log(data)
+
+                const sip_total_amount = data.sipPayment.reduce((sum, record)=> sum + record.sip_amount, 0);
+                // console.log(sip_total_amount);
+                setSipTotalAmount(sip_total_amount)
                 
                 if (response.ok) {
                     const formattedData = data.sipPayment.map((payment, index) => ({
@@ -406,14 +411,23 @@ const SIPPaymentMonthlyReport = () => {
                                             </select>
                                         </Form.Group>
                                     </Col>
-                                    <Col md={6} style={{ textAlign:'end' }}>
-                                        <Button style={{ height: '40px', backgroundColor: '#dd4923'}} onClick={handleSearchPayment}>
-                                                Search
-                                        </Button>
-                                        &nbsp;
-                                        <Button style={{ height: '40px', backgroundColor: '#05711e'}} onClick={handleExportPayment}>
-                                                Export
-                                        </Button>
+                                    <Col md={6} style={{display:"flex"}}>
+                                        <Col md={6}>
+                                            <Form.Group className="mb-2 d-flex" style={{fontSize:"2.2vh",paddingTop:"1vh"}}>
+                                                    <Form.Label style={{width:'70%'}}><b>Total Amount Received :</b></Form.Label>
+                                                    <b>{sipTotalAmount}</b>
+                                            </Form.Group>    
+                                        </Col>
+                                        <Col md={6} style={{ textAlign:'end' }}>
+                                            <Button style={{ height: '40px', backgroundColor: '#dd4923'}} onClick={handleSearchPayment}>
+                                                    Search
+                                            </Button>
+                                            &nbsp;
+                                            <Button style={{ height: '40px', backgroundColor: '#05711e'}} onClick={handleExportPayment}>
+                                                    Export
+                                            </Button>
+                                        </Col>
+                                        
                                     </Col>
                                 </Row>
                         </div>

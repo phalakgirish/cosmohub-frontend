@@ -139,7 +139,6 @@ const MENU_ITEMS: MenuItemTypes[] = [
             },
         ],
     },
-
     {
         key: 'sipcategory',
         label: 'SIP category',
@@ -158,6 +157,27 @@ const MENU_ITEMS: MenuItemTypes[] = [
                 label: 'Add SIP Category',
                 url: '/add-sipcategory',
                 parentKey: 'sipcategory',
+            },
+        ],
+    },
+    {
+        key: 'referenceScheme',
+        label: 'Reference Scheme',
+        isTitle: false,
+        icon: 'mdi mdi-ballot',
+        usershow:["0"],
+        children: [
+            {
+                key: 'allreferencesch',
+                label: 'All Ref. Scheme',
+                url: '/all-refscheme',
+                parentKey: 'referenceScheme',
+            },
+            {
+                key: 'addreferencesch',
+                label: 'Add Ref. Scheme',
+                url: '/add-refscheme',
+                parentKey: 'referenceScheme',
             },
         ],
     },

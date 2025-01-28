@@ -25,10 +25,10 @@ interface OrgChartData {
   } 
 
 const transformDataForOrgChart = (data: any): OrgChartData[] => {
-    
+    // console.log(data)
     return data.map((item:any) => ({
       id: item._id,
-      parentId: item.referredClient_id || null,
+      parentId: (item.generation >0)?item.referredClient_id:null,
       name: `${item.client_id}, ${item.client_name}`,
       totalInvestedAmount: item.total_invested_amount,
       totalRecurringCommission: item.total_recurring_commission,
@@ -50,6 +50,7 @@ const OrganizationalChart: React.FC<OrgChartProps> = ({ data }) => {
   const chartContainerId = 'chart-container';
 
   const transformedData = transformDataForOrgChart(data);
+// console.log(transformedData);
 
   
 

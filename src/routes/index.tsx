@@ -56,6 +56,10 @@ const AllSlab= React.lazy(() => import('../pages/Master/SIPSlab'));
 const AddSlab= React.lazy(() => import('../pages/Master/AddSIPSlab'));
 const EditSlab= React.lazy(() => import('../pages/Master/EditSIPSlab'));
 
+const AddReferenceScheme= React.lazy(() => import('../pages/Master/AddReferenceScheme'));
+const AllReferenceScheme= React.lazy(() => import('../pages/Master/AllReferenceScheme'));
+const editReferenceScheme= React.lazy(() => import('../pages/Master/EditReferenceScheme'));
+
 const AllSipCategory= React.lazy(() => import('../pages/Master/AllSipCategory'));
 const AddSipCategory= React.lazy(() => import('../pages/Master/AddSipCategory'));
 const EditSipCategory= React.lazy(() => import('../pages/Master/EditSipCategory'));
@@ -292,6 +296,18 @@ const AllRoutes = () => {
         {
           path: 'add-designation',
           element: <LoadComponent component={AddDesignation} />,
+        },
+        {
+          path: 'add-refscheme',
+          element: <LoadComponent component={AddReferenceScheme} />,
+        },
+        {
+          path: 'all-refscheme',
+          element: <LoadComponent component={AllReferenceScheme} />,
+        },
+        {
+          path: 'edit-refscheme/:id',
+          element: <LoadComponent component={editReferenceScheme} />,
         },
         // {
         //   path: 'sipslab',

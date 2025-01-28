@@ -17,6 +17,8 @@ import { Typeahead } from 'react-bootstrap-typeahead';
 type PaymentData = {
     refschpayment_receiptno: string;
     client_id: string;
+    reference_category:string;
+    reference_scheme:string;
     reference_scheme_amount: number;
     ref_payment_mode: string;
     ref_payment_refno: string;
@@ -45,9 +47,26 @@ type Staff = {
     staff_name: string
 };
 
+type Category = {
+    _id: string;
+    category_name: string;
+    category_status:boolean;
+};
+
+type RefScheme = {
+    _id: string;
+    refScheme_name: string;
+    refScheme_category: string;
+    refScheme_amount: number;
+    refScheme_comission: string;
+    refScheme_status: boolean;
+};
+
 // Validation schema
 const schema = yup.object().shape({
     client_id: yup.string().required('Select client'),
+    reference_category: yup.string().required('Select Reference Scheme Category'),
+    reference_scheme: yup.string().required('Select Reference Scheme'),
     reference_scheme_amount: yup.number().required(' Amount is required').min(1,'Amount Is Greater Then 0'),
     ref_payment_mode: yup.string().required('Payment Mode is required'),
 });
@@ -58,6 +77,8 @@ const RefSchPaymentForm = () => {
     const { id } = useParams<{ id: string }>();
     const [branches, setBranches] = useState<Branch[]>([]);
     const [clients, setClients] = useState<client[]>([]);
+    const [refScheme, setRefScheme] = useState<RefScheme[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [staff, setStaff] = useState<Staff[]>([]);
     const [clientbranch, setClientBranch] = useState('');
     const [branchErr,setBranchErr] = useState(false);
@@ -242,6 +263,8 @@ const RefSchPaymentForm = () => {
             var dataToPost = {
                 client_id: formData.client_id,
                 client_name: clientName,
+                reference_category:formData.reference_category,
+                reference_scheme:formData.reference_scheme,
                 reference_scheme_amount: formData.reference_scheme_amount,
                 ref_payment_mode: formData.ref_payment_mode,
                 ref_payment_refno: (formData.ref_payment_refno)?formData.ref_payment_refno:'',
@@ -288,6 +311,50 @@ const RefSchPaymentForm = () => {
         
         
     };
+
+    const fetchScheme = async (category:any) => {
+        // console.log(category);
+        
+        if(category == '')
+        {
+            setRefScheme([]);
+            setValue('reference_scheme_amount',0)
+            return;
+        }
+        try {
+            const bearerToken = secureLocalStorage.getItem('login');
+            const response = await fetch(`${url.nodeapipath}/referencescheme/category/${category}`,{
+                method:'GET',
+                headers: {
+                    'Content-Type':'application/json',
+                    'Access-Control-Allow-Origin':'*',
+                    'Authorization': `Bearer ${bearerToken}`
+                    }
+            });
+            const data = await response.json();
+            // console.log(data);   
+            
+            if (response.ok) {
+                setRefScheme(data.reference_scheme || []);
+            } else {
+                console.error('Error fetching branches:', data);
+            }
+        } catch (error) {
+            console.error('Error during API call:', error);
+        }
+    };
+
+    const handelSchemechange = (id:any)=>{
+        if(id != '')
+        {
+            var schemeAmount = refScheme.filter((item:any)=> item._id == id)
+            setValue('reference_scheme_amount',schemeAmount[0].refScheme_amount)
+        }
+        else
+        {
+            setValue('reference_scheme_amount',0)
+        }
+    }
 
     useEffect(()=>{
         const bearerToken = secureLocalStorage.getItem('login');
@@ -344,6 +411,32 @@ const RefSchPaymentForm = () => {
 
         // fetchClients();
 
+        const fetchCategory = async () => {
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/category/`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
+                const data = await response.json();
+                // console.log(data);   
+                
+                if (response.ok) {
+                    setCategories(data.category || []);
+                } else {
+                    console.error('Error fetching branches:', data);
+                }
+            } catch (error) {
+                console.error('Error during API call:', error);
+            }
+        };
+
+        
+
         const fetchStaff = async () => {
             try {
 
@@ -388,8 +481,11 @@ const RefSchPaymentForm = () => {
                 await fetchClients();
                 await fetchBranches();
                 await fetchStaff();
+                await fetchCategory();
+                await fetchScheme(refSchPaymentData.reference_category)
                 var clientname = await clientsData.filter((item:any)=> item._id == refSchPaymentData.client_id)
                 setSingleSelections([{value:refSchPaymentData.client_id,label:`${clientname[0].client_id}-${clientname[0].client_name}`}])
+
                 for (const key in refSchPaymentData) {
                     if (refSchPaymentData.hasOwnProperty(key)) {
                         setValue(key as keyof PaymentData, refSchPaymentData[key]);
@@ -509,10 +605,62 @@ const RefSchPaymentForm = () => {
                         </Col>
                     </Row>
                      <Row>
-                     <Col md={6}>
+                        <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Client Name</Form.Label>
                                 <Form.Control placeholder="Enter Name" value={clientName} disabled={true}/>
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group className="mb-2">
+                                <Form.Label>Reference Scheme Category</Form.Label>
+                                    <Controller
+                                        name="reference_category"
+                                        control={control}
+                                        render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value}
+                                            onChange={(e) => {field.onChange(e.target.value); fetchScheme(e.target.value)}} isInvalid={!!errors.reference_category}>
+                                            <option value="">Select Category</option>
+                                            {categories.map((category) => (
+                                            <option key={category.category_name} value={category.category_name}>
+                                                {category.category_name}
+                                            </option>
+                                        ))}
+                                        </Form.Select>
+                                    )}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.reference_category?.message}
+                                    </Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col md={6}>
+                            <Form.Group className="mb-2">
+                                <Form.Label>Reference Scheme</Form.Label>
+                                    <Controller
+                                        name="reference_scheme"
+                                        control={control}
+                                        render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value}
+                                            onChange={(e) => {field.onChange(e.target.value); handelSchemechange(e.target.value)}} isInvalid={!!errors.reference_category}>
+                                            <option value="">Select Category</option>
+                                            {refScheme.map((scheme) => (
+                                            <option key={scheme._id} value={scheme._id}>
+                                                {scheme.refScheme_name}
+                                            </option>
+                                        ))}
+                                        </Form.Select>
+                                    )}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.reference_category?.message}
+                                    </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
                         <Col md={6}>
@@ -532,10 +680,9 @@ const RefSchPaymentForm = () => {
                                 </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
-                        
                     </Row>
                     <Row>
-                    <Col md={6}>
+                        <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Payment Mode</Form.Label>
                                 <Controller
@@ -566,11 +713,10 @@ const RefSchPaymentForm = () => {
                                     placeholder="Enter Payment Ref. No." />}
                                 />
                             </Form.Group>
-                        </Col>
-                        
+                        </Col>   
                     </Row>
                    <Row>
-                   <Col md={6}>
+                        <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Received By</Form.Label>
                                 <Controller

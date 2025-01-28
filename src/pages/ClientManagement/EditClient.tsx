@@ -8,6 +8,7 @@ import secureLocalStorage from 'react-secure-storage';
 import url from '../../env';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 // Define the type for form data
 type ClientRegistrationData = {
@@ -24,10 +25,15 @@ type ClientRegistrationData = {
     client_postaladdress: string;
     client_landmark: string;
     client_sip_refrence_level: number;
+    client_refered_by:string;
     client_country: string;
     client_state: string;
     client_city: string;
     client_status: string;
+    client_bank_name : string;
+    client_bank_account_no : string;
+    client_bank_ifsc : string;
+    client_others: string;
 };
 
 // Define the type for branch data
@@ -35,6 +41,8 @@ type Branch = {
     _id: string;
     branch_name: string;
 };
+
+type Option = string | Record<string, any>;
 
 type Country = {
     _id: string;
@@ -100,6 +108,8 @@ const ClientEdit = () => {
     const [clientAadharcard, setClientAadharcard] = useState<File | null>(null);
     const [panFileStatus, setPanFileStatus] = useState(false);
     const [aadharFileStatus, setAadharFileStatus] = useState(false);
+    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
+    const [clientName,setClientName] = useState('');
     const navigate = useNavigate();
 
     const userData:any = JSON.parse(StorageuserData);
@@ -112,7 +122,7 @@ const ClientEdit = () => {
 
 
     const onSubmit = async (data: ClientRegistrationData) => {
-        // console.log(data);  
+        console.log(data);  
         
         // Handle form submission
             if(userData.staff_branch == '0' && clientbranch == '')
@@ -134,12 +144,20 @@ const ClientEdit = () => {
                 formData.append('client_postaladdress', data.client_postaladdress);
                 formData.append('client_landmark', data.client_landmark);
                 formData.append('sip_reference_level', data.client_sip_refrence_level.toString());
-                formData.append('sip_refered_by_clientId', (clientsName == undefined || clientsName == null)?'null':clientsName);
+                formData.append('sip_refered_by_clientId', (data.client_refered_by == undefined || data.client_refered_by == null)?'null':data.client_refered_by);
                 formData.append('client_country',data.client_country)
                 formData.append('client_state',data.client_state)
                 formData.append('client_city',data.client_city)
                 formData.append('client_status', data.client_status);
                 formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
+                formData.append('client_bank_name', data.client_bank_name == undefined ? '' : data.client_bank_name);
+                formData.append('client_bank_account_no', data.client_bank_account_no == undefined ? '' : data.client_bank_account_no );
+                formData.append('client_bank_ifsc', data.client_bank_ifsc == undefined ? '' : data.client_bank_ifsc);
+                formData.append('client_others', data.client_others == undefined ? '' : data.client_others);
+
+                
+
+                
 
                 try {
                     const bearerToken = secureLocalStorage.getItem('login');
@@ -190,7 +208,7 @@ const ClientEdit = () => {
     });
 
     useEffect(() => {
-
+        var clientsData:any
         const fetchClients = async () => {
             try {
                 const bearerToken = secureLocalStorage.getItem('login');
@@ -204,7 +222,7 @@ const ClientEdit = () => {
                 });
                 const data = await response.json();
 
-                
+                clientsData = data.client
                 if (response.ok) {
                     setClients(data.client || []);
 
@@ -215,7 +233,7 @@ const ClientEdit = () => {
                 console.error('Error during API call:', error);
             }
         };
-
+        
         fetchClients();
 
         const fetchCountries = async () => {
@@ -281,6 +299,7 @@ const ClientEdit = () => {
                     },
                 });
                 const data = await response.json();
+                console.log(data);
                 
                 
                 if (response.ok && data.client) {
@@ -301,7 +320,19 @@ const ClientEdit = () => {
                     setValue('client_aadhaar_number', (clientDetails.client_aadhaar_number == null)?'':clientDetails.client_aadhaar_number);
                     setValue('client_landmark', (clientDetails.client_landmark == null)? '':clientDetails.client_landmark);
                     setValue('client_sip_refrence_level', (clientDetails.sip_reference_level == undefined)?0:clientDetails.sip_reference_level);
+                    await fetchClients();
+                    if(clientDetails.sip_refered_by_clientId != null)
+                    {
+                        var clientname = await clientsData.filter((item:any)=> item._id == clientDetails.sip_refered_by_clientId)
+                        setSingleSelections([{value:clientDetails.sip_refered_by_clientId,label:`${clientname[0].client_id}-${clientname[0].client_name}`}]) 
+                        setValue('client_refered_by',clientDetails.sip_refered_by_clientId) 
+                    }
+                    
                     setValue('client_status',clientDetails.client_status.toString())
+                    setValue('client_bank_name', (clientDetails.client_bank_name == undefined)?'':clientDetails.client_bank_name);
+                    setValue('client_bank_account_no', (clientDetails.client_bank_account_no == undefined)?'':clientDetails.client_bank_account_no);
+                    setValue('client_bank_ifsc', (clientDetails.client_bank_ifsc == undefined)?'':clientDetails.client_bank_ifsc);
+                    setValue('client_others', (clientDetails.client_others == undefined)?'':clientDetails.client_others);
                     setClientBranch(clientDetails.branch_id);
                     setClientsName((clientDetails.sip_refered_by_clientId == null)? '':clientDetails.sip_refered_by_clientId)
 
@@ -319,7 +350,21 @@ const ClientEdit = () => {
     const handleClientChange = (e:any)=>{
         // var clientname = clients.filter((item)=> item._id == e.target.value)
         
-        setClientsName(e.target.value);
+        // setClientsName(e.target.value);
+
+        setSingleSelections(e)
+        if(e.length>0)
+        {
+            var clientname = clients.filter((item)=> item._id == e[0].value)
+            setClientName(clientname[0].client_name);
+            setValue('client_refered_by',e[0].value);
+        }
+        else
+        {
+            setClientName('');
+            setValue('client_refered_by','');
+
+        }
     }
 
     const handleCountryChange = async (country:any)=>{
@@ -528,6 +573,29 @@ const ClientEdit = () => {
                                     onChange={(event) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'client_addharcard')}
                                 />
                             </Form.Group>
+                            {/* Other Upload */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Other Docs Upload</Form.Label>
+                                <Form.Control
+                                    type="file"
+                                    onChange={(event) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'client_otherdocs')}
+                                />
+                            </Form.Group>
+                            {/* bank account no */}
+                            <Form.Group className="mb-3">
+                                    <Form.Label>Bank Account No</Form.Label>
+                                    <Controller
+                                         name="client_bank_account_no"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Form.Control
+                                                type="text"
+                                                placeholder="Enter a Bank Account No"
+                                                {...field}
+                                            />
+                                        )}
+                                    />
+                            </Form.Group>
                             {/* Reference Level */}
                             <Form.Group className="mb-3">
                                 <Form.Label>SIP Refrence Level</Form.Label>
@@ -698,16 +766,85 @@ const ClientEdit = () => {
                                     {errors.client_aadhaar_number?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
-                            {/* Other Upload */}
+                            {/* others dropdown */}
                             <Form.Group className="mb-3">
-                                <Form.Label>Other Docs Upload</Form.Label>
-                                <Form.Control
-                                    type="file"
-                                    onChange={(event) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'client_otherdocs')}
+                                <Form.Label>Others Docs</Form.Label>
+                                <Controller
+                                    name="client_others"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value || ''}
+                                            onChange={(e) => {field.onChange(e);}} 
+                                            isInvalid={!!errors.client_country}>
+                                            <option value="">Select Others</option>
+                                            <option value="PAN">PAN</option>
+                                            <option value="VOTING_CARD">VOTING CARD</option>
+                                            <option value="RATION_CARD">RATION CARD</option>
+                                            <option value="ELECTRICITY_BILL">ELECTRICITY BILL</option>
+                                            <option value="PASSPORT">PASSPORT</option>
+                                            <option value="DRIVING_LICENSE">DRIVING LICENSE</option>
+                                        </Form.Select>
+                                    )}
+                                />                        
+                            </Form.Group>
+                            {/* bank name */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Bank Name</Form.Label>
+                                    <Controller
+                                    name="client_bank_name"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Enter a Bank Name"
+                                            {...field}
+                                            value={field.value ?? ""}
+                                        />
+                                    )}
+                                />
+                            </Form.Group>
+                             {/* bank ifsc */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Bank  IFSC</Form.Label>
+                                <Controller
+                                    name="client_bank_ifsc"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Enter a Bank IFSC"
+                                            {...field}
+                                            value={field.value ?? ""}
+                                        />
+                                    )}
                                 />
                             </Form.Group>
                             {/* Referred By */}
                             <Form.Group className="mb-3">
+                                <Form.Label>Referred By</Form.Label>
+                                <Controller
+                                    name="client_refered_by"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Typeahead
+                                            id="select-client"
+                                            labelKey={'label'}
+                                            {...field}
+                                            multiple={false}
+                                            onChange={(e) => { handleClientChange(e) }}
+                                            options={clients.map((client) => (
+                                                { value: `${client._id}`, label: `${client.client_id}-${client.client_name}` }
+                                            ))}
+                                            placeholder="-- Select --"
+                                            selected={singleSelections} // Adjust this state to match your implementation
+                                        />
+                                    )}
+                                />
+                                
+                            </Form.Group>
+                            {/* <Form.Group className="mb-3">
                                  <Form.Label>Refered By</Form.Label>
                                     <select className="form-control" id="client_refered_by" value={clientsName ?? ""} onChange={(e)=>{handleClientChange(e)}} >
                                                             <option value="">-- Select --</option>
@@ -718,7 +855,7 @@ const ClientEdit = () => {
                                             </option>
                                         ))}
                                     </select>
-                            </Form.Group>
+                            </Form.Group> */}
                             {/* Branch Name */}
                             {(userData.user_role_type == '0') && (
                                 <>

@@ -29,6 +29,7 @@ interface ISIPFormInput {
     sipmember_sip_category:string;
     sipmember_remarks:string;
     sipmember_status: string;
+    sipmember_others:string;
 }
 
 // Define the type for branch data
@@ -80,6 +81,7 @@ const schema = yup.object().shape({
     .max(12, "Nominee Aadhaar Number must be at most 12 digit long"),
     sipmember_sip_category: yup.string().required('SIP Category required'),
     sipmember_status: yup.string().required('Block Status is required'),
+    sipmember_others: yup.string()
 });
 
 const SIPRegistration = () => {
@@ -209,6 +211,7 @@ const SIPRegistration = () => {
             formData.append('sipmember_nominee_relation', data.sipmember_nominee_relation);
             formData.append('sipmember_nominee_mobile', `${data.sipmember_nominee_mobcode}-${data.sipmember_nominee_mobile}`);
             formData.append('sipmember_nominee_otherdocs', data.sipmember_nominee_otherdocs instanceof FileList ? data.sipmember_nominee_otherdocs[0]:'');
+            formData.append('sipmember_others', data.sipmember_others == undefined ? '' : data.sipmember_others )
             formData.append('sipmember_nominee_addharcard', data.sipmember_nominee_addharcard[0]);
             formData.append('sipmember_nominee_aadhaarno', data.sipmember_nominee_aadhaarno);
             formData.append('sipmember_sip_category', data.sipmember_sip_category);
@@ -439,27 +442,45 @@ const SIPRegistration = () => {
                                             />
                                             {errors.sipmember_nominee_aadhaarno && <div className="invalid-feedback d-block">{errors.sipmember_nominee_aadhaarno.message}</div>}
                                         </div>
-                                        <div className="mb-3">
-                                            <label htmlFor="sipmember_nominee_otherdocs" className="form-label">Nominee Other Document</label>
-                                            <Form.Control
-                                                type="file"
-                                                onChange={(event) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'sipmember_nominee_otherdocs')}
-                                                isInvalid={!!errors.sipmember_nominee_otherdocs}
+
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Others Docs</Form.Label>
+                                                <Controller
+                                                    name="sipmember_others"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                    <Form.Select
+                                                        {...field}
+                                                        value={field.value || ''}
+                                                        onChange={(e) => {field.onChange(e);}} 
+                                                        >
+                                                        <option value="">Select Others</option>
+                                                        <option value="PAN">PAN</option>
+                                                        <option value="VOTING_CARD">VOTING CARD</option>
+                                                        <option value="RATION_CARD">RATION CARD</option>
+                                                        <option value="ELECTRICITY_BILL">ELECTRICITY BILL</option>
+                                                        <option value="PASSPORT">PASSPORT</option>
+                                                        <option value="DRIVING_LICENSE">DRIVING LICENSE</option>
+                                                    </Form.Select>
+                                                )}
                                             />
-                                            <Form.Control.Feedback type="invalid">
-                                                {errors.sipmember_nominee_otherdocs?.message}
-                                            </Form.Control.Feedback>
-                                        </div>
+                                                               
+                                        </Form.Group>
+
                                         <div className="mb-3">
-                                            <label htmlFor="sipmember_remarks" className="form-label">Remarks</label>
-                                            <input
-                                                type="text"
-                                                id="sipmember_remarks"
-                                                className="form-control"
-                                                placeholder="Enter Remarks"
-                                                {...register('sipmember_remarks')}
-                                            />
+                                            <label htmlFor="sipmember_sip_category" className="form-label">SIP Category</label>
+                                            <select className="form-control" id="sipmember_sip_category" {...register('sipmember_sip_category')}>
+                                                    <option value="">-- Select --</option>
+            
+                                                    {category.map((category) => (
+                                                        <option key={category._id} value={category._id}>
+                                                            {category.sipcategory_name}
+                                                        </option>
+                                                        ))}
+                                            </select>
+                                            {errors.sipmember_sip_category && <div className="invalid-feedback d-block">{errors.sipmember_sip_category.message}</div>}
                                         </div>
+                                        
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_status" className="form-label">Status</label>
                                             <select className="form-control" id="sipmember_status" {...register('sipmember_status')} >
@@ -570,18 +591,34 @@ const SIPRegistration = () => {
                                             </Form.Control.Feedback>
                                         </div>
                                         <div className="mb-3">
-                                            <label htmlFor="sipmember_sip_category" className="form-label">SIP Category</label>
-                                            <select className="form-control" id="sipmember_sip_category" {...register('sipmember_sip_category')}>
-                                                    <option value="">-- Select --</option>
-            
-                                                    {category.map((category) => (
-                                                        <option key={category._id} value={category._id}>
-                                                            {category.sipcategory_name}
-                                                        </option>
-                                                        ))}
-                                            </select>
-                                            {errors.sipmember_sip_category && <div className="invalid-feedback d-block">{errors.sipmember_sip_category.message}</div>}
+                                            <label htmlFor="sipmember_nominee_otherdocs" className="form-label">Nominee Other Document</label>
+                                            <Form.Control
+                                                type="file"
+                                                onChange={(event) => handleFileChange(event as React.ChangeEvent<HTMLInputElement>,'sipmember_nominee_otherdocs')}
+                                                isInvalid={!!errors.sipmember_nominee_otherdocs}
+                                            />
+                                            <Form.Control.Feedback type="invalid">
+                                                {errors.sipmember_nominee_otherdocs?.message}
+                                            </Form.Control.Feedback>
                                         </div>
+
+                                        <div className="mb-3">
+                                            <label htmlFor="sipmember_remarks" className="form-label">Remarks</label>
+                                            <input
+                                                type="text"
+                                                id="sipmember_remarks"
+                                                className="form-control"
+                                                placeholder="Enter Remarks"
+                                                {...register('sipmember_remarks')}
+                                            />
+                                        </div>
+
+
+
+
+
+
+                                        
                                         {(userData.user_role_type == '0') && (
                                         <>
                                         <div className="mb-3">
