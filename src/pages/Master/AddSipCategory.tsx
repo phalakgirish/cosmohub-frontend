@@ -17,6 +17,7 @@ import { toast } from 'react-toastify';
 // Define the type for form data
 type SipCategoryData = {
     sipcategory_name: string;
+    is_commission_calculate: boolean;
     sipcategory_status: boolean;
 };
 
@@ -82,8 +83,8 @@ const AddSipCategory = () => {
     }, []);
 
     const onSubmit = async (data: SipCategoryData) => {
-        console.log(data);
-        
+        // console.log(data);
+        // return;
 
             // if(userData.staff_branch == '0' && clientbranch == '')
             // {
@@ -93,6 +94,7 @@ const AddSipCategory = () => {
             // {
                 var DataToPost = {
                     sipcategory_name: data.sipcategory_name,
+                    is_commission_calculate: data.is_commission_calculate,
                     sipcategory_status: data.sipcategory_status,
                     // branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
                     // branch_id:''
@@ -167,6 +169,30 @@ const AddSipCategory = () => {
                         </Form.Control.Feedback>
                     </Form.Group>
 
+                    <Form.Group className="mb-3">
+                        <Form.Label>Is Commission Calculate ?</Form.Label>
+                            <Controller
+                                name="is_commission_calculate"
+                                control={control}
+                                defaultValue={false}
+                                render={({ field }) => {
+                                    const { value, ...fieldProps } = field; // Remove `value` to prevent type errors
+                                    return (
+                                        <Form.Check
+                                            type="checkbox"
+                                            // label="Referred by family?"
+                                            {...fieldProps} // Spread remaining field properties (without `value`)
+                                            checked={field.value} // Ensure correct boolean binding
+                                            onChange={(e) => field.onChange(e.target.checked)} // Convert event value to boolean
+                                        />
+                                    );
+                                }}
+                            />
+                            {/* <Form.Control.Feedback type="invalid">
+                                {errors.client_sip_refrence_level?.message}
+                            </Form.Control.Feedback> */}
+                    </Form.Group>
+
                     <Form.Group className="mb-2">
                         <Form.Label>Category Status</Form.Label>
                         <Controller
@@ -222,7 +248,7 @@ const AddSipCategory = () => {
 const SipCategory = () => {
 
     usePageTitle({
-        title: 'Add SIP category',
+        title: 'SIP Category',
         breadCrumbItems: [
             {
                 path: '/forms/validation',

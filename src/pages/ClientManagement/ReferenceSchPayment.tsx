@@ -79,7 +79,7 @@ const AllPayments = () => {
     };
 
     usePageTitle({
-        title: 'All Payments',
+        title: 'Reference Scheme Payment',
         breadCrumbItems: [
             {
                 path: '/payments',
@@ -231,7 +231,7 @@ const AllPayments = () => {
                     <Card.Body>
                         <div className="d-flex justify-content-between mb-4">
                             <div>
-                                <h4 className="header-title">All Payments</h4>
+                                <h4 className="header-title">All Scheme Payments</h4>
                                 <p className="text-muted font-14 mb-4">A table showing all payment records</p>
                             </div>
                             <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddPayment}>

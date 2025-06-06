@@ -1,11 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Row, Col, Card, Button, Form } from 'react-bootstrap';
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import url from '../../env';
+import IntlTelInput from "react-intl-tel-input";
+import "react-intl-tel-input/dist/main.css";
 // hooks
 import { usePageTitle } from '../../hooks';
+
+import intlTelInput  from "intl-tel-input";
+import type AllOptions   from "intl-tel-input";
+
+import "intl-tel-input/build/css/intlTelInput.css";
 
 // components
 import { FormInput, VerticalForm } from '../../components/form';
@@ -36,6 +43,8 @@ type Country = {
     country_name: string;
     country_code: string;
     country_phonecode: string;
+    phonenumber_length: number;
+
 };
 
 type State = {
@@ -47,10 +56,18 @@ type State = {
 
 
 
+
+
 const BasicForm = () => {
+
+    
 
     const [countries, setCountries] = useState<Country[]>([]);
     const [states, setStates] = useState<State[]>([]);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [phoneNumberLength, setPhoneNumberLength] = useState(0);
+    const [phoneNumberValidation, setPhoneNumberValidation] = useState(true);
+
 
     const schemaResolver = yupResolver(
         yup.object().shape({
@@ -83,6 +100,27 @@ const BasicForm = () => {
     const navigate = useNavigate();
     useEffect(() => {
         // Fetch branches from the backend
+        
+        if (inputRef.current) {
+            const iti = intlTelInput(inputRef.current, {
+              initialCountry: "in",
+            //   preferredCountries: ["us", "gb", "in"],
+            //  utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/18.1.8/js/utils.js"
+            });
+      
+            // Listen for changes and update state
+            inputRef.current.addEventListener("blur", () => {
+                console.log("iti instance:", iti);
+
+                console.log(inputRef.current?.value);
+                console.log(iti.getNumber());
+
+                
+                // setPhoneNumber(iti.getNumber());
+            });
+      
+            return () => iti.destroy(); // Cleanup on unmount
+          }
 
         const fetchCountries = async () => {
             try {
@@ -134,8 +172,11 @@ const BasicForm = () => {
                     console.error('Error fetching states:', data);
                 }
                 var phoneCode = countries.filter((item:any)=> item.country_name === country);
-
+                
                 setValue('branch_modile_code',phoneCode[0].country_phonecode)
+                setPhoneNumberLength(phoneCode[0].phonenumber_length)
+                setValue('branch_mobile_number','')
+
             } catch (error) {
                 console.error('Error during API call:', error);
             }
@@ -150,7 +191,13 @@ const BasicForm = () => {
     }
 
     const onSubmit = async (formData: BranchData) => {
+        
+        if(!phoneNumberValidation)
+        {
+            return;
+        }
         try {
+            
             const bearerToken = secureLocalStorage.getItem('login');
 
             const DataToSave = {
@@ -200,6 +247,24 @@ const BasicForm = () => {
             toast.error('An error occurred. Please try again.');
         }
     };
+
+    const handelMobileNoChange = (mobile:any)=>{ 
+        if(mobile != '')
+        {  
+            if(mobile.length != phoneNumberLength)
+            {
+                setPhoneNumberValidation(false)
+            }
+            else
+            {
+                setPhoneNumberValidation(true)
+            }
+        }
+        else
+        {
+            setPhoneNumberValidation(true)
+        }
+    }
 
     return (
         <Card>
@@ -329,12 +394,23 @@ const BasicForm = () => {
                                 <Controller
                                     name="branch_mobile_number"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_mobile_number} placeholder="Enter mobile number" style={{width:'90%'}}/>}
+                                    render={({ field }) =>
+                                        
+                                        <Form.Control {...field} isInvalid={!!errors.branch_mobile_number || !phoneNumberValidation}  value = {field.value}placeholder="Enter mobile number" style={{width:'90%'}}
+                                        onChange={(e)=>{field.onChange(e.target.value);handelMobileNoChange(e.target.value)}}
+                                        />
+                                        }
+                                         //ref={inputRef}
                                 />
                                 </div>
-                                <Form.Control.Feedback type="invalid">
+                                {/* <Form.Control.Feedback type="invalid">
                                     {errors.branch_mobile_number?.message}
-                                </Form.Control.Feedback>
+                                </Form.Control.Feedback> */}
+                                {/* <Form.Control.Feedback type="invalid"> */}
+                                    {/* {(!phoneNumberValidation)?<div className="invalid-feedback d-block">Please Enter {phoneNumberLength} digit contact number.</div>:""} */}
+                                    {(errors.branch_mobile_number)? <div className="invalid-feedback d-block">{errors.branch_mobile_number.message}</div>:''}
+                                    {(!phoneNumberValidation)? <div className="invalid-feedback d-block">Please Enter {phoneNumberLength} digit mobile number</div>:""}
+                                {/* </Form.Control.Feedback> */}
                             </Form.Group>
                         </Col>
                         <Col md={6}>

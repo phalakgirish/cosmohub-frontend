@@ -40,6 +40,8 @@ const AllSIPManagement = () => {
     const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
     const navigate = useNavigate();
     const [isRefreshed,setIsRefreshed] = useState(false)
+    const [showDiscontinueModal, setShowDiscontinueModal] = useState(false);
+    const [selectedDiscontinueId, setSelectedDiscontinueId] = useState<string | null>(null);
 
     // Define handleEdit function
     const handleEdit = (id: string) => {
@@ -64,6 +66,23 @@ const AllSIPManagement = () => {
     const handleCloseReplicaModal = () => {
         setShowReplicaModal(false);
         setSelectedMemberId(null);
+    };
+
+    const handleShowDiscontinueModal = (id: string) => {
+        setSelectedDiscontinueId(id);
+        setShowDiscontinueModal(true);
+    };
+    
+    const handleCloseDiscontinueModal = () => {
+        setShowDiscontinueModal(false);
+        setSelectedDiscontinueId(null);
+    };
+    
+    const handleConfirmDiscontinue = async () => {
+        if (selectedDiscontinueId) {
+            await handleDiscontinue(selectedDiscontinueId);
+        }
+        handleCloseDiscontinueModal(); // Close modal 
     };
 
     const handleConfirmDelete = async () => {
@@ -143,9 +162,42 @@ const AllSIPManagement = () => {
     }
     };
 
+    const handleDiscontinue = async (id: string) => {
+        try {
+            const bearerToken = secureLocalStorage.getItem('login'); // Ensure authentication
+            const response = await fetch(`${url.nodeapipath}/sipmanagement/discontinue/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${bearerToken}`, 
+                },
+                body: JSON.stringify({ sipmember_status: "Discontinue" }), 
+            });
+    
+            if (response.ok) {
+                const updatedItem = await response.json();
+    
+                // setData((prevData) =>
+                //     prevData.map((item) =>
+                //         item._id === id ? { ...item, sipmember_status: updatedItem.sipmember_status } : item
+                //     )
+                // );
+    
+                toast.success("SIP Member status updated to Discontinue");
+                setIsRefreshed(prev => !prev)
+            } else {
+                const errorResponse = await response.json();
+                toast.error(errorResponse.message || "Failed to update SIP Member status");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            toast.error("An error occurred while updating the status. Please try again.");
+        }
+    };
+
     // Set page title
     usePageTitle({
-        title: 'All Members',
+        title: 'SIP Member',
         breadCrumbItems: [
             {
                 path: '/sip-management',
@@ -252,11 +304,11 @@ const AllSIPManagement = () => {
             accessor: 'sipmember_nominee_name',
             sort: true,
         },
-        {
-            Header: 'Nominee Mobile No',
-            accessor: 'sipmember_nominee_mobile',
-            sort: true,
-        },
+        // {
+        //     Header: 'Nominee Mobile No',
+        //     accessor: 'sipmember_nominee_mobile',
+        //     sort: true,
+        // },
         {
             Header: 'Status',
             accessor: 'sipmember_status',
@@ -326,6 +378,24 @@ const AllSIPManagement = () => {
                 <i className='fe-copy'/> 
             </Button>
             </OverlayTrigger>
+            &nbsp;
+            <OverlayTrigger
+                key={'left'}
+                placement={'left'}
+                overlay={
+                    <Tooltip id={`tooltip-${'left'}`}>
+                        Discontinue
+                    </Tooltip>
+                }
+            >
+                <Button
+                    variant="secondary"
+                    onClick={() => handleShowDiscontinueModal(row.original._id)}
+                    style={{ borderRadius: '35px', width: '38px', padding: '7px 7px', backgroundColor: '#6c757d' }}
+                >
+                    <i className='fe-x' />
+                </Button>
+            </OverlayTrigger>
         </>
             ),
         },
@@ -394,6 +464,24 @@ const AllSIPManagement = () => {
                     </Button>
                     <Button variant="warning" onClick={handleConfirmReplica}>
                         Create
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Modal for Discontinue  Confirmation */}
+            <Modal show={showDiscontinueModal} onHide={handleCloseDiscontinueModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Discontinue</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to discontinue this SIP Member?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseDiscontinueModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleConfirmDiscontinue}>
+                        Discontinue
                     </Button>
                 </Modal.Footer>
             </Modal>

@@ -47,7 +47,7 @@ const AllStaffs = () => {
 
     // Set page title
     usePageTitle({
-        title: 'Staff Members',
+        title: 'Staff',
         breadCrumbItems: [
             {
                 path: '/staffs',
@@ -215,7 +215,7 @@ const AllStaffs = () => {
     ];
 
     usePageTitle({
-        title: 'All Staffs',
+        title: 'Staffs',
         breadCrumbItems: [
             {
                 path: '/forms/validation',

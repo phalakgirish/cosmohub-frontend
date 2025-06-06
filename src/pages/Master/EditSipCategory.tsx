@@ -17,6 +17,7 @@ import { toast } from 'react-toastify';
 // Define the type for form data
 type SipCategoryData = {
     sipcategory_name: string;
+    is_commission_calculate: boolean;
     sipcategory_status: boolean;
 };
 
@@ -69,12 +70,13 @@ const EditSipCategoryForm = () => {
                     },
                 });
                 const data = await response.json();
-                console.log(data);
+                // console.log(data);
                 
                 if (response.ok) {
                     // setSipSlab(data.sipSlab);
                     const sip_category = data.sip_category; // Access the first element in the branch array
                     setValue("sipcategory_name", sip_category.sipcategory_name)
+                    setValue("is_commission_calculate",sip_category.is_commission_calculate)
                     setValue("sipcategory_status", sip_category.sipcategory_status)
                     // Set form values using branchData
                     // for (const key in reference_levels) {
@@ -97,7 +99,6 @@ const EditSipCategoryForm = () => {
     }, []);
 
     const onSubmit = async (data: SipCategoryData) => {
-        // console.log(data);
         
 
             // if(userData.staff_branch == '0' && clientbranch == '')
@@ -108,6 +109,7 @@ const EditSipCategoryForm = () => {
             // {
                 var DataToPost = {
                     sipcategory_name: data.sipcategory_name,
+                    is_commission_calculate:data.is_commission_calculate,
                     sipcategory_status: data.sipcategory_status,
                     // branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
                     // branch_id:''
@@ -147,8 +149,8 @@ const EditSipCategoryForm = () => {
     return (
         <Card style={{marginTop:'25px'}}>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Add Reference Level</h4>
-                <p className="sub-header">Fill the form to add a new reference level.</p>
+                <h4 className="header-title mt-0 mb-1">Edit SIP Category</h4>
+                <p className="sub-header">Fill the form to edit a SIP category.</p>
                 <Form onSubmit={handleSubmit(onSubmit)}>
                      <Form.Group className="mb-2">
                         <Form.Label> Category Name</Form.Label>
@@ -169,7 +171,29 @@ const EditSipCategoryForm = () => {
                             {errors.sipcategory_name?.message}
                         </Form.Control.Feedback>
                     </Form.Group>
-
+                    <Form.Group className="mb-3">
+                        <Form.Label>Is Commission Calculate ?</Form.Label>
+                            <Controller
+                                name="is_commission_calculate"
+                                control={control}
+                                defaultValue={false}
+                                render={({ field }) => {
+                                    const { value, ...fieldProps } = field; // Remove `value` to prevent type errors
+                                    return (
+                                        <Form.Check
+                                            type="checkbox"
+                                            // label="Referred by family?"
+                                            {...fieldProps} // Spread remaining field properties (without `value`)
+                                            checked={field.value} // Ensure correct boolean binding
+                                            onChange={(e) => field.onChange(e.target.checked)} // Convert event value to boolean
+                                        />
+                                    );
+                                }}
+                            />
+                            {/* <Form.Control.Feedback type="invalid">
+                                {errors.client_sip_refrence_level?.message}
+                            </Form.Control.Feedback> */}
+                    </Form.Group>
                     <Form.Group className="mb-2">
                         <Form.Label>Category Status</Form.Label>
                         <Controller
@@ -225,7 +249,7 @@ const EditSipCategoryForm = () => {
 const SipCategory = () => {
 
     usePageTitle({
-        title: 'Edit SIP Category',
+        title: 'SIP Category',
         breadCrumbItems: [
             {
                 path: '/forms/validation',

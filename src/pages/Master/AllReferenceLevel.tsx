@@ -12,6 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 interface ReferenceLevel {
     _id: string;
     reference_level: number;
+    reference_category: string;
     reference_bouns: number;
     reference_effective: string;
     reference_status: boolean;
@@ -89,11 +90,11 @@ const ReferenceLevels = () => {
 
     // Set page title
     usePageTitle({
-        title: 'SIP Slabs',
+        title: 'Level Commission Slab',
         breadCrumbItems: [
             {
-                path: '/sips',
-                label: 'SIPs',
+                path: '/add-refscheme',
+                label: 'Level Commission Slabs',
                 active: true,
             },
         ],
@@ -120,6 +121,7 @@ const ReferenceLevels = () => {
                         srNo: index + 1,
                         _id: referencelevel._id,
                         reference_level: referencelevel.reference_level,
+                        reference_category: referencelevel.reference_category,
                         reference_bouns: referencelevel.reference_bouns,
                         reference_effective: formatDate(new Date(referencelevel.reference_effective)),
                         reference_status: referencelevel.reference_status
@@ -157,6 +159,11 @@ const ReferenceLevels = () => {
         {
             Header: 'Reference Level',
             accessor: 'reference_level',
+            sort: true,
+        },
+        {
+            Header: 'Reference Category',
+            accessor: 'reference_category',
             sort: true,
         },
         {
@@ -212,7 +219,7 @@ const ReferenceLevels = () => {
                     <Card.Body>
                         <div className="d-flex justify-content-between mb-4">
                             <div>
-                                <h4 className="header-title">All Reference Level</h4>
+                                <h4 className="header-title">All Level Commision Slab</h4>
                                 <p className="text-muted font-14 mb-4">A table showing all reference level</p>
                             </div>
                             <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddReferenceLevel}>

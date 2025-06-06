@@ -13,6 +13,7 @@ import DeniReactTreeView from 'deni-react-treeview';
 import { Typeahead } from 'react-bootstrap-typeahead';
 import { Link } from 'react-router-dom';
 import OrganizationalChart from './OrganizationalChart';
+import Spinner from '../../components/Spinner';
 
 interface Payment {
     generation:Number;
@@ -21,7 +22,11 @@ interface Payment {
     months: Number;
     sipJoinDate: string;
     total_invested_amount: number;
+    spot_commission_dts: string;
+    total_spot_commission_dts: number;
     total_spot_commission: number;
+    recurring_commission_dts: string;
+    total_recurring_commission_dts: number;
     total_recurring_commission: number;
     referred_client_id: string;
     referred_client_name:string;
@@ -57,9 +62,11 @@ interface DataResponse {
 const ClientwiseReferenceComission = () => {
     const [branches, setBranches] = useState<Branch[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
-    const [data, setData] = useState<Payment[]>([]);
+    const [data, setData] = useState<any>([]);
     const [commissionDts, setCommissionDts] = useState<any>([]);
     const [commissionTreeDts, setCommissionTreeDts] = useState<any>([]);
+    const [columns, setcolumns] = useState<any>([]);
+    const [Excelcolumns,setExcelcolumns] = useState<any>([]);
 
 
     const [simembers, setSipMembers] = useState<SipMember[]>([]);
@@ -75,6 +82,86 @@ const ClientwiseReferenceComission = () => {
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
     const [showPicker, setShowPicker] = useState<boolean>(false);
+    const [isSpinner,setIsSpinner] = useState(false)
+
+
+    const table_columns = [
+        {
+            Header: 'Sr. No',
+            accessor: 'srNo',
+            sort: true,
+        },
+        {
+            Header: 'Generation',
+            accessor: 'generation',
+            sort: true,
+        },
+        {
+            Header: 'Client Id',
+            accessor: 'client_id',
+            sort: true,
+        },
+        {
+            Header: 'Client Name',
+            accessor: 'client_name',
+            sort: true,
+        },
+        {
+            Header: 'Joined date',
+            accessor: 'sipJoinDate',
+            sort: true,
+        },
+        {
+            Header: 'Months',
+            accessor: 'months',
+            sort: true,
+        },
+        {
+            Header: 'Invested Amount',
+            accessor: 'total_invested_amount',
+            sort: true,
+        },
+        {
+            Header: 'Spot Comission Dts',
+            accessor: 'spot_commission_dts',
+            sort: true,
+        },
+        {
+            Header: 'Total Spot Comission Dts',
+            accessor: 'total_spot_commission_dts',
+            sort: true,
+        },
+        {
+            Header: 'Total Spot Comission',
+            accessor: 'total_spot_commission',
+            sort: true,
+        },
+        {
+            Header: 'Recurring Comission Dts',
+            accessor: 'recurring_commission_dts',
+            sort: true,
+        },
+        {
+            Header: 'Total Recurring Comission Dts',
+            accessor: 'total_recurring_commission_dts',
+            sort: true,
+        },
+        {
+            Header: 'Total Recurring Comission',
+            accessor: 'total_recurring_commission',
+            sort: true,
+        },
+        {
+            Header: 'Referred By Client Id',
+            accessor: 'referred_client_id',
+            sort: true,
+        },
+        {
+            Header: 'Referred By Client Name',
+            accessor: 'referred_client_name',
+            sort: true,
+        },
+    ];
 
     const togglePicker = () => setShowPicker(!showPicker);
 
@@ -247,7 +334,7 @@ const ClientwiseReferenceComission = () => {
                 toast.error('Client Id is required');
                 return;
             }
-                
+              setIsSpinner(true);  
             try {
                 
                 const bearerToken = secureLocalStorage.getItem('login');
@@ -278,14 +365,59 @@ const ClientwiseReferenceComission = () => {
                         sipJoinDate: formatDate(new Date(payment.sipJoinDate)),
                         months: payment.months,
                         total_invested_amount: payment.total_invested_amount,
+                        spot_commission_dts:payment.spot_commission_dts,
+                        total_spot_commission_dts:payment.total_spot_commission_dts,
                         total_spot_commission: payment.total_spot_commission,
+                        recurring_commission_dts:payment.recurring_commission_dts,
+                        total_recurring_commission_dts:payment.total_recurring_commission_dts,
                         total_recurring_commission:payment.total_recurring_commission,
                         referred_client_id: payment.referred_client_id,
                         referred_client_name: payment.referred_client_name,
                     }));
-                    setData(formattedData);
-                    setCommissionDts(data.CommissionDetails)
+
+                    var column1:any = []
+                    var Excelcolumn1:any = []
+
+
+                    for(let i of table_columns)
+                    {
+                        if(i.accessor == "spot_commission_dts" || i.accessor == "total_spot_commission_dts")
+                        {
+                            if(formattedData[0]['total_spot_commission'] > 0)
+                            {
+                                column1.push(i)
+                                Excelcolumn1.push(i.Header)
+                            }
+                        }
+                        else if(i.accessor == "recurring_commission_dts" || i.accessor == "total_recurring_commission_dts")
+                        {
+                            if(formattedData[0]['total_recurring_commission'] > 0)
+                            {
+                                column1.push(i)
+                                Excelcolumn1.push(i.Header)
+                            }
+                        }
+                        else
+                        {
+                            column1.push(i)
+                            Excelcolumn1.push(i.Header)
+                        }
+                    }
+                    // console.log(column1);
+
+                    setcolumns(column1)
+                    setExcelcolumns(Excelcolumn1)
+                    var formatedData1:any = formattedData
+                    var comissionDts:any = data.CommissionDetails
+                    if(formattedData[0]['total_recurring_commission'] == 0)
+                    {
+                        formatedData1 = formattedData.filter((item:any)=> item.generation <= 1)
+                        comissionDts = data.CommissionDetails.filter((item:any)=> item.generation <= 1)
+                    }
+                    setData(formatedData1);
+                    setCommissionDts(comissionDts)
                     setCommissionTreeDts([data.treeView])
+                    setIsSpinner(false);
                 } else {
                     console.error('Error fetching payments:', data);
                 }
@@ -332,65 +464,6 @@ const ClientwiseReferenceComission = () => {
         { text: 'All', value: data.length },
     ];
 
-    const Excelcolumns = ['Sr. No','Generation','Client Id','Client Name','Joined date','Months','Invested Amount','Spot Comission','Recurring Comission','Referred By Client Id','Referred By Client Name'];
-
-    const columns = [
-        {
-            Header: 'Sr. No',
-            accessor: 'srNo',
-            sort: true,
-        },
-        {
-            Header: 'Generation',
-            accessor: 'generation',
-            sort: true,
-        },
-        {
-            Header: 'Client Id',
-            accessor: 'client_id',
-            sort: true,
-        },
-        {
-            Header: 'Client Name',
-            accessor: 'client_name',
-            sort: true,
-        },
-        {
-            Header: 'Joined date',
-            accessor: 'sipJoinDate',
-            sort: true,
-        },
-        {
-            Header: 'Months',
-            accessor: 'months',
-            sort: true,
-        },
-        {
-            Header: 'Invested Amount',
-            accessor: 'total_invested_amount',
-            sort: true,
-        },
-        {
-            Header: 'Spot Comission',
-            accessor: 'total_spot_commission',
-            sort: true,
-        },
-        {
-            Header: 'Recurring Comission',
-            accessor: 'total_recurring_commission',
-            sort: true,
-        },
-        {
-            Header: 'Referred By Client Id',
-            accessor: 'referred_client_id',
-            sort: true,
-        },
-        {
-            Header: 'Referred By Client Name',
-            accessor: 'referred_client_name',
-            sort: true,
-        },
-    ];
 
 
     const exportToExcel = (columns:any,columnHeader:any, data:any, fileName:any) => {
@@ -537,6 +610,13 @@ const ClientwiseReferenceComission = () => {
 
                                     <Tab.Content>
                                         <Tab.Pane eventKey={'List'} id={String('list')} key={'list'}>
+                                        
+                                        {(isSpinner)?
+                                            <div className="d-flex justify-content-center">
+                                                <Spinner key={'1'} className="m-2" color={'danger'} type="bordered" size="lg"/>
+                                            </div>:
+                                             (data.length > 0)? (
+                                                // <>{columns}</>
                                             <Table
                                                 columns={columns}
                                                 data={data}
@@ -546,18 +626,38 @@ const ClientwiseReferenceComission = () => {
                                                 pagination={true}
                                                 // isSearchable={true}
                                             />
+                                            ):
+                                            <div className="d-flex justify-content-center">
+                                                No Data Found
+                                            </div> 
+                                        }
                                         </Tab.Pane>
                                         <Tab.Pane eventKey={'Tree'} id={String('tree')} key={'tree'}>
-                                            <div style={{padding:'3%',}}>
-                                                <DeniReactTreeView items={commissionTreeDts} />
-                                            </div>
+                                        {(isSpinner)?
+                                            <div className="d-flex justify-content-center">
+                                                <Spinner key={'1'} className="m-2" color={'danger'} type="bordered" size="lg"/>
+                                            </div>:
+                                            (commissionTreeDts.length > 0)?(
+                                                <div style={{padding:'3%',}}>
+                                                    <DeniReactTreeView items={commissionTreeDts} />
+                                                </div>)
+                                                :<div className="d-flex justify-content-center">
+                                                No Data Found
+                                            </div>  
+                                        }
                                         </Tab.Pane>
                                         <Tab.Pane eventKey={'Chart'} id={String('chart')} key={'chart'}>
-                                            {(commissionDts.length > 0)?
+                                            {(isSpinner)?
+                                            <div className="d-flex justify-content-center">
+                                                <Spinner key={'1'} className="m-2" color={'danger'} type="bordered" size="lg"/>
+                                            </div>:
+                                            (commissionDts.length > 0)?(
                                                 <div style={{ width: '100%', height: 'auto' }}>
                                                     <OrganizationalChart data={commissionDts} />
-                                                </div>:''
-                                            }   
+                                                </div>):<div className="d-flex justify-content-center">
+                                                No Data Found
+                                            </div>
+                                        }   
                                         </Tab.Pane>
                                     </Tab.Content>
                                 </Tab.Container>

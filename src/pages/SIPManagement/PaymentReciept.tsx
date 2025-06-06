@@ -80,7 +80,7 @@ const AllPayments = () => {
     };
 
     usePageTitle({
-        title: 'All Payments',
+        title: 'SIP Payment',
         breadCrumbItems: [
             {
                 path: '/payments',

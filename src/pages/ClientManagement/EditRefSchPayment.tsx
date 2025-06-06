@@ -24,6 +24,7 @@ type PaymentData = {
     ref_payment_refno: string;
     ref_payment_receivedBy: string;
     ref_payment_receivedDate: string;
+    ref_payment_expirationDate:string;
 };
 
 // Define the type for branch data
@@ -85,6 +86,8 @@ const RefSchPaymentForm = () => {
     const navigate = useNavigate();
     const [clientName,setClientName] = useState('');
     const [receivedDate, setReceivedDate] = useState('')
+    const [expiredDate, setExpiredDate] = useState('')
+
     const [singleSelections, setSingleSelections] = useState<Option[]>([]);
     // const [sipmember_month,setSipmember_month] = useState('')
     var today = new Date();
@@ -270,6 +273,7 @@ const RefSchPaymentForm = () => {
                 ref_payment_refno: (formData.ref_payment_refno)?formData.ref_payment_refno:'',
                 ref_payment_receivedBy: formData.ref_payment_receivedBy,
                 ref_payment_receivedDate: formData.ref_payment_receivedDate,
+                ref_payment_expirationDate:formData.ref_payment_expirationDate,
                 branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
             }
 
@@ -492,6 +496,7 @@ const RefSchPaymentForm = () => {
                     }
                 }
                 setReceivedDate(refSchPaymentData.ref_payment_receivedDate.split('T')[0])
+                setExpiredDate(refSchPaymentData.ref_payment_expirationDate.split('T')[0])
                 setClientBranch(refSchPaymentData.branch_id)
                 setClientName(refSchPaymentData.client_name)
             } else {
@@ -748,6 +753,17 @@ const RefSchPaymentForm = () => {
                         </Col>  
                     </Row>
                     <Row>
+                        <Col md={6}>
+                            <Form.Group className="mb-2">
+                            <Form.Label>Expiration Date</Form.Label>
+                                <Controller
+                                    name="ref_payment_expirationDate"
+                                        control={control}
+                                        // defaultValue={ExpirationDate}
+                                        render={({ field }) => <Form.Control type="date" {...field} onChange={(e)=>{field.onChange(e.target.value)}} disabled={true} value={expiredDate}/>}
+                                />
+                            </Form.Group>
+                        </Col>
                     {(userData.user_role_type == '0') && (
                                 <>
                                 <Col md={6}>

@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import secureLocalStorage from 'react-secure-storage';
 import url from '../../env';
 import { toast } from 'react-toastify';
+import { usePageTitle } from '../../hooks';
 
 
 // Define the type for form data
@@ -55,6 +56,17 @@ const AddSIPSlab = () => {
     });
 
     const [duration, setDuration] = useState<[number, number]>([1, 40]);
+
+    usePageTitle({
+        title: 'SIP Slab',
+        breadCrumbItems: [
+            {
+                path: '/add-slab',
+                label: 'Add SIP Slab',
+                active: true,
+            },
+        ],
+    });
 
     useEffect(() => {
         // Fetch branches from the backend

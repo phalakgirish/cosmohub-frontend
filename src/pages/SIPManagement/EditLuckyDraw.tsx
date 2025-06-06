@@ -9,6 +9,7 @@ import secureLocalStorage from 'react-secure-storage';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 // Define types
 type LuckyDrawData = {
@@ -31,6 +32,8 @@ type SipMember = {
     sipmember_name: string
 };
 
+type Option = string | Record<string, any>;
+
 // Validation schema
 const schema = yup.object().shape({
     luckydraw_month: yup.string().required('Month is required'),
@@ -46,6 +49,7 @@ const EditLuckyDrawForm = () => {
     const [simembers, setSipMembers] = useState<SipMember[]>([]);
     const [clientbranch, setClientBranch] = useState('');
     const [branchErr,setBranchErr] = useState(false);
+    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
     const navigate = useNavigate();
 
     const { control, handleSubmit, reset,formState:{errors},setValue } = useForm<LuckyDrawData>({
@@ -53,7 +57,7 @@ const EditLuckyDrawForm = () => {
     });
 
     const onSubmit =async  (formData: LuckyDrawData) => {
-
+        
         // if(userData.staff_branch == '0' && clientbranch == '')
         // {
         //     setBranchErr(true);
@@ -126,7 +130,7 @@ const EditLuckyDrawForm = () => {
             }
         };
         fetchBranches();
-
+        let sipmemberdata:any;
         const fetchSIPMember = async () => {
             try {
                 const response = await fetch(`${url.nodeapipath}/all/spimember/${userData.staff_branch}`,{
@@ -139,6 +143,7 @@ const EditLuckyDrawForm = () => {
                 });
                 const data = await response.json();
                 
+                sipmemberdata = data.sipmember
                 if (response.ok) {
                     setSipMembers(data.sipmember || []);
 
@@ -150,7 +155,7 @@ const EditLuckyDrawForm = () => {
             }
         };
 
-        fetchSIPMember();
+        // fetchSIPMember();
 
         const fetchLuckDrawData = async ()=>{
             const response = await fetch(`${url.nodeapipath}/luckydraw/${id}`,{
@@ -169,8 +174,20 @@ const EditLuckyDrawForm = () => {
 
             if (data && data.luckyDraw && Array.isArray(data.luckyDraw) && data.luckyDraw.length > 0) {
                 const luckydrawData = data.luckyDraw[0]; // Access the first element in the branch array
-
+                
                 // Set form values using branchData
+
+                if(luckydrawData.spimember_id != null)
+                {       
+
+                    await fetchSIPMember()
+                        
+                    var clientname = await sipmemberdata.filter((item:any)=> item._id == luckydrawData.spimember_id)
+                        
+                    setSingleSelections([{value:luckydrawData.spimember_id,label:`${clientname[0].sipmember_id}-${clientname[0].sipmember_name}`}]) 
+                    // setValue('client_refered_by',clientDetails.sip_refered_by_clientId) 
+                }
+
                 for (const key in luckydrawData) {
                     if (luckydrawData.hasOwnProperty(key)) {
                         setValue(key as keyof LuckyDrawData, luckydrawData[key]);
@@ -196,6 +213,21 @@ const EditLuckyDrawForm = () => {
         {
             setBranchErr(false)
         }  
+    }
+
+    const handleMemberChange = (e:any)=>{
+        // var clientname = clients.filter((item)=> item._id == e.target.value)
+        setSingleSelections(e)
+        // setClientsName(e.target.value);
+        if(e.length>0)
+        {
+            // var clientname = simembers.filter((item)=> item._id == e[0].value)
+            setValue('spimember_id',e[0].value);
+        }
+        else
+        {
+            setValue('spimember_id','');
+        }
     }
 
     return (
@@ -232,7 +264,7 @@ const EditLuckyDrawForm = () => {
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Member ID</Form.Label>
-                                <Controller
+                                {/* <Controller
                                     name="spimember_id"
                                     control={control}
                                     render={({ field }) => (<Form.Select
@@ -248,10 +280,32 @@ const EditLuckyDrawForm = () => {
                                              ))}
                                     </Form.Select>
                                     )}
+                                /> */}
+
+                                <Controller
+                                        name="spimember_id"
+                                        control={control}
+                                        
+                                        render={({ field }) => (
+                                            <Typeahead
+                                            id="select-client"
+                                            labelKey={'label'}
+                                            {...field}
+                                            isInvalid={!!errors.spimember_id}
+                                            multiple={false}
+                                            onChange={(e) => { handleMemberChange(e) }}
+                                            options={simembers.map((member) => (
+                                            { value: `${member._id}`, label: `${member.sipmember_id}-${member.sipmember_name}` }
+                                        ))}
+                                        placeholder="-- Select --"
+                                        selected={singleSelections} 
+                                    />
+                                    )}
                                 />
-                                <Form.Control.Feedback type="invalid">
+                                {/* <Form.Control.Feedback type="invalid">
                                     {errors.spimember_id?.message}
-                                </Form.Control.Feedback>
+                                </Form.Control.Feedback> */}
+                                {errors.spimember_id && <div className="invalid-feedback d-block">{errors.spimember_id.message}</div>}
                             </Form.Group>
                         </Col>
                     </Row>

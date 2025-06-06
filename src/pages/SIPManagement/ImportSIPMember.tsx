@@ -329,7 +329,7 @@ const ImportSIPMember = () => {
     ];
 
     usePageTitle({
-        title: 'Import Members',
+        title: 'SIP Member',
         breadCrumbItems: [
             {
                 path: '/importmember',

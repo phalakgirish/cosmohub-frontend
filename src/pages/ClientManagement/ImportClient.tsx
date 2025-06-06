@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer , toast} from 'react-toastify';
+import { usePageTitle } from '../../hooks';
 
 // Define types
 interface Client {
@@ -324,6 +325,21 @@ const ImportClient = () => {
     const handleAddClient = ()=>{
         navigate('/client-registration');
     }
+
+    usePageTitle({
+            title: 'Client',
+            breadCrumbItems: [
+                {
+                    path: '/forms/validation',
+                    label: 'Forms',
+                },
+                {
+                    path: '/forms/validation',
+                    label: 'Validation',
+                    active: true,
+                },
+            ],
+        });
 
     const clearFile = () => {
         setFile(null)  

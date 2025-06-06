@@ -323,7 +323,7 @@ const EditSIPSlabForm = () => {
 
 const EditSIPSlab = () => {
     usePageTitle({
-        title: 'Edit SIP Slab',
+        title: 'SIP Slab',
         breadCrumbItems: [
             {
                 path: '/forms/sipslab',

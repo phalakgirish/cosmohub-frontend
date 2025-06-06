@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { Row, Col, Card, Button, Form, Modal } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form } from 'react-bootstrap';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { usePageTitle } from '../../hooks';
@@ -9,23 +9,24 @@ import url from '../../env';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Typeahead } from 'react-bootstrap-typeahead';
-import { FormInput } from '../../components/form';
 
 // Define the type for form data
 type ClientRegistrationData = {
+    client_id:string;
     client_name: string;
     client_dob: string;
     client_phonecode: string;
     client_mobile_number: string;
     client_emailId: string;
     client_gender: string;
+    client_others : string;
     client_otherdocs: FileList;
     client_addharcard: FileList;
     client_aadhaar_number: string;
     client_postaladdress: string;
     client_landmark: string;
     client_sip_refrence_level: number;
-    client_refered_by:string;
+    client_refered_by : string;
     client_country: string;
     client_state: string;
     client_city: string;
@@ -33,8 +34,6 @@ type ClientRegistrationData = {
     client_bank_name : string;
     client_bank_account_no : string;
     client_bank_ifsc : string;
-    client_others:string;
-    client_sip_refrence_family:boolean;
 };
 
 type Country = {
@@ -42,7 +41,6 @@ type Country = {
     country_name: string;
     country_code: string;
     country_phonecode: string;
-    phonenumber_length: number;
 };
 
 type State = {
@@ -64,8 +62,6 @@ type Client = {
     client_id: string;
     client_name: string
 };
-
-type Option = string | Record<string, any>;
 
 // Validation schema
 const schemaResolver = yupResolver(
@@ -104,18 +100,12 @@ const ClientRegistration = () => {
     const [states, setStates] = useState<State[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [clientbranch, setClientBranch] = useState('');
-    const [clientsName, setClientsName] = useState('');
+    const [clientsName, setClientsName] = useState('')
     const [branchErr,setBranchErr] = useState(false);
+    const [singleSelections, setSingleSelections] = useState([]);
     const navigate = useNavigate();
-    const [clientName,setClientName] = useState('');
-    const [client_id,setClient_id] = useState('')
-    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
+
     const userData:any = JSON.parse(StorageuserData);
-    const [clientData, setClientData] = useState<any>()
-    const [verifyMessage, setVerifyMessage] = useState('');
-    const [showModal, setShowModal] = useState(false);
-    const [phoneNumberLength, setPhoneNumberLength] = useState(0);
-    const [phoneNumberValidation, setPhoneNumberValidation] = useState(true);
     // console.log(userData);
     
     const { handleSubmit, control, formState: { errors }, setValue } = useForm<ClientRegistrationData>({
@@ -128,142 +118,66 @@ const ClientRegistration = () => {
     const onSubmit = async (data: ClientRegistrationData) => {
         // console.log(data);
         // Handle form submission
-            if(!phoneNumberValidation)
-            {
-                return;
-            }
-            
             if(userData.staff_branch == '0' && clientbranch == '')
             {
                 setBranchErr(true);
             }
             else
             {
-                var verifyClientName = await verifyPreEventClientExist(data.client_name)
-                // console.log(verifyClientName);
-
-                if(verifyClientName.status == false)
-                {
-                    setClientData(data)
-                    setVerifyMessage(verifyClientName.msg)
-                    handleOpenModal();
-                }
-                else
-                {
-                    const formData = new FormData();
-                    formData.append('client_name', data.client_name);
-                    formData.append('client_dob', data.client_dob);
-                    formData.append('client_mobile_number',`${data.client_phonecode}-${data.client_mobile_number}`);
-                    formData.append('client_emailId', data.client_emailId);
-                    formData.append('client_gender', data.client_gender);
-                    formData.append('client_otherdocs', data.client_otherdocs instanceof FileList ? data.client_otherdocs[0]:'');
-                    formData.append('client_addharcard', data.client_addharcard[0]);
-                    formData.append('client_aadhaar_number', data.client_aadhaar_number);
-                    formData.append('client_postaladdress', data.client_postaladdress);
-                    formData.append('client_landmark', data.client_landmark);
-                    formData.append('sip_refered_by_clientId', (data.client_refered_by)?data.client_refered_by:'null');
-                    formData.append('sip_reference_level',(data.client_sip_refrence_level)?data.client_sip_refrence_level.toString():'0')
-                    formData.append('client_country',data.client_country)
-                    formData.append('client_state',data.client_state)
-                    formData.append('client_city',data.client_city)
-                    formData.append('client_status', data.client_status.toString());
-                    formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
-                    formData.append('client_bank_name', data.client_bank_name == undefined ? '':data.client_bank_name);
-                    formData.append('client_bank_account_no', data.client_bank_account_no == undefined ? '': data.client_bank_account_no);
-                    formData.append('client_bank_ifsc', data.client_bank_ifsc == undefined ? '':data.client_bank_ifsc== undefined ? '' : data.client_others);
-                    formData.append('client_others', data.client_others == undefined ?'':data.client_others);
-                    formData.append('client_sip_refrence_family', data.client_sip_refrence_family.toString())
+                const formData = new FormData();
+                formData.append('client_name', data.client_name);
+                formData.append('client_dob', data.client_dob);
+                formData.append('client_mobile_number',`${data.client_phonecode}-${data.client_mobile_number}`);
+                formData.append('client_emailId', data.client_emailId);
+                formData.append('client_gender', data.client_gender);
+                formData.append('client_otherdocs', data.client_otherdocs instanceof FileList ? data.client_otherdocs[0]:'');
+                formData.append('client_addharcard', data.client_addharcard[0]);
+                formData.append('client_aadhaar_number', data.client_aadhaar_number);
+                formData.append('client_postaladdress', data.client_postaladdress);
+                formData.append('client_landmark', data.client_landmark);
+                formData.append('sip_refered_by_clientId', (clientsName == undefined || clientsName == null)?'null':clientsName);
+                formData.append('client_refrence_by', data.client_refered_by);
+                formData.append('sip_reference_level',(data.client_sip_refrence_level)?data.client_sip_refrence_level.toString():'0')
+                formData.append('client_country',data.client_country)
+                formData.append('client_state',data.client_state)
+                formData.append('client_city',data.client_city)
+                formData.append('client_status', data.client_status.toString());
+                formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
+                formData.append('client_bank_name', data.client_bank_name == undefined ? '' : data.client_bank_name);
+                formData.append('client_bank_account_no', data.client_bank_account_no == undefined ? '' : data.client_bank_account_no);
+                formData.append('client_bank_ifsc', data.client_bank_ifsc== undefined ? '' : data.client_bank_ifsc== undefined ? '' : data.client_others);
+                formData.append('client_others', data.client_others);
 
 
-                    try {
-                        const bearerToken = secureLocalStorage.getItem('login');
-                        const response = await fetch(`${url.nodeapipath}/client`, {
-                            body: formData,
-                            method: 'POST',
-                            headers: {
-                                // 'Content-Type': 'application/json',
-                                'Access-Control-Allow-Origin':'*',
-                                'Authorization': `Bearer ${bearerToken}`
-                            },
-                            
-                        });
-                        const result = await response.json();
+                try {
+                    const bearerToken = secureLocalStorage.getItem('login');
+                    const response = await fetch(`${url.nodeapipath}/client`, {
+                        body: formData,
+                        method: 'POST',
+                        headers: {
+                            // 'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin':'*',
+                            'Authorization': `Bearer ${bearerToken}`
+                        },
+                        
+                    });
+                    const result = await response.json();
 
-                        if (response.ok) {
-                            toast.success(`Registration successful: ${result.message || 'Client registered successfully'}`);
-                            navigate('/clients');
-                        } else {
-                            toast.error(`Registration failed: ${result.message || 'Failed to register client'}`);
-                        }
-                    } catch (error) {
-                        // console.error('Error during registration:', error);
-                        toast.error('An error occurred during registration. Please try again.');
+                    if (response.ok) {
+                        toast.success(`Registration successful: ${result.message || 'Client registered successfully'}`);
+                        navigate('/clients');
+                    } else {
+                        toast.error(`Registration failed: ${result.message || 'Failed to register client'}`);
                     }
+                } catch (error) {
+                    // console.error('Error during registration:', error);
+                    toast.error('An error occurred during registration. Please try again.');
                 }
+
             }
             
 
     };
-
-
-    const onDuplicateSubmit = async()=>{
-        // console.log(clientData);
-
-        let clientsData:any = clientData
-        // console.log(clientsData);
-        
-        const formData = new FormData();
-        formData.append('client_name', clientsData.client_name);
-        formData.append('client_dob', clientsData.client_dob);
-        formData.append('client_mobile_number',`${clientsData.client_phonecode}-${clientsData.client_mobile_number}`);
-        formData.append('client_emailId', clientsData.client_emailId);
-        formData.append('client_gender', clientsData.client_gender);
-        formData.append('client_otherdocs', clientsData.client_otherdocs instanceof FileList ? clientsData.client_otherdocs[0]:'');
-        formData.append('client_addharcard', clientsData.client_addharcard[0]);
-        formData.append('client_aadhaar_number', clientsData.client_aadhaar_number);
-        formData.append('client_postaladdress', clientsData.client_postaladdress);
-        formData.append('client_landmark', clientsData.client_landmark);
-        formData.append('sip_refered_by_clientId', (clientsData.client_refered_by)?clientsData.client_refered_by:'null');
-        formData.append('sip_reference_level',(clientsData.client_sip_refrence_level)?clientsData.client_sip_refrence_level.toString():'0')
-        formData.append('client_country',clientsData.client_country)
-        formData.append('client_state',clientsData.client_state)
-        formData.append('client_city',clientsData.client_city)
-        formData.append('client_status', clientsData.client_status.toString());
-        formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
-        formData.append('client_bank_name', clientsData.client_bank_name == undefined ? '':clientsData.client_bank_name);
-        formData.append('client_bank_account_no', clientsData.client_bank_account_no == undefined ? '': clientsData.client_bank_account_no);
-        formData.append('client_bank_ifsc', clientsData.client_bank_ifsc == undefined ? '':clientsData.client_bank_ifsc== undefined ? '' : clientsData.client_others);
-        formData.append('client_others', clientsData.client_others == undefined ?'':clientsData.client_others);
-        formData.append('client_sip_refrence_family', clientsData.client_sip_refrence_family)
-        
-
-        try {
-            const bearerToken = secureLocalStorage.getItem('login');
-            const response = await fetch(`${url.nodeapipath}/client`, {
-                body: formData,
-                method: 'POST',
-                headers: {
-                    // 'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin':'*',
-                    'Authorization': `Bearer ${bearerToken}`
-                },
-
-            });
-            const result = await response.json();
-
-            if (response.ok) {
-                handleCloseModal();
-                toast.success(`Registration successful: ${result.message || 'Client registered successfully'}`);
-                navigate('/clients');
-            } 
-            else {
-                toast.error(`Registration failed: ${result.message || 'Failed to register client'}`);
-            }
-            } catch (error) {
-            // console.error('Error during registration:', error);
-            toast.error('An error occurred during registration. Please try again.');
-        }
-    }
 
     // Handle file input change manually
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, fieldName: keyof ClientRegistrationData) => {
@@ -273,46 +187,8 @@ const ClientRegistration = () => {
         }
     };
 
-    const handleOpenModal = () => {
-        // setClientToDelete(id);
-        setShowModal(true);
-    };
-
-    const handleCloseModal = () => {
-        setShowModal(false);
-        // setClientToDelete(null);
-    };
-
-    const verifyPreEventClientExist = async (clientName:any)=>{
-        try {
-            const bearerToken = secureLocalStorage.getItem('login');
-            const response = await fetch(`${url.nodeapipath}/client/verify/client?clientName=${clientName}`, {
-                method: 'GET',
-                headers: {
-                    // 'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin':'*',
-                    'Authorization': `Bearer ${bearerToken}`
-                },
-                
-            });
-            const result = await response.json();
-            // console.log(result);
-            
-            if (response.ok) {
-                // toast.success(`Registration successful: ${result.message || 'Client registered successfully'}`);
-                // navigate('/clients');
-                return result
-            } else {
-                toast.error(`Registration failed: ${result.message || 'Failed to register client'}`);
-            }
-        } catch (error) {
-            // console.error('Error during registration:', error);
-            toast.error('An error occurred during pre-event. Please try again.');
-        }
-    }
-
     usePageTitle({
-        title: 'Client',
+        title: 'Add Client',
         breadCrumbItems: [
             {
                 path: '/client-registration',
@@ -405,25 +281,23 @@ const ClientRegistration = () => {
         fetchBranches();
     }, []);
 
-    const handleClientChange = (e:any)=>{
-        // var clientname = clients.filter((item)=> item._id == e.target.value)
-        setSingleSelections(e)
-        // setClientsName(e.target.value);
-        if(e.length>0)
-            {
-                var clientname = clients.filter((item)=> item._id == e[0].value)
-                setClientName(clientname[0].client_name);
-                setValue('client_refered_by',e[0].value);
-            }
-            else
-            {
-                setClientName('');
-                setValue('client_refered_by','');
-    
-            }
+    // const handleClientChange = (e:any)=>{
+    //     // var clientname = clients.filter((item)=> item._id == e.target.value)
+    //     setSingleSelections(e.target.value)
+    //     setClientsName(e.target.value);
+    // }
 
+    const handleClientChange = (ev: any) => {
+        if (ev.length > 0) {
+            const selectedClient = ev[0]; 
+            setSingleSelections(ev);
+            setClientsName(selectedClient.value); 
+        } else {
+            setSingleSelections([]);
+            setClientsName(""); 
+        }
+    };
 
-    }
 
     const handleCountryChange = async (country:any)=>{
 
@@ -450,8 +324,6 @@ const ClientRegistration = () => {
                 var phoneCode = countries.filter((item:any)=> item.country_name === country);
 
                 setValue('client_phonecode',phoneCode[0].country_phonecode)
-                setPhoneNumberLength(phoneCode[0].phonenumber_length)
-                setValue('client_mobile_number','')
             } catch (error) {
                 console.error('Error during API call:', error);
             }
@@ -459,7 +331,6 @@ const ClientRegistration = () => {
         else
         {
             setValue('client_phonecode','');
-            setValue('client_mobile_number','')
             setStates([]);
 
         }
@@ -476,24 +347,6 @@ const ClientRegistration = () => {
         {
             setBranchErr(false)
         }  
-    }
-
-    const handelMobileNoChange = (mobile:any)=>{ 
-        if(mobile != '')
-        {  
-            if(mobile.length != phoneNumberLength)
-            {
-                setPhoneNumberValidation(false)
-            }
-            else
-            {
-                setPhoneNumberValidation(true)
-            }
-        }
-        else
-        {
-            setPhoneNumberValidation(true)
-        }
     }
 
     return (
@@ -623,7 +476,7 @@ const ClientRegistration = () => {
                                     render={({ field }) => (
                                         <Form.Control
                                             type="text"
-                                            placeholder="Enter your mobile number"
+                                            placeholder="Enter your adhar card number"
                                             {...field}
                                             isInvalid={!!errors.client_aadhaar_number}
                                         />
@@ -655,6 +508,7 @@ const ClientRegistration = () => {
                                         </Form.Select>
                                     )}
                                 />
+                            
                             </Form.Group>
                             {/* bank name */}
                             <Form.Group className="mb-3">
@@ -686,24 +540,11 @@ const ClientRegistration = () => {
                                     )}
                                 />
                             </Form.Group>
-                            {/* Referred By
-                            <Form.Group className="mb-3">
-                                 <Form.Label>Refered By</Form.Label>
-                                    <select className="form-control" id="client_refered_by" onChange={(e)=>{handleClientChange(e)}}>
-                                                            <option value="">-- Select --</option>
-                    
-                                        {clients.map((client) => (
-                                        <option key={client._id} value={client._id}>
-                                        {`${client.client_id}-${client.client_name}`}
-                                            </option>
-                                        ))}
-                                    </select>
-                            </Form.Group> */}
                             {/* Referred By */}
                             <Form.Group className="mb-3">
                                 <Form.Label>Referred By</Form.Label>
                                     <Controller
-                                        name="client_refered_by"
+                                        name="client_id"
                                         control={control}
                                         render={({ field }) => (
                                             <Typeahead
@@ -721,27 +562,37 @@ const ClientRegistration = () => {
                                     )}
                                 />
                             </Form.Group>
-                            {/* Status */}
-                            <Form.Group className="mb-2">
-                                <Form.Label>Status</Form.Label>
-                                <Controller
-                                    name="client_status"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Form.Select
-                                            {...field}
-                                            value={field.value.toString()}
-                                            onChange={(e) => field.onChange(e.target.value === 'true')} isInvalid={!!errors.client_status}>
-                                            <option value="">Select status</option>
-                                            <option value="true">Active</option>
-                                            <option value="false">Inactive</option>
-                                        </Form.Select>
-                                    )}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.client_status?.message}
-                                </Form.Control.Feedback>
-                            </Form.Group>
+                            {/* ================= */}
+                            {/* <Form.Group className="mb-3">
+                                 <Form.Label>Refered By</Form.Label>
+                                    <select className="form-control" id="client_refered_by" onChange={(e)=>{handleClientChange(e)}}>
+                                                            <option value="">-- Select --</option>
+                    
+                                        {clients.map((client) => (
+                                        <option key={client._id} value={client._id}>
+                                        {`${client.client_id}-${client.client_name}`}
+                                            </option>
+                                        ))}
+                                    </select>
+                            </Form.Group> */}
+                            {/* Branch Name */}
+                            {(userData.user_role_type == '0') && (
+                                <>
+                                 <Form.Group className="mb-3" style={{paddingTop:'13px'}}>
+                                 <Form.Label>Branch Name</Form.Label>
+                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" onChange={(e)=>{handleBranchChange(e)}} >
+                                         <option value="">-- Select --</option>
+ 
+                                         {branches.map((branch) => (
+                                             <option key={branch._id} value={branch._id}>
+                                                 {branch.branch_name}
+                                             </option>
+                                             ))}
+                                 </select>
+                                 {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
+                             </Form.Group>
+                             </>
+                            )} 
                         </Col>
 
                         <Col md={6}>
@@ -786,25 +637,25 @@ const ClientRegistration = () => {
                             {/* State */}
                             <Form.Group className="mb-3">
                                 <Form.Label>State</Form.Label>
-                                <Controller
-                                    name="client_state"
-                                    control={control}
-                                    render={({ field }) => 
+                                    <Controller
+                                        name="client_state"
+                                        control={control}
+                                        render={({ field }) => 
                                         <Form.Select
                                             {...field}
                                             value={field.value || ''}
                                             isInvalid={!!errors.client_state}>
                                             <option value="">Select State</option>
-                                            {states.map((state) => (
-                                                <option key={state.state_name} value={state.state_name}>
-                                                    {state.state_name} - {state.state_code}
-                                                        </option>
+                                                {states.map((state) => (
+                                                    <option key={state.state_name} value={state.state_name}>
+                                                            {state.state_name} - {state.state_code}
+                                            </option>
                                             ))}
                                         </Form.Select>
-                                    }
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.client_state?.message}
+                                        }
+                                    />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.client_state?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
                             {/* Mobile No */}
@@ -815,11 +666,11 @@ const ClientRegistration = () => {
                                     <Controller
                                         name="client_phonecode"
                                         control={control}
-                                        render={({ field }) => <Form.Control {...field}  placeholder="code" disabled />}
+                                        render={({ field }) => <Form.Control {...field}  placeholder="code" disabled isInvalid={!!errors.client_phonecode} />}
                                     />
-                                    {/* <Form.Control.Feedback type="invalid">
+                                    <Form.Control.Feedback type="invalid">
                                         {errors.client_phonecode?.message}
-                                    </Form.Control.Feedback> */}
+                                    </Form.Control.Feedback>
                                     </div>
                                     <div style={{width:'90%'}}>
                                     <Controller
@@ -830,14 +681,12 @@ const ClientRegistration = () => {
                                                 type="text"
                                                 placeholder="Enter your mobile number"
                                                 {...field}
-                                                isInvalid={!!errors.client_mobile_number || !phoneNumberValidation}
-                                                onChange={(e)=>{field.onChange(e.target.value); handelMobileNoChange(e.target.value)}}
+                                                isInvalid={!!errors.client_mobile_number}
                                             />
                                         )}
                                     />
                                     <Form.Control.Feedback type="invalid">
                                         {errors.client_mobile_number?.message}
-                                        {!phoneNumberValidation?`Please Enter ${phoneNumberLength} digit mobile number`:''}
                                     </Form.Control.Feedback>
                                     </div>
                                 </div>
@@ -925,49 +774,29 @@ const ClientRegistration = () => {
                                     {errors.client_sip_refrence_level?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
-                            {/*Is Refered By family*/}
-                            <Form.Group className="mb-3">
-                                <Form.Label>Is Referred By Family</Form.Label>
+                            {/* Status */}
+                            <Form.Group className="mb-2">
+                                <Form.Label>Status</Form.Label>
                                 <Controller
-                                    name="client_sip_refrence_family"
+                                    name="client_status"
                                     control={control}
-                                    defaultValue={false}
-                                    render={({ field }) => {
-                                        const { value, ...fieldProps } = field; // Remove `value` to prevent type errors
-                                        return (
-                                            <Form.Check
-                                                type="checkbox"
-                                                // label="Referred by family?"
-                                                {...fieldProps} // Spread remaining field properties (without `value`)
-                                                checked={field.value} // Ensure correct boolean binding
-                                                onChange={(e) => field.onChange(e.target.checked)} // Convert event value to boolean
-                                            />
-                                        );
-                                    }}
+                                    render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value.toString()}
+                                            onChange={(e) => field.onChange(e.target.value === 'true')} isInvalid={!!errors.client_status}>
+                                            <option value="">Select status</option>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </Form.Select>
+                                    )}
                                 />
-                                {/* <Form.Control.Feedback type="invalid">
-                                    {errors.client_sip_refrence_level?.message}
-                                </Form.Control.Feedback> */}
-                            </Form.Group>
-                            {/* Branch Name */}
-                            {(userData.user_role_type == '0') && (
-                                <>
-                                 <Form.Group className="mb-3" style={{paddingTop:'13px'}}>
-                                 <Form.Label>Branch Name</Form.Label>
-                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" onChange={(e)=>{handleBranchChange(e)}} >
-                                         <option value="">-- Select --</option>
- 
-                                         {branches.map((branch) => (
-                                             <option key={branch._id} value={branch._id}>
-                                                 {branch.branch_name}
-                                             </option>
-                                             ))}
-                                 </select>
-                                 {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
-                             </Form.Group>
-                             </>
-                            )}  
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.client_status?.message}
+                                </Form.Control.Feedback>
+                            </Form.Group> 
                         </Col>
+                         
                     </Row>
 
                     <div className="text-md-end mb-0">
@@ -979,26 +808,8 @@ const ClientRegistration = () => {
                         </Button>
                     </div>
                 </Form>
-                {/* Delete Confirmation Modal */}
-                <Modal show={showModal} onHide={handleCloseModal} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Confirm To Add Duplicate Client</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {verifyMessage} Are you sure you want to add this client?
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseModal}>
-                        Cancel
-                    </Button>
-                    <Button variant="danger" onClick={()=>{onDuplicateSubmit()}}>
-                        Confirm
-                    </Button>
-                </Modal.Footer>
-            </Modal>
             </Card.Body>
         </Card>
-        
     );
 };
 

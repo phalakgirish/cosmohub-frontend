@@ -8,6 +8,8 @@ import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Typeahead } from 'react-bootstrap-typeahead';
+import Clients from '../ClientManagement/Clients';
 
 type MaturityData = {
     sipmaturity_receiptno: string;
@@ -46,6 +48,8 @@ type Staff = {
     staff_name: string
 };
 
+type Option = string | Record<string, any>;
+
 const schema = yup.object().shape({
     client_id: yup.string().required('Client ID is required'),
     sipmember_id: yup.string().required('SIP Member Id is required'),
@@ -66,6 +70,8 @@ const EditMaturityForm = () => {
     const [clientsName, setClientsName] = useState('')
     const navigate = useNavigate()
     const [paidDate, setPaidDate] = useState('')
+    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
+    const [singleMemberSelections, setSingleMemberSelections] = useState<Option[]>([]);
 
     var today = new Date();
     var TodayDate = today.toISOString().split('T')[0];
@@ -125,12 +131,51 @@ const EditMaturityForm = () => {
 
     };
 
+    // const handleClientChange = (e:any)=>{
+    //     handleFetchSIPMember(e.target.value);
+    //     var clientname = clients.filter((item)=> item._id == e.target.value)
+    //     setClientsName((clientname.length>0)?clientname[0].client_name:'');
+    // }
+
     const handleClientChange = (e:any)=>{
-        handleFetchSIPMember(e.target.value);
-        var clientname = clients.filter((item)=> item._id == e.target.value)
-        setClientsName((clientname.length>0)?clientname[0].client_name:'');
+        // var clientname = clients.filter((item)=> item._id == e.target.value)s
+        setSingleSelections(e)
+        // setClientsName(e.target.value);
+        if(e.length > 0)
+        {
+            handleFetchSIPMember(e[0].value);
+            var clientname = clients.filter((item)=> item._id == e[0].value)
+            if(clientname.length >0)
+            setClientsName(clientname[0].client_name);
+            setValue('client_id',e[0].value);
+        }
+        else
+        {
+            setClientsName('');
+            setSipMembers([]);
+            setValue('client_id','');
+            setValue('sipmember_id','');
+            setSingleMemberSelections(e)
+        }
     }
 
+    const handleMemberChange = (e:any)=>{
+        // var clientname = clients.filter((item)=> item._id == e.target.value)
+        setSingleMemberSelections(e)
+        // setClientsName(e.target.value);
+        if(e.length>0)
+        {
+            var clientname = simembers.filter((item)=> item._id == e[0].value)
+            fetchSIPTotalAmount(e[0].value);
+            setValue('sipmember_id',e[0].value);
+        }
+        else
+        {
+            setValue('sipmember_id','');
+            setValue('sip_maturity_amount',0)
+        }
+    }
+    var sipmemberData:any
     const handleFetchSIPMember = async(id:any)=>{
         try {
             const bearerToken = secureLocalStorage.getItem('login');
@@ -143,8 +188,9 @@ const EditMaturityForm = () => {
                     }
             });
             const data = await response.json();
-
+            // console.log(data);
             
+            sipmemberData = data.sipmember
             if (response.ok) {
                 setSipMembers(data.sipmember || []);
 
@@ -181,7 +227,7 @@ const EditMaturityForm = () => {
             }
         };
         // fetchBranches();
-
+        var ClientsData:any
         const fetchClients = async () => {
             try {
                 
@@ -195,7 +241,7 @@ const EditMaturityForm = () => {
                 });
                 const data = await response.json();
 
-                
+                ClientsData = data.client
                 if (response.ok) {
                     setClients(data.client || []);
 
@@ -255,7 +301,16 @@ const EditMaturityForm = () => {
                     await fetchStaff();
                     setValue('sipmaturity_receiptno',sipMPaymentDetails.sipmaturity_receiptno)
                     setValue('client_id', sipMPaymentDetails.client_id);
-                    await handleClientChange({target:{value:sipMPaymentDetails.client_id}})
+                    var clientname = await ClientsData.filter((item:any)=> item._id == sipMPaymentDetails.client_id)
+                        
+                    setSingleSelections([{value:sipMPaymentDetails.client_id,label:`${clientname[0].client_id}-${clientname[0].client_name}`}]) 
+                    // await handleClientChange([{value:sipMPaymentDetails.client_id,label:`${clientname[0].client_id}-${clientname[0].client_name}`}])
+
+                    await handleFetchSIPMember(sipMPaymentDetails.client_id)
+                    // console.log(sipmemberData);
+                    
+                    var sipname = await sipmemberData.filter((item:any)=> item._id == sipMPaymentDetails.sipmember_id)
+                    setSingleMemberSelections([{value:sipMPaymentDetails.sipmember_id,label:`${sipname[0].sipmember_id}-${sipname[0].sipmember_name}`}]) 
                     setValue('sipmember_id', sipMPaymentDetails.sipmember_id);
                     setValue('sip_maturity_amount', sipMPaymentDetails.sip_maturity_amount);
                     setValue('sip_payment_mode', sipMPaymentDetails.sip_payment_mode);
@@ -348,7 +403,7 @@ const EditMaturityForm = () => {
                                     control={control}
                                     render={({ field }) => <Form.Control {...field} placeholder="Enter Customer ID" />}
                                 /> */}
-                                <Controller
+                                {/* <Controller
                                     name="client_id"
                                     control={control}
                                     render={({ field }) => (<Form.Select
@@ -367,7 +422,31 @@ const EditMaturityForm = () => {
                                 />
                                 <Form.Control.Feedback type="invalid">
                                     {errors.client_id?.message}
-                                </Form.Control.Feedback>
+                                </Form.Control.Feedback> */}
+
+                                <Controller
+                                    name="client_id"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Typeahead
+                                        id="select-client"
+                                        labelKey={'label'}
+                                        {...field}
+                                        multiple={false}
+                                        isInvalid={!!errors.client_id}
+                                        onChange={(e) => { handleClientChange(e); }}
+                                        options={clients.map((client) => (
+                                        { value: `${client._id}`, label: `${client.client_id}-${client.client_name}` }
+                                    ))}
+                                    placeholder="-- Select --"
+                                    selected={singleSelections} 
+                                    />
+                                    )}
+                                />
+                                {/* <Form.Control.Feedback type="invalid">
+                                    {errors.client_id?.message}
+                                </Form.Control.Feedback> */}
+                                {errors.client_id && <div className="invalid-feedback d-block">{errors.client_id.message}</div>}
                             </Form.Group>
                         </Col>   
                     </Row>
@@ -376,7 +455,7 @@ const EditMaturityForm = () => {
                             <Form.Group className="mb-2">
                                 <Form.Label>SIP Member Id</Form.Label>
 
-                                <Controller
+                                {/* <Controller
                                     name="sipmember_id"
                                     control={control}
                                     render={({ field }) => (<Form.Select
@@ -395,7 +474,31 @@ const EditMaturityForm = () => {
                                 />
                                 <Form.Control.Feedback type="invalid">
                                     {errors.sipmember_id?.message}
-                                </Form.Control.Feedback>
+                                </Form.Control.Feedback> */}
+
+                                <Controller
+                                    name="sipmember_id"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Typeahead
+                                        id="select-client"
+                                        labelKey={'label'}
+                                        {...field}
+                                        multiple={false}
+                                        isInvalid={!!errors.sipmember_id}
+                                        onChange={(e) => { handleMemberChange(e); }}
+                                        options={simembers.map((member) => (
+                                        { value: `${member._id}`, label: `${member.sipmember_id}-${member.sipmember_name}` }
+                                    ))}
+                                    placeholder="-- Select --"
+                                    selected={singleMemberSelections} 
+                                    />
+                                    )}
+                                />
+                                {/* <Form.Control.Feedback type="invalid">
+                                    {errors.sipmember_id?.message}
+                                </Form.Control.Feedback> */}
+                                {errors.sipmember_id && <div className="invalid-feedback d-block">{errors.sipmember_id.message}</div>}
                             </Form.Group>
                         </Col>
                         <Col md={6}>

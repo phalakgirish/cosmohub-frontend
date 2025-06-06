@@ -34,6 +34,7 @@ type ClientRegistrationData = {
     client_bank_account_no : string;
     client_bank_ifsc : string;
     client_others: string;
+    client_sip_refrence_family:boolean;
 };
 
 // Define the type for branch data
@@ -49,6 +50,7 @@ type Country = {
     country_name: string;
     country_code: string;
     country_phonecode: string;
+    phonenumber_length: number;
 };
 
 type State = {
@@ -110,7 +112,10 @@ const ClientEdit = () => {
     const [aadharFileStatus, setAadharFileStatus] = useState(false);
     const [singleSelections, setSingleSelections] = useState<Option[]>([]);
     const [clientName,setClientName] = useState('');
+    const [phoneNumberLength, setPhoneNumberLength] = useState(0);
+    const [phoneNumberValidation, setPhoneNumberValidation] = useState(true);
     const navigate = useNavigate();
+    let countryData:any
 
     const userData:any = JSON.parse(StorageuserData);
     // console.log(userData);
@@ -122,9 +127,13 @@ const ClientEdit = () => {
 
 
     const onSubmit = async (data: ClientRegistrationData) => {
-        console.log(data);  
+        // console.log(data);  
         
         // Handle form submission
+            if(!phoneNumberValidation)
+            {
+                return;
+            }
             if(userData.staff_branch == '0' && clientbranch == '')
             {
                 setBranchErr(true);
@@ -154,10 +163,8 @@ const ClientEdit = () => {
                 formData.append('client_bank_account_no', data.client_bank_account_no == undefined ? '' : data.client_bank_account_no );
                 formData.append('client_bank_ifsc', data.client_bank_ifsc == undefined ? '' : data.client_bank_ifsc);
                 formData.append('client_others', data.client_others == undefined ? '' : data.client_others);
+                formData.append('client_sip_refrence_family', data.client_sip_refrence_family.toString())
 
-                
-
-                
 
                 try {
                     const bearerToken = secureLocalStorage.getItem('login');
@@ -197,7 +204,7 @@ const ClientEdit = () => {
     };
 
     usePageTitle({
-        title: 'Edit Client',
+        title: 'Client',
         breadCrumbItems: [
             {
                 path: '/client-registration',
@@ -251,6 +258,7 @@ const ClientEdit = () => {
                 // console.log(data);
                 
                 if (response.ok) {
+                    countryData = data.country
                     setCountries(data.country || []);
                 } else {
                     console.error('Error fetching countries:', data);
@@ -308,10 +316,10 @@ const ClientEdit = () => {
                     setValue('client_name', clientDetails.client_name);
                     setValue('client_dob', new Date(clientDetails.client_dob).toISOString().substring(0, 10));
                     var phoneCode = clientDetails.client_mobile_number.split('-')
-                    setValue('client_phonecode', phoneCode[0]);
-                    setValue('client_mobile_number', phoneCode[1]);
                     setValue('client_country', clientDetails.client_country);
                     await handleCountryChange(clientDetails.client_country)
+                    setValue('client_phonecode', phoneCode[0]);
+                    setValue('client_mobile_number', phoneCode[1]);
                     setValue('client_state', clientDetails.client_state);
                     setValue('client_city', clientDetails.client_city);
                     setValue('client_emailId', (clientDetails.client_emailId == null)? '':clientDetails.client_emailId);
@@ -333,8 +341,10 @@ const ClientEdit = () => {
                     setValue('client_bank_account_no', (clientDetails.client_bank_account_no == undefined)?'':clientDetails.client_bank_account_no);
                     setValue('client_bank_ifsc', (clientDetails.client_bank_ifsc == undefined)?'':clientDetails.client_bank_ifsc);
                     setValue('client_others', (clientDetails.client_others == undefined)?'':clientDetails.client_others);
+                    setValue('client_sip_refrence_family',clientDetails.client_sip_refrence_family)
                     setClientBranch(clientDetails.branch_id);
                     setClientsName((clientDetails.sip_refered_by_clientId == null)? '':clientDetails.sip_refered_by_clientId)
+
 
                 } else {
                     console.error('Error fetching client details:', data);
@@ -389,9 +399,12 @@ const ClientEdit = () => {
                 } else {
                     console.error('Error fetching states:', data);
                 }
-                var phoneCode = countries.filter((item:any)=> item.country_name === country);
+                var phoneCode = ((countryData != undefined)?countryData:countries).filter((item:any)=> item.country_name === country);
 
                 setValue('client_phonecode',phoneCode[0].country_phonecode)
+
+                setPhoneNumberLength(phoneCode[0].phonenumber_length)
+                setValue('client_mobile_number','')
             } catch (error) {
                 console.error('Error during API call:', error);
             }
@@ -415,6 +428,24 @@ const ClientEdit = () => {
         {
             setBranchErr(false)
         }  
+    }
+
+    const handelMobileNoChange = (mobile:any)=>{ 
+        if(mobile != '')
+        {  
+            if(mobile.length != phoneNumberLength)
+            {
+                setPhoneNumberValidation(false)
+            }
+            else
+            {
+                setPhoneNumberValidation(true)
+            }
+        }
+        else
+        {
+            setPhoneNumberValidation(true)
+        }
     }
 
     return (
@@ -532,12 +563,14 @@ const ClientEdit = () => {
                                                 type="text"
                                                 placeholder="Enter your mobile number"
                                                 {...field}
-                                                isInvalid={!!errors.client_mobile_number}
+                                                isInvalid={!!errors.client_mobile_number || !phoneNumberValidation}
+                                                onChange={(e)=>{field.onChange(e.target.value); handelMobileNoChange(e.target.value)}}
                                             />
                                         )}
                                     />
                                     <Form.Control.Feedback type="invalid">
                                         {errors.client_mobile_number?.message}
+                                        {!phoneNumberValidation?`Please Enter ${phoneNumberLength} digit mobile number`:''}
                                     </Form.Control.Feedback>
                                     </div>
                                 </div>
@@ -617,27 +650,48 @@ const ClientEdit = () => {
                                     {errors.client_sip_refrence_level?.message}
                                 </Form.Control.Feedback>
                             </Form.Group>
-                            {/* Status */}
+                            {/*Is Refered By family*/}
                             <Form.Group className="mb-3">
-                                <Form.Label>Status</Form.Label>
+                                <Form.Label>Is Referred By Family</Form.Label>
                                 <Controller
-                                    name="client_status"
+                                    name="client_sip_refrence_family"
                                     control={control}
-                                    render={({ field }) => (
-                                        <Form.Select
-                                            {...field}
-                                            value={field.value || ''}
-                                            isInvalid={!!errors.client_status}>
-                                            <option value="">Select status</option>
-                                            <option value="true">Active</option>
-                                            <option value="false">Inactive</option>
-                                        </Form.Select>
-                                    )}
+                                    defaultValue={false}
+                                    render={({ field }) => {
+                                        const { value, ...fieldProps } = field; // Remove `value` to prevent type errors
+                                        return (
+                                        <Form.Check
+                                            type="checkbox"
+                                            // label="Referred by family?"
+                                            {...fieldProps} // Spread remaining field properties (without `value`)
+                                            checked={field.value} // Ensure correct boolean binding
+                                            onChange={(e) => field.onChange(e.target.checked)} // Convert event value to boolean
+                                        />
+                                        );
+                                    }}
                                 />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.client_status?.message}
-                                </Form.Control.Feedback>
+                                {/* <Form.Control.Feedback type="invalid">
+                                    {errors.client_sip_refrence_level?.message}
+                                </Form.Control.Feedback> */}
                             </Form.Group>
+                            {/* Branch Name */}
+                            {(userData.user_role_type == '0') && (
+                                <>
+                                 <Form.Group className="mb-3">
+                                 <Form.Label>Branch Name</Form.Label>
+                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" value={clientbranch} onChange={(e)=>{handleBranchChange(e)}} >
+                                         <option value="">-- Select --</option>
+ 
+                                         {branches.map((branch) => (
+                                             <option key={branch._id} value={branch._id}>
+                                                 {branch.branch_name}
+                                             </option>
+                                             ))}
+                                 </select>
+                                 {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
+                             </Form.Group>
+                             </>
+                            )}
                             
                         </Col>
 
@@ -833,6 +887,7 @@ const ClientEdit = () => {
                                             labelKey={'label'}
                                             {...field}
                                             multiple={false}
+                                            disabled={true}
                                             onChange={(e) => { handleClientChange(e) }}
                                             options={clients.map((client) => (
                                                 { value: `${client._id}`, label: `${client.client_id}-${client.client_name}` }
@@ -856,24 +911,28 @@ const ClientEdit = () => {
                                         ))}
                                     </select>
                             </Form.Group> */}
-                            {/* Branch Name */}
-                            {(userData.user_role_type == '0') && (
-                                <>
-                                 <Form.Group className="mb-3">
-                                 <Form.Label>Branch Name</Form.Label>
-                                 <select className={(branchErr)?"form-control is-invalid":"form-control"} id="branch" value={clientbranch} onChange={(e)=>{handleBranchChange(e)}} >
-                                         <option value="">-- Select --</option>
- 
-                                         {branches.map((branch) => (
-                                             <option key={branch._id} value={branch._id}>
-                                                 {branch.branch_name}
-                                             </option>
-                                             ))}
-                                 </select>
-                                 {(branchErr)?(<div className="invalid-feedback d-block">Please Select Branch</div>):''}
-                             </Form.Group>
-                             </>
-                            )}
+                            {/* Status */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Status</Form.Label>
+                                <Controller
+                                    name="client_status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Form.Select
+                                            {...field}
+                                            value={field.value || ''}
+                                            isInvalid={!!errors.client_status}>
+                                            <option value="">Select status</option>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </Form.Select>
+                                    )}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.client_status?.message}
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                            
                         </Col>
                     </Row>
 

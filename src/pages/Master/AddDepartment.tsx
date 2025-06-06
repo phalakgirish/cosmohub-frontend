@@ -179,7 +179,7 @@ const BasicForm = () => {
 
 const AddDepartment = () => {
     usePageTitle({
-        title: 'Add Department',
+        title: 'Department',
         breadCrumbItems: [
             {
                 path: '/forms/validation',

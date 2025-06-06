@@ -9,6 +9,7 @@ import url from '../../env';
 import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { toast } from 'react-toastify';
+import { CountryData } from 'react-intl-tel-input';
 
 type BranchData = {
     branch_code: string;
@@ -32,6 +33,7 @@ type Country = {
     country_name: string;
     country_code: string;
     country_phonecode: string;
+    phonenumber_length: number;
 };
 
 type State = {
@@ -66,6 +68,8 @@ const EditForm = () => {
     const { id } = useParams<{ id: string }>();
     const [countries, setCountries] = useState<Country[]>([]);
     const [states, setStates] = useState<State[]>([]);
+    const [phoneNumberLength, setPhoneNumberLength] = useState(0);
+    const [phoneNumberValidation, setPhoneNumberValidation] = useState(true);
     const navigate = useNavigate();
     const { control, handleSubmit, reset, setValue,formState:{errors} } = useForm<BranchData>({
         resolver: schemaResolver,
@@ -73,9 +77,9 @@ const EditForm = () => {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
+    let countryData:any
     useEffect(() => {
-
+        
         const fetchCountries = async () => {
             try {
                 const bearerToken = secureLocalStorage.getItem('login');
@@ -91,6 +95,7 @@ const EditForm = () => {
                 // console.log(data);
                 
                 if (response.ok) {
+                    countryData = data.country
                     setCountries(data.country || []);
                 } else {
                     console.error('Error fetching countries:', data);
@@ -100,7 +105,7 @@ const EditForm = () => {
             }
         };
 
-        fetchCountries();
+        
 
         const fetchBranchData = async () => {
             try {
@@ -122,7 +127,8 @@ const EditForm = () => {
                     const branchData = data.branch[0]; // Access the first element in the branch array
 
                     // Set form values using branchData
-                    handleCountryChange(branchData.branch_country);
+                    await fetchCountries();
+                    await handleCountryChange(branchData.branch_country);
                     for (const key in branchData) {
                         if (branchData.hasOwnProperty(key)) {
                             setValue(key as keyof BranchData, branchData[key]);
@@ -150,7 +156,8 @@ const EditForm = () => {
     }, [id, setValue]);
 
     const handleCountryChange = async (country:any)=>{
-
+        // console.log(country);
+        
         if(country != '')
         {
             try {
@@ -171,9 +178,13 @@ const EditForm = () => {
                 } else {
                     console.error('Error fetching states:', data);
                 }
-                var phoneCode = countries.filter((item:any)=> item.country_name === country);
+
+                var phoneCode = ((countryData != undefined)?countryData:countries).filter((item:any)=> item.country_name === country);
 
                 setValue('branch_modile_code',phoneCode[0].country_phonecode)
+                
+                setPhoneNumberLength(phoneCode[0].phonenumber_length)
+                setValue('branch_mobile_number','')
             } catch (error) {
                 console.error('Error during API call:', error);
             }
@@ -188,6 +199,10 @@ const EditForm = () => {
     }
 
     const onSubmit = async (formData: BranchData) => {
+        if(!phoneNumberValidation)
+        {
+            return;
+        }
         try {
             const bearerToken = secureLocalStorage.getItem('login');
 
@@ -242,6 +257,24 @@ const EditForm = () => {
 
     if (loading) return <div>Loading...</div>;
     if (error) return <Alert variant="danger">{error}</Alert>;
+
+    const handelMobileNoChange = (mobile:any)=>{
+        if(mobile != '')
+        {  
+            if(mobile.length != phoneNumberLength)
+            {
+                setPhoneNumberValidation(false)
+            }
+            else
+            {
+                setPhoneNumberValidation(true)
+            }
+        }
+        else
+        {
+            setPhoneNumberValidation(true)
+        }
+    }
 
     return (
         <Card style={{marginTop:'25px'}}>
@@ -371,12 +404,16 @@ const EditForm = () => {
                                 <Controller
                                     name="branch_mobile_number"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_mobile_number} placeholder="Enter mobile number" style={{width:'90%'}}/>}
+                                    render={({ field }) => <Form.Control {...field} isInvalid={!!errors.branch_mobile_number || !phoneNumberValidation} placeholder="Enter mobile number" style={{width:'90%'}}
+                                    onChange={(e)=>{field.onChange(e.target.value);handelMobileNoChange(e.target.value)}}
+                                    />}
                                 />
                                 </div>
-                                <Form.Control.Feedback type="invalid">
+                                {/* <Form.Control.Feedback type="invalid">
                                     {errors.branch_mobile_number?.message}
-                                </Form.Control.Feedback>
+                                </Form.Control.Feedback> */}
+                                {(errors.branch_mobile_number)? <div className="invalid-feedback d-block">{errors.branch_mobile_number.message}</div>:''}
+                                {(!phoneNumberValidation)? <div className="invalid-feedback d-block">Please Enter {phoneNumberLength} digit mobile number</div>:""}
                             </Form.Group>
                         </Col>
                         <Col md={6}>

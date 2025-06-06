@@ -17,10 +17,17 @@ import { toast } from 'react-toastify';
 // Define the type for form data
 type ReferenceLevelData = {
     reference_level: number;
+    reference_category:string;
     reference_bouns: number;
     reference_effective:  string;
     reference_status: boolean;
 
+};
+
+type Category = {
+    _id: string;
+    category_name: string;
+    category_status:boolean;
 };
 
 // Define the type for branch data
@@ -33,6 +40,7 @@ type Branch = {
 const schemaResolver = yupResolver(
     yup.object().shape({
         reference_level: yup.number().required('Please enter the reference level'),
+        reference_category: yup.number().required('Please select the reference category'),
         reference_bouns: yup.number().required('Please enter the reference bouns'),
         reference_effective: yup.string().required('Please select the effective date'),
         reference_status: yup.boolean().required('Please select the level status'),
@@ -42,6 +50,7 @@ const schemaResolver = yupResolver(
 const AddReferenceLevel = () => {
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const [branches, setBranches] = useState<Branch[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [clientbranch, setClientBranch] = useState('');
     const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
@@ -84,6 +93,31 @@ const AddReferenceLevel = () => {
         };
 
         fetchBranches();
+        const fetchCategory = async () => {
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/category/`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
+                const data = await response.json();
+                // console.log(data);   
+                
+                if (response.ok) {
+                    setCategories(data.category || []);
+                } else {
+                    console.error('Error fetching branches:', data);
+                }
+            } catch (error) {
+                console.error('Error during API call:', error);
+            }
+        };
+
+        fetchCategory();
     }, []);
 
     const onSubmit = async (data: ReferenceLevelData) => {
@@ -98,6 +132,7 @@ const AddReferenceLevel = () => {
             // {
                 var DataToPost = {
                     reference_level: data.reference_level,
+                    reference_category: data.reference_category,
                     reference_bouns: data.reference_bouns,
                     reference_effective: data.reference_effective,
                     reference_status: data.reference_status,
@@ -151,10 +186,10 @@ const AddReferenceLevel = () => {
     return (
         <Card style={{marginTop:'25px'}}>
             <Card.Body>
-                <h4 className="header-title mt-0 mb-1">Add Reference Level</h4>
+                <h4 className="header-title mt-0 mb-1">Add Level Commission Slab</h4>
                 <p className="sub-header">Fill the form to add a new reference level.</p>
                 <Form onSubmit={handleSubmit(onSubmit)}>
-                     <Form.Group className="mb-2">
+                    <Form.Group className="mb-2">
                         <Form.Label> Reference Level</Form.Label>
                         <Controller
                             name="reference_level"
@@ -172,6 +207,30 @@ const AddReferenceLevel = () => {
                         />
                         <Form.Control.Feedback type="invalid">
                             {errors.reference_level?.message}
+                        </Form.Control.Feedback>
+                    </Form.Group>
+
+                    <Form.Group className="mb-2">
+                        <Form.Label> Reference Category</Form.Label>
+                        <Controller
+                            name="reference_category"
+                            control={control}
+                            render={({ field }) => (
+                                <Form.Select
+                                    {...field}
+                                    value={field.value}
+                                    onChange={(e) => field.onChange(e.target.value)} isInvalid={!!errors.reference_category}>
+                                    <option value="">Select Category</option>
+                                    {categories.map((category) => (
+                                    <option key={category.category_name} value={category.category_name}>
+                                        {category.category_name}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                            )}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.reference_category?.message}
                         </Form.Control.Feedback>
                     </Form.Group>
 
@@ -273,7 +332,7 @@ const AddReferenceLevel = () => {
 const ReferenceLevel = () => {
 
     usePageTitle({
-        title: 'Add Reference Level',
+        title: 'Level Commission Slab',
         breadCrumbItems: [
             {
                 path: '/forms/validation',

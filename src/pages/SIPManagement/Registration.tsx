@@ -54,6 +54,14 @@ type SIPCategory = {
     sipcategory_status: string
 };
 
+type Country = {
+    _id: string;
+    country_name: string;
+    country_code: string;
+    country_phonecode: string;
+    phonenumber_length: number;
+};
+
 const schema = yup.object().shape({
     client_id: yup.string().required('Client ID is required'),
     sipmember_bank_name: yup.string().required('Bank Name is required'),
@@ -88,6 +96,7 @@ const SIPRegistration = () => {
     const [branches, setBranches] = useState<Branch[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [category, setCategory] = useState<SIPCategory[]>([]);
+    const [countries, setCountries] = useState<Country[]>([]);
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const userData:any = JSON.parse(StorageuserData);
     const [clientbranch, setClientBranch] = useState('');
@@ -95,6 +104,8 @@ const SIPRegistration = () => {
     const [sipmaturitydate,setSipMaturityDate] = useState('')
     const [branchErr,setBranchErr] = useState(false);
     const [singleSelections, setSingleSelections] = useState<Option[]>([]);
+    const [phoneNumberLength, setPhoneNumberLength] = useState(0);
+    const [phoneNumberValidation, setPhoneNumberValidation] = useState(true);
 
 
 
@@ -160,6 +171,32 @@ const SIPRegistration = () => {
                     }
                 };
                 fetchSIPCategory();
+
+                const fetchCountries = async () => {
+                    try {
+                        const bearerToken = secureLocalStorage.getItem('login');
+                        const response = await fetch(`${url.nodeapipath}/all/country`,{
+                            method:'GET',
+                            headers: {
+                                'Content-Type':'application/json',
+                                'Access-Control-Allow-Origin':'*',
+                                'Authorization': `Bearer ${bearerToken}`
+                                }
+                        });
+                        const data = await response.json();
+                        // console.log(data);
+                        
+                        if (response.ok) {
+                            setCountries(data.country || []);
+                        } else {
+                            console.error('Error fetching countries:', data);
+                        }
+                    } catch (error) {
+                        console.error('Error during API call:', error);
+                    }
+                };
+        
+                fetchCountries();
                 
             // Fetch branches from the backend
             const fetchBranches = async () => {
@@ -190,7 +227,11 @@ const SIPRegistration = () => {
         },[])
 
     const onSubmit = async (data: ISIPFormInput) => {
-        // console.log(data);
+        console.log(data);
+        if(!phoneNumberValidation)
+        {
+            return;
+        }
         if(userData.staff_branch == '0' && clientbranch == '')
         {
             setBranchErr(true);
@@ -288,8 +329,10 @@ const SIPRegistration = () => {
             setClientsName(clientname[0].client_name);
             setValue('client_id',e[0].value);
             var phonecode = clientname[0].client_mobile_number.split('-')
+            var phonecodelength = countries.filter((item:any)=> item.country_phonecode === phonecode[0]);
             setValue('sipmember_nominee_mobcode',phonecode[0])
-
+            setPhoneNumberLength(phonecodelength[0].phonenumber_length)
+            // setValue('client_mobile_number','')
         }
         else
         {
@@ -299,6 +342,26 @@ const SIPRegistration = () => {
 
         }
         
+    }
+
+    const handelMobileNoChange = (mobile:any)=>{ 
+        if(mobile != '')
+        {  
+            setValue("sipmember_nominee_mobile",mobile,{ shouldValidate: true })
+            if(mobile.length != phoneNumberLength)
+            {
+                setPhoneNumberValidation(false)
+            }
+            else
+            {
+                setPhoneNumberValidation(true)
+            }
+        }
+        else
+        {
+            setValue("sipmember_nominee_mobile",'',{ shouldValidate: true })
+            setPhoneNumberValidation(true)
+        }
     }
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, fieldName: keyof ISIPFormInput) => {
@@ -316,6 +379,7 @@ const SIPRegistration = () => {
         const formattedDate = newDate.toISOString().split('T')[0];
         // console.log(formattedDate); 
         // setSipMaturityDate(formattedDate);
+        setValue('sipmember_doj',e.target.value,{shouldValidate:true})
         setValue('sipmember_maturity_date',formattedDate)
 
 
@@ -568,6 +632,7 @@ const SIPRegistration = () => {
                                                     className="form-control"
                                                     {...register('sipmember_nominee_mobile')}
                                                     style={{width:'90%'}}
+                                                    onChange={(e)=>{handelMobileNoChange(e.target.value)}}
                                                 />
                                             </div>
                                             {/* <input
@@ -578,6 +643,7 @@ const SIPRegistration = () => {
                                                 {...register('sipmember_nominee_mobile')}
                                             /> */}
                                             {errors.sipmember_nominee_mobile && <div className="invalid-feedback d-block">{errors.sipmember_nominee_mobile.message}</div>}
+                                            {!phoneNumberValidation?<div className="invalid-feedback d-block">Please Enter{phoneNumberLength} digit mobile number</div>:''}
                                         </div>
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_nominee_addharcard" className="form-label">Nominee Aadhar Card</label>

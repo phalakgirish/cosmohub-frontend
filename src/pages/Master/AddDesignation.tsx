@@ -175,7 +175,7 @@ const BasicForm = () => {
 
 const AddDesignation = () => {
     usePageTitle({
-        title: 'Add Designation',
+        title: 'Designation',
         breadCrumbItems: [
             {
                 path: '/forms/validation',

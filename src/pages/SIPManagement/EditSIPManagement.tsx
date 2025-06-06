@@ -55,6 +55,14 @@ type SIPCategory = {
     sipcategory_status: string
 };
 
+type Country = {
+    _id: string;
+    country_name: string;
+    country_code: string;
+    country_phonecode: string;
+    phonenumber_length: number;
+};
+
 const schema = yup.object().shape({
     client_id: yup.string().required('Client ID is required'),
     sipmember_bank_name: yup.string().required('Bank Name is required'),
@@ -89,6 +97,7 @@ const SIPEdit = () => {
     const [branches, setBranches] = useState<Branch[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [category, setCategory] = useState<SIPCategory[]>([]);
+    const [countries, setCountries] = useState<Country[]>([]);
     const StorageuserData:any = secureLocalStorage.getItem('userData');
     const userData:any = JSON.parse(StorageuserData);
     const [clientbranch, setClientBranch] = useState('');
@@ -96,7 +105,10 @@ const SIPEdit = () => {
     const [sipmaturitydate,setSipMaturityDate] = useState('')
     const [branchErr,setBranchErr] = useState(false);
     const [singleSelections, setSingleSelections] = useState<Option[]>([]);
+    const [phoneNumberLength, setPhoneNumberLength] = useState(0);
+    const [phoneNumberValidation, setPhoneNumberValidation] = useState(true);
     const navigate = useNavigate();
+    let countryData:any
 
     const { register, handleSubmit, setValue,control, formState: { errors } } = useForm<ISIPFormInput>({
         resolver: yupResolver(schema),
@@ -150,7 +162,7 @@ const SIPEdit = () => {
                     });
                     const data = await response.json();
 
-                    console.log(data);
+                    // console.log(data);
                     
                     if (response.ok) {
                         setCategory(data.sip_category || []);
@@ -188,6 +200,32 @@ const SIPEdit = () => {
         };
 
         // fetchBranches();
+        const fetchCountries = async () => {
+            try {
+                const bearerToken = secureLocalStorage.getItem('login');
+                const response = await fetch(`${url.nodeapipath}/all/country`,{
+                    method:'GET',
+                    headers: {
+                        'Content-Type':'application/json',
+                        'Access-Control-Allow-Origin':'*',
+                        'Authorization': `Bearer ${bearerToken}`
+                        }
+                });
+                const data = await response.json();
+                // console.log(data);
+                
+                if (response.ok) {
+                    countryData = data.country
+                    setCountries(data.country || []);
+                } else {
+                    console.error('Error fetching countries:', data);
+                }
+            } catch (error) {
+                console.error('Error during API call:', error);
+            }
+        };
+
+        fetchCountries();
  
         const fetchData = async () => {
             try {
@@ -200,7 +238,7 @@ const SIPEdit = () => {
                         }
                 });
                 const data =  await response.json();
-                console.log(data);
+                // console.log(data);
                 
                 
                 // Pre-fill form with fetched data
@@ -227,9 +265,21 @@ const SIPEdit = () => {
                     setValue("sipmember_nominee_name", sipMemberdetails.sipmember_nominee_name)
                     setValue("sipmember_nominee_age", sipMemberdetails.sipmember_nominee_age)
                     setValue("sipmember_nominee_relation", sipMemberdetails.sipmember_nominee_relation)
+                    // console.log(sipMemberdetails.sipmember_nominee_mobile);
+                    
                     var phonecode = sipMemberdetails.sipmember_nominee_mobile.split('-');
-                    setValue("sipmember_nominee_mobcode", phonecode[0])
+                    // console.log(clientname);
+                    var clientPhonecode:any;
+                    
+                    if(phonecode[0] == 'undefined' || phonecode[0] == '')
+                    clientPhonecode = await clientname[0].client_mobile_number.split('-')
+                
+                    var phonecodelength = countryData.filter((item:any)=> item.country_phonecode === ((phonecode[0] == 'undefined' || phonecode[0] == '')?clientPhonecode[0]:phonecode[0]));
+                    
+                    await setPhoneNumberLength(phonecodelength[0].phonenumber_length)
+                    setValue("sipmember_nominee_mobcode", (phonecode[0] == 'undefined' || phonecode[0] == '')?clientPhonecode[0]:phonecode[0])
                     setValue("sipmember_nominee_mobile", phonecode[1])
+                    await handelMobileNoChangeFetchdData(phonecode[1],phonecodelength[0].phonenumber_length)
                     setValue("sipmember_nominee_aadhaarno", sipMemberdetails.sipmember_nominee_aadhaarno)
                     setValue("sipmember_sip_category", sipMemberdetails.sipmember_sip_category)
                     setValue("sipmember_remarks", sipMemberdetails.sipmember_remarks)
@@ -251,6 +301,51 @@ const SIPEdit = () => {
         
     },[])
 
+    const handelMobileNoChange = (mobile:any)=>{ 
+        if(mobile != '')
+        {  
+            setValue("sipmember_nominee_mobile",mobile,{ shouldValidate: true })
+            
+            if(mobile.length != phoneNumberLength)
+            {
+                setPhoneNumberValidation(false)
+            }
+            else
+            {
+                setPhoneNumberValidation(true)
+            }
+        }
+        else
+        {
+            setValue("sipmember_nominee_mobile",'',{ shouldValidate: true })
+            setPhoneNumberValidation(true)
+        }
+    }
+
+    const handelMobileNoChangeFetchdData = (mobile:any,length:any)=>{ 
+        if(mobile != '')
+        {  
+            setValue("sipmember_nominee_mobile",mobile,{ shouldValidate: true })
+            // console.log(phoneNumberLength);
+            
+            if(mobile.length != length)
+            {
+                console.log();
+                
+                setPhoneNumberValidation(false)
+            }
+            else
+            {
+                setPhoneNumberValidation(true)
+            }
+        }
+        else
+        {
+            setValue("sipmember_nominee_mobile",'',{ shouldValidate: true })
+            setPhoneNumberValidation(true)
+        }
+    }
+
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, fieldName: keyof ISIPFormInput) => {
         const files = event.target.files;
         if (files) {
@@ -266,6 +361,7 @@ const SIPEdit = () => {
         const formattedDate = newDate.toISOString().split('T')[0];
         // console.log(formattedDate); 
         setSipMaturityDate(formattedDate);
+        setValue('sipmember_doj',e.target.value,{shouldValidate:true})
         setValue('sipmember_maturity_date',formattedDate)
 
 
@@ -289,8 +385,12 @@ const SIPEdit = () => {
         if(e.length>0)
         {
             var clientname = clients.filter((item)=> item._id == e[0].value)
+            var phonecode = clientname[0].client_mobile_number.split('-')
+            var phonecodelength = ((countryData != undefined)?countryData:countries).filter((item:any)=> item.country_phonecode === phonecode[0]);
             setValue('sipmember_name',clientname[0].client_name);
             setValue('client_id',e[0].value);
+            setValue('sipmember_nominee_mobcode',phonecode[0])
+            setPhoneNumberLength(phonecodelength[0].phonenumber_length)
         }
         else
         {
@@ -304,6 +404,10 @@ const SIPEdit = () => {
     const onSubmit = async (data: ISIPFormInput) => {
         console.log(data);
         // Handle form submission
+        if(!phoneNumberValidation)
+        {
+            return;
+        }
         if(userData.staff_branch == '0' && clientbranch == '')
         {
             setBranchErr(true);
@@ -467,9 +571,11 @@ const SIPEdit = () => {
                                                     className="form-control"
                                                     {...register('sipmember_nominee_mobile')}
                                                     style={{width:'90%'}}
+                                                    onChange={(e)=>{handelMobileNoChange(e.target.value)}}
                                                 />
                                             </div>
                                             {errors.sipmember_nominee_mobile && <div className="invalid-feedback d-block">{errors.sipmember_nominee_mobile.message}</div>}
+                                            {!phoneNumberValidation?<div className="invalid-feedback d-block">Please Enter      {phoneNumberLength} digit mobile number</div>:''}
                                         </div>
                                         <div className="mb-3">
                                             <label htmlFor="sipmember_nominee_addharcard" className="form-label">Nominee Aadhar Card</label>

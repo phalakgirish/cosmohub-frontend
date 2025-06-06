@@ -12,6 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 interface SipCategory {
     _id: string;
     sipcategory_name: string;
+    is_commission_calculate:Boolean;
     sipcategory_status: Boolean;
 }
 
@@ -118,6 +119,7 @@ const AllSipCategory = () => {
                         srNo: index + 1,
                         _id: sipcategory._id,
                         sipcategory_name: sipcategory.sipcategory_name,
+                        is_commission_calculate:sipcategory.is_commission_calculate,
                         sipcategory_status: sipcategory.sipcategory_status,  
                     }));
                     setData(formattedData);
@@ -150,9 +152,15 @@ const AllSipCategory = () => {
             sort: true,
         },
         {
-            Header: 'Reference Level',
+            Header: 'Category Name',
             accessor: 'sipcategory_name',
             sort: true,
+        },
+        {
+            Header: 'Is Commission Calculate ?',
+            accessor: 'is_commission_calculate',
+            sort: true,
+            Cell: ({ value }: { value: boolean }) => (value ? 'Yes' : 'No'),
         },
         {
             Header: 'Status',

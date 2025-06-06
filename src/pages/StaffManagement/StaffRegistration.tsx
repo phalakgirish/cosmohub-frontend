@@ -48,6 +48,7 @@ type Country = {
     country_name: string;
     country_code: string;
     country_phonecode: string;
+    phonenumber_length: number;
 };
 
 type State = {
@@ -78,14 +79,16 @@ const StaffRegistration = () => {
     const [showModal, setShowModal] = useState(false);
     const [otpErr,setOtpErr] = useState('')
     const [isOtpErr,setIsOtpErr] = useState(false)
-
+    const [phoneNumberLength, setPhoneNumberLength] = useState(0);
+    const [phoneNumberValidation, setPhoneNumberValidation] = useState(true);
+    const [phoneNo, setPhoneNo] = useState('')
     const navigate = useNavigate();
 
     const[errFile,setErrFile] = useState(false);
     const[fileName,setFileName] = useState('')
 
     usePageTitle({
-        title: 'Add Staff',
+        title: 'Staffs',
         breadCrumbItems: [
             {
                 path: '/forms/validation',
@@ -297,7 +300,12 @@ const StaffRegistration = () => {
     }
 
     const onSubmit = async (data: IFormInput) => {
-        console.log(data);
+        // console.log(data);
+
+        if(!phoneNumberValidation)
+        {
+            return;
+        }
         
         if(!panFileStatus)
         {
@@ -395,6 +403,8 @@ const StaffRegistration = () => {
                 var phoneCode = countries.filter((item:any)=> item.country_name === country);
 
                 setValue('phone_code',phoneCode[0].country_phonecode)
+                setPhoneNumberLength(phoneCode[0].phonenumber_length)
+                setValue('mobile_number','')
             } catch (error) {
                 console.error('Error during API call:', error);
             }
@@ -402,10 +412,34 @@ const StaffRegistration = () => {
         else
         {
             setValue('phone_code','');
+            setValue('mobile_number','')
             setStates([]);
 
         }
         
+    }
+
+    const handelMobileNoChange = (mobile:any)=>{ 
+        if(mobile != '')
+        {  
+            setValue("mobile_number",mobile,{ shouldValidate: true })
+            setPhoneNo(mobile)
+            if(mobile.length != phoneNumberLength)
+            {
+                
+                setPhoneNumberValidation(false)
+            }
+            else
+            {
+                setPhoneNumberValidation(true)
+            }
+        }
+        else
+        {
+            setValue("mobile_number",'',{ shouldValidate: true })
+            setPhoneNo('')
+            setPhoneNumberValidation(true)
+        }
     }
 
     const handleBranchChange = async (e:any)=>{
@@ -547,9 +581,13 @@ const StaffRegistration = () => {
                                                     className="form-control"
                                                     {...register('mobile_number')}
                                                     style={{width:'90%'}}
+                                                    // value={phoneNo}
+                                                    onChange={(e)=>{handelMobileNoChange(e.target.value)}}  
                                                 />
                                             </div>
-                                            {errors.mobile_number && <div className="invalid-feedback d-block">{errors.mobile_number.message}</div>}
+                                            {/* {(phoneNo.length == 0) && <div className="invalid-feedback d-block">Please Enter Mobile Number.</div>} */}
+                                            {(errors.mobile_number)? <div className="invalid-feedback d-block">{errors.mobile_number.message}</div>:''}
+                                            {(!phoneNumberValidation)? <div className="invalid-feedback d-block">Please Enter {phoneNumberLength} digit mobile number</div>:""}
                                         </div>
 
                                         <div className="mb-3">

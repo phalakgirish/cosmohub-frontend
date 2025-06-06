@@ -9,6 +9,7 @@ import secureLocalStorage from 'react-secure-storage';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 // Define types
 type LuckyDrawData = {
@@ -31,6 +32,8 @@ type SipMember = {
     sipmember_name: string
 };
 
+type Option = string | Record<string, any>;
+
 // Validation schema
 const schema = yup.object().shape({
     month: yup.string().required('Month is required'),
@@ -46,13 +49,14 @@ const LuckyDrawForm = () => {
     const [clientbranch, setClientBranch] = useState('');
     const [branchErr,setBranchErr] = useState(false);
     const navigate = useNavigate();
+    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
 
-    const { control, handleSubmit, reset,formState:{errors} } = useForm<LuckyDrawData>({
+    const { control, handleSubmit, reset,setValue,formState:{errors} } = useForm<LuckyDrawData>({
         resolver: yupResolver(schema),
     });
 
     const onSubmit =async  (formData: LuckyDrawData) => {
-
+        
         // if(userData.staff_branch == '0' && clientbranch == '')
         // {
         //     setBranchErr(true);
@@ -164,6 +168,22 @@ const LuckyDrawForm = () => {
         }  
     }
 
+    const handleMemberChange = (e:any)=>{
+        // var clientname = clients.filter((item)=> item._id == e.target.value)
+        setSingleSelections(e)
+        // setClientsName(e.target.value);
+        if(e.length>0)
+            {
+                var clientname = simembers.filter((item)=> item._id == e[0].value)
+                setValue('memberId',e[0].value);
+            }
+            else
+            {
+                setValue('memberId','');
+    
+            }
+    }
+
     return (
         <Card>
             <Card.Body>
@@ -197,7 +217,7 @@ const LuckyDrawForm = () => {
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>Member ID</Form.Label>
-                                <Controller
+                                {/* <Controller
                                     name="memberId"
                                     control={control}
                                     render={({ field }) => (<Form.Select
@@ -213,10 +233,31 @@ const LuckyDrawForm = () => {
                                              ))}
                                     </Form.Select>
                                     )}
+                                /> */}
+
+                                <Controller
+                                        name="memberId"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Typeahead
+                                            id="select-client"
+                                            labelKey={'label'}
+                                            {...field}
+                                            isInvalid={!!errors.memberId}
+                                            multiple={false}
+                                            onChange={(e) => { handleMemberChange(e) }}
+                                            options={simembers.map((member) => (
+                                            { value: `${member._id}`, label: `${member.sipmember_id}-${member.sipmember_name}` }
+                                        ))}
+                                        placeholder="-- Select --"
+                                        selected={singleSelections} 
+                                    />
+                                    )}
                                 />
-                                <Form.Control.Feedback type="invalid">
+                                {/* <Form.Control.Feedback type="invalid">
                                     {errors.memberId?.message}
-                                </Form.Control.Feedback>
+                                </Form.Control.Feedback> */}
+                                {errors.memberId && <div className="invalid-feedback d-block">{errors.memberId.message}</div>}
                             </Form.Group>
                         </Col>
                     </Row>

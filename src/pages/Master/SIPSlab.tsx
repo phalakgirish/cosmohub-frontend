@@ -82,7 +82,7 @@ const SIPs = () => {
 
     // Set page title
     usePageTitle({
-        title: 'SIP Slabs',
+        title: 'SIP Slab',
         breadCrumbItems: [
             {
                 path: '/sips',

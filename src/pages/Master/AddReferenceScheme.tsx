@@ -334,7 +334,7 @@ const AddReferenceScheme = () => {
 const ReferenceScheme = () => {
 
     usePageTitle({
-        title: 'Add Reference Scheme',
+        title: 'Reference Scheme',
         breadCrumbItems: [
             {
                 path: '/forms/validation',

@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer , toast} from 'react-toastify';
 import * as XLSX from 'xlsx';
+import DatePicker from 'react-datepicker';
+import { usePageTitle } from '../../hooks';
 
 // Define types
 interface Client {
@@ -37,6 +39,10 @@ const Clients = () => {
     const [clientToDelete, setClientToDelete] = useState<string | null>(null);
     const [isRefreshed,setIsRefreshed] = useState(false)
     const [isSelectedRec,setIsSelectedRec] = useState<Array<string>>([])
+
+    const [showFilterModal, setShowFilterModal] = useState(false);
+    const [startDate, setStartDate] = useState< Date | null>(null);
+    const [endDate, setEndDate] = useState< Date | null>(null);
 
     const navigate = useNavigate();
     const formatDate = (date: Date): string => {
@@ -88,6 +94,7 @@ const Clients = () => {
                     sip_reference_level:client.sip_reference_level,
                     referred_client_id:(client.sip_refered_by_clientId)?client.sip_refered_by_clientId.client_id:'',
                     referred_client_name:(client.sip_refered_by_clientId)?client.sip_refered_by_clientId.client_name:'',
+                    createdAt:formatDate(new Date(client.createdAt)),
                     status:(client.client_status)?'Active':'Inactive'   
                 }));
                 
@@ -270,7 +277,68 @@ const Clients = () => {
             }
     }
 
-     const exportToExcel = (columns:any,columnHeader:any, data:any, fileName:any) => {
+    const handleRefreshClientData = ()=>{
+        setIsRefreshed(true);
+    }
+
+    // filter date 
+    const handleFilterDate = () => {
+        setShowFilterModal(true);
+    };
+
+    const filterDateAction = () => {
+        const formatDate = (date: Date | null) => {
+            return date ? date.toISOString().split("T")[0] : null; 
+        };
+    
+        const formattedStartDate = formatDate(startDate);
+        const formattedEndDate = formatDate(endDate);
+    
+        // console.log("Filtering by date:", formattedStartDate, formattedEndDate);
+    
+        if (formattedStartDate && formattedEndDate) {
+            const filteredData = clients.filter(({ createdAt }) => {
+                if (!createdAt) return false; // Skip null/undefined dates
+                
+                // (assuming 'YYYY-MM-DD' format)
+                return createdAt >= formattedStartDate && createdAt <= formattedEndDate;
+            });
+
+            const filteredData1 = clients1.filter(({ createdAt }) => {
+                if (!createdAt) return false; // Skip null/undefined dates
+                
+                // (assuming 'YYYY-MM-DD' format)
+                return createdAt >= formattedStartDate && createdAt <= formattedEndDate;
+            });
+    
+            // console.log("Filtered Data:", filteredData);
+            setClients(filteredData);
+            setClients1(filteredData1);
+
+        } else {
+            // Reset to original data if no filter is applied
+            setClients(clients);  
+        }
+    
+        setShowFilterModal(false);
+    };
+
+    usePageTitle({
+            title: 'Client',
+            breadCrumbItems: [
+                {
+                    path: '/forms/validation',
+                    label: 'Forms',
+                },
+                {
+                    path: '/forms/validation',
+                    label: 'Validation',
+                    active: true,
+                },
+            ],
+        });
+
+    const exportToExcel = (columns:any,columnHeader:any, data:any, fileName:any) => {
             // console.log(data);
             
             // Create a new workbook
@@ -294,7 +362,7 @@ const Clients = () => {
             XLSX.writeFile(workbook, fileName);
         };
 
-    const Excelcolumns = ['Sr. No','Client Id','Name','Date Of Birth','Mobile No','Email Id','Gender','Aadhaar Number','Postal Address','Landmark','Country','State','City/Village','Bank Name','Account Number','IFSC Code','SIP Reference Level','Referred By Client Id','Referred By Client Name','Status'];
+    const Excelcolumns = ['Sr. No','Client Id','Name','Date Of Birth','Mobile No','Email Id','Gender','Aadhaar Number','Postal Address','Landmark','Country','State','City/Village','Bank Name','Account Number','IFSC Code','SIP Reference Level','Referred By Client Id','Referred By Client Name','Joining Date','Status'];
 
     const columns1 = [
         {
@@ -393,10 +461,15 @@ const Clients = () => {
             sort: true,
         },
         {
+            Header : 'Joining Date',
+            accessor : 'createdAt',
+            sort : true,
+        },
+        {
             Header: 'Status',
             accessor: 'status',
             sort: true,
-        },
+        }
     ];
 
     const columns = [
@@ -419,6 +492,10 @@ const Clients = () => {
         { Header: 'Mobile Number', accessor: 'client_mobile_number',sort: true, },
         // { Header: 'Postal Address', accessor: 'postalAddress',sort: true, },
         // { Header: 'Landmark', accessor: 'landmark',sort: true, },
+        {Header : 'Date', accessor: 'createdAt', sort : true,
+            Cell: ({ value }: { value: string }) => 
+                formatDate(new Date(value)),
+        },
         {
             Header: 'Status',
             accessor: 'client_status',
@@ -469,11 +546,22 @@ const Clients = () => {
                                 <h4 className="header-title">Client</h4>
                                 <p className="text-muted font-14 mb-4">A table showing all clients</p>
                             </div>
+                            <Button style={{ height: '40px', backgroundColor: 'gray', position:"absolute", right: '11%' }} onClick={handleRefreshClientData}>
+                                Refresh
+                            </Button>
                             <Button style={{ height: '40px', backgroundColor: '#dd4923' }} onClick={handleAddClient}>
                                 Add Client
                             </Button>
                         </div>
 
+                          {/* Filter Button to Open Modal */}
+                          <Button
+                            variant="primary"
+                            onClick={handleFilterDate}
+                            style={{ width: "101px", padding: "7px 7px", position: "absolute", right: "11%" }}
+                        >
+                            Filter
+                        </Button>
                         <Button
                             variant="success"
                             onClick={() => handleExportPayment()}
@@ -489,7 +577,7 @@ const Clients = () => {
                             onClick={() => handleOpenSelectDeleteModal()}
                             style={{borderRadius: '35px',
                                 width: '38px',
-                                padding: '7px 7px',position:'absolute',right:'10.6%'}}
+                                padding: '7px 7px',position:'absolute',right:'20.2%'}}
                             >
                             <i className='fe-trash-2'/> 
                         </Button>}
@@ -568,6 +656,49 @@ const Clients = () => {
                         Delete
                     </Button>
                 </Modal.Footer>
+            </Modal>
+
+
+            {/* Date Filter Modal */}
+             
+            <Modal show={showFilterModal} onHide={() => setShowFilterModal(false)} centered>
+            <Modal.Header closeButton>
+                <Modal.Title>Filter by Date</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                    {/* Start Date Picker */}
+                    <div>
+                        <label>Start Date:</label>
+                        <DatePicker
+                            selected={startDate}
+                            onChange={(date: Date | null) => setStartDate(date)}
+                            dateFormat="yyyy-MM-dd"
+                            className="form-control"
+                            placeholderText="Select Start Date"
+                        />
+                    </div>
+                    {/* End Date Picker */}
+                    <div>
+                        <label>End Date:</label>
+                        <DatePicker
+                            selected={endDate}
+                            onChange={(date: Date | null) => setEndDate(date)}
+                            dateFormat="yyyy-MM-dd"
+                            className="form-control"
+                            placeholderText="Select End Date"
+                        />
+                    </div>
+                </div>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={() => setShowFilterModal(false)}>
+                    Close
+                </Button>
+                <Button variant="primary" onClick={filterDateAction}>
+                    Search
+                </Button>
+            </Modal.Footer>
             </Modal>
         </Row>
     );

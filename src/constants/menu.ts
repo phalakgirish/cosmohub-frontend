@@ -120,7 +120,7 @@ const MENU_ITEMS: MenuItemTypes[] = [
 
     {
         key: 'referencelevel',
-        label: 'Reference Level',
+        label: 'Level Commission Slab',
         isTitle: false,
         icon: 'mdi mdi-ballot',
         usershow:["0"],

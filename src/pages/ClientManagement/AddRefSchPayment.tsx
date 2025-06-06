@@ -23,6 +23,7 @@ type PaymentData = {
     ref_payment_refno: string;
     ref_payment_receivedBy: string;
     ref_payment_receivedDate: string;
+    ref_payment_expirationDate:string;
 };
 
 // Define the type for branch data
@@ -86,6 +87,9 @@ const RefSchPaymentForm = () => {
     // const [sipmember_month,setSipmember_month] = useState('')
     var today = new Date();
     var TodayDate = today.toISOString().split('T')[0];
+    var expiration = new Date(today.setDate(365))
+    var ExpirationDate = expiration.toISOString().split('T')[0];
+
     const { control, handleSubmit, reset,formState: { errors }, setValue } = useForm<PaymentData>({
         resolver: yupResolver(schema),
     });
@@ -267,6 +271,7 @@ const RefSchPaymentForm = () => {
                 ref_payment_refno: (formData.ref_payment_refno)?formData.ref_payment_refno:'',
                 ref_payment_receivedBy: formData.ref_payment_receivedBy,
                 ref_payment_receivedDate: formData.ref_payment_receivedDate,
+                ref_payment_expirationDate:formData.ref_payment_expirationDate,
                 branch_id:(userData.staff_branch =='0')?clientbranch:userData.staff_branch
             }
 
@@ -690,7 +695,22 @@ const RefSchPaymentForm = () => {
                                 />
                             </Form.Group>
                         </Col>
-                        {(userData.user_role_type == '0') && (
+
+                        <Col md={6}>
+                            <Form.Group className="mb-2">
+                                <Form.Label>Expiration Date</Form.Label>
+                                <Controller
+                                    name="ref_payment_expirationDate"
+                                    control={control}
+                                    defaultValue={ExpirationDate}
+                                    render={({ field }) => <Form.Control type="date" {...field} onChange={(e)=>{field.onChange(e.target.value)}} disabled={true}/>}
+                                />
+                            </Form.Group>
+                        </Col>
+                        
+                    </Row>
+                    <Row>
+                    {(userData.user_role_type == '0') && (
                                 <>
                                 <Col md={6}>
                                  <Form.Group className="mb-3">
@@ -727,7 +747,7 @@ const RefSchPaymentForm = () => {
 
 const AddRefSchPayment = () => {
     usePageTitle({
-        title: 'SIP Payment',
+        title: 'Reference Scheme Payment',
         breadCrumbItems: [
             {
                 path: '/forms/payment-receipt',

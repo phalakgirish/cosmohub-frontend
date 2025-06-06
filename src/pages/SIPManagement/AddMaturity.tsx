@@ -8,6 +8,7 @@ import { usePageTitle } from '../../hooks';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 type MaturityData = {
     client_id: string;
@@ -45,6 +46,8 @@ type Staff = {
     staff_name: string
 };
 
+type Option = string | Record<string, any>;
+
 const schema = yup.object().shape({
     client_id: yup.string().required('Client ID is required'),
     sipmember_id: yup.string().required('SIP Member Id is required'),
@@ -64,6 +67,9 @@ const MaturityForm = () => {
     const [branchErr,setBranchErr] = useState(false);
     const [clientsName, setClientsName] = useState('')
     const [sipMaturityAmount,setSipMaturityAmount] = useState(0);
+    const [singleSelections, setSingleSelections] = useState<Option[]>([]);
+    const [singleMemberSelections, setSingleMemberSelections] = useState<Option[]>([]);
+
     const navigate = useNavigate()
 
     var today = new Date();
@@ -74,7 +80,7 @@ const MaturityForm = () => {
     });
 
     const onSubmit = async (data: MaturityData) => {
-        console.log('Form data:', data);
+        // console.log('Form data:', data);
 
         if(userData.staff_branch == '0' && clientbranch == '')
         {
@@ -90,7 +96,6 @@ const MaturityForm = () => {
             formData.append('sip_payment_mode',data.sip_payment_mode);
             formData.append('sip_payment_paidBy',data.sip_payment_paidBy);
             formData.append('sip_payment_paidDate',data.sip_payment_paidDate);
-            formData.append('sip_maturity_doc',data.sip_maturity_doc);
             formData.append('sip_maturity_doc', data.sip_maturity_doc instanceof File ? data.sip_maturity_doc:'');
             formData.append('branch_id', (userData.staff_branch =='0')?clientbranch:userData.staff_branch);
 
@@ -124,10 +129,48 @@ const MaturityForm = () => {
 
     };
 
+    // const handleClientChange = (e:any)=>{
+    //     handleFetchSIPMember(e.target.value);
+    //     var clientname = clients.filter((item)=> item._id == e.target.value)
+    //     setClientsName((clientname.length>0)?clientname[0].client_name:'');
+    // }
+
     const handleClientChange = (e:any)=>{
-        handleFetchSIPMember(e.target.value);
-        var clientname = clients.filter((item)=> item._id == e.target.value)
-        setClientsName((clientname.length>0)?clientname[0].client_name:'');
+        // var clientname = clients.filter((item)=> item._id == e.target.value)s
+        setSingleSelections(e)
+        // setClientsName(e.target.value);
+        if(e.length > 0)
+        {
+            handleFetchSIPMember(e[0].value);
+            var clientname = clients.filter((item)=> item._id == e[0].value)
+            setClientsName(clientname[0].client_name);
+            setValue('client_id',e[0].value);
+        }
+        else
+        {
+            setClientsName('');
+            setSipMembers([]);
+            setValue('client_id','');
+            setValue('sipmember_id','');
+            setSingleMemberSelections(e)
+        }
+    }
+
+    const handleMemberChange = (e:any)=>{
+        // var clientname = clients.filter((item)=> item._id == e.target.value)
+        setSingleMemberSelections(e)
+        // setClientsName(e.target.value);
+        if(e.length>0)
+        {
+            var clientname = simembers.filter((item)=> item._id == e[0].value)
+            fetchSIPTotalAmount(e[0].value);
+            setValue('sipmember_id',e[0].value);
+        }
+        else
+        {
+            setValue('sipmember_id','');
+            setValue('sip_maturity_amount',0)
+        }
     }
 
     const handleFetchSIPMember = async(id:any)=>{
@@ -248,11 +291,11 @@ const MaturityForm = () => {
                     }
             });
             const data = await response.json();
-            console.log(data);
+            // console.log(data);
             
             if (response.ok) {
                 // setStaff(data.staff || []);
-                console.log(data.sipMAmount);
+                // console.log(data.sipMAmount);
                 
                 setValue('sip_maturity_amount',data.sipMAmount)
 
@@ -298,11 +341,6 @@ const MaturityForm = () => {
                                 {/* <Controller
                                     name="client_id"
                                     control={control}
-                                    render={({ field }) => <Form.Control {...field} placeholder="Enter Customer ID" />}
-                                /> */}
-                                <Controller
-                                    name="client_id"
-                                    control={control}
                                     render={({ field }) => (<Form.Select
                                     {...field}
                                     isInvalid={!!errors.client_id}
@@ -316,17 +354,38 @@ const MaturityForm = () => {
                                              ))}
                                     </Form.Select>
                                     )}
+                                /> */}
+
+                                <Controller
+                                    name="client_id"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Typeahead
+                                        id="select-client"
+                                        labelKey={'label'}
+                                        {...field}
+                                        multiple={false}
+                                        isInvalid={!!errors.client_id}
+                                        onChange={(e) => { handleClientChange(e); }}
+                                        options={clients.map((client) => (
+                                        { value: `${client._id}`, label: `${client.client_id}-${client.client_name}` }
+                                    ))}
+                                    placeholder="-- Select --"
+                                    selected={singleSelections} 
+                                    />
+                                    )}
                                 />
-                                <Form.Control.Feedback type="invalid">
+                                {/* <Form.Control.Feedback type="invalid">
                                     {errors.client_id?.message}
-                                </Form.Control.Feedback>
+                                </Form.Control.Feedback> */}
+                                {errors.client_id && <div className="invalid-feedback d-block">{errors.client_id.message}</div>}
                             </Form.Group>
                         </Col>
                         <Col md={6}>
                             <Form.Group className="mb-2">
                                 <Form.Label>SIP Member Id</Form.Label>
 
-                                <Controller
+                                {/* <Controller
                                     name="sipmember_id"
                                     control={control}
                                     render={({ field }) => (<Form.Select
@@ -342,10 +401,30 @@ const MaturityForm = () => {
                                              ))}
                                     </Form.Select>
                                     )}
+                                /> */}
+                                <Controller
+                                    name="sipmember_id"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Typeahead
+                                        id="select-client"
+                                        labelKey={'label'}
+                                        {...field}
+                                        multiple={false}
+                                        isInvalid={!!errors.sipmember_id}
+                                        onChange={(e) => { handleMemberChange(e); }}
+                                        options={simembers.map((member) => (
+                                        { value: `${member._id}`, label: `${member.sipmember_id}-${member.sipmember_name}` }
+                                    ))}
+                                    placeholder="-- Select --"
+                                    selected={singleMemberSelections} 
+                                    />
+                                    )}
                                 />
-                                <Form.Control.Feedback type="invalid">
+                                {/* <Form.Control.Feedback type="invalid">
                                     {errors.sipmember_id?.message}
-                                </Form.Control.Feedback>
+                                </Form.Control.Feedback> */}
+                                {errors.sipmember_id && <div className="invalid-feedback d-block">{errors.sipmember_id.message}</div>}
                             </Form.Group>
                         </Col>
                     </Row>
